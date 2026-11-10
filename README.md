@@ -1,4 +1,4 @@
-# Convo – local AI coding helper
+# CressyAI – local AI coding helper
 
 A private chat UI for a local **GGUF** model. Nothing leaves your machine.
 
