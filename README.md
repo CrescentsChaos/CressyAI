@@ -115,10 +115,28 @@ The model is taught (via a short system prompt, switch it off under *Settings �
 | **Changes tab** | Everything you saved or downloaded this session, with *Diff*, *Download*, *Save*, **Download all (.zip)** and *Save all*. |
 | **Terminal** | Right-panel tab (Alt+T) streams a command's output live, with Stop, history (↑/↓) and a time limit (Settings). `bash` blocks in a reply get a **Run** button that asks first, shows the output under the block, and **Send output to chat** lets the model read the result. Each command starts fresh in `--root` (no state carried between commands). |
 | **Plan mode** | Toggle *Plan* next to the paperclip, or use `/plan <goal>`. The model writes Goal / Approach / Files / Steps / Risks and nothing else. The plan card lets you tick steps, **Build** one step, **Build everything**, or **Revise**. Approving turns plan mode off. Progress is saved with the chat. |
-| **Charts & diagrams** | A ` ```chart ` block (JSON: `type`, `title`, `labels`, `datasets`) becomes a chart: bar, line, area, pie, doughnut, radar, polarArea, scatter; *Save PNG* included. A ` ```mermaid ` block becomes a diagram (*Save SVG*). Try `/chart`, `/diagram`. Invalid specs show a clear error instead of breaking the message. |
+| **Charts & diagrams** | A ` ```chart ` block (JSON: `type`, `title`, `labels`, `datasets`) becomes a chart: bar, line, area, pie, doughnut, radar, polarArea, scatter; *Save PNG* included. A ` ```mermaid ` block becomes a diagram (*Save SVG*). Try `/chart`, `/diagram`. Mermaid 12 supports native UML use-case diagrams with `usecase-beta`, actors, use cases, system boundaries, associations, `include` / `extend`, and generalization. |
 | **Other commands** | `/newfile`, `/edit`, `/run` ask for the matching format. |
 
-Charts, the zip download and diagrams load Chart.js, JSZip and Mermaid from cdnjs the first time they are used (like the existing markdown/highlight libraries), so that needs internet once.
+Example use-case diagram:
+```mermaid
+usecase-beta
+direction LR
+actor Customer("Customer")
+actor Admin("Store administrator")
+systemBoundary "Online Store"
+  Browse("Browse catalog")
+  Order("Place order")
+  Payment("Take payment")
+  ManageCatalog("Manage catalog")
+end
+Customer --> Browse
+Customer --> Order
+Order ..> : include Payment
+Admin --> ManageCatalog
+```
+
+Charts, the zip download and diagrams load Chart.js, JSZip and Mermaid from cdnjs the first time they are used (like the existing markdown/highlight libraries), so that needs internet once. Mermaid diagrams need Mermaid 12.0 or newer; use-case diagrams are currently a Mermaid beta feature.
 
 ## Web search (SearXNG)
 Lets the model answer from live results. [SearXNG](https://github.com/searxng/searxng) is a self-hosted meta search engine; CressyAI asks it for results, opens the top pages, and hands the text to the model as numbered sources. The model itself never touches the network.
@@ -159,6 +177,7 @@ Lets the model answer from live results. [SearXNG](https://github.com/searxng/se
 | `/help` | list commands and shortcuts |
 
 **@file mentions** – type `@src/app.py` to attach it (Tab autocompletes from the project).
+**PDFs** – attach, drop, or pick a PDF from the project files to extract its selectable text (up to 20 MB and 200,000 characters). Scanned/image-only PDFs need OCR, which is not supported yet.
 **Git buttons** (Files panel) – attach working diff, staged diff or last commit.
 **Search in files** – substring search across the project, click *Add* to attach a hit.
 **Modes** – Code helper, Code reviewer, Debugger, Tutor (set the system prompt) and sampling presets Precise / Balanced / Creative.
@@ -193,7 +212,7 @@ Alt+N new chat · Alt+L focus input · Alt+R retry · Alt+C copy last reply · A
 - Images come out completely black: the SDXL VAE overflows in half precision. Download `sdxl-vae-fp16-fix.safetensors` and pass `--image-vae path\to\it`.
 - Image engine runs out of memory: pick a smaller size in Settings → Images, or start with `--image-low-vram`.
 - Garbled replies: pass `--chat-format` (e.g. `chatml`, `llama-3`).
-- "Binary or unreadable file": only text files can be attached.
+- "Binary or unreadable file": only text files and PDFs with selectable text can be attached. Scanned PDFs need OCR, which is not supported yet.
 - Port busy: `--port 8001`.
 
 **New in this version**

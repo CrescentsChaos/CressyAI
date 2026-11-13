@@ -2,3 +2,4 @@ fastapi
 uvicorn
 llama-cpp-python
 psutil
+pypdf

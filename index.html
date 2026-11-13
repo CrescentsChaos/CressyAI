@@ -474,7 +474,7 @@ label.f.x{grid-template-columns:1fr 150px}.wst{font:500 11px Inter,sans-serif;ma
     <label class="f">Top-p<input type="number" id="r_top_p" value="0.95" step="0.05" min="0" max="1"></label>
     <label class="f">Top-k<input type="number" id="r_top_k" value="20" min="0"></label>
     <label class="f">Repeat penalty<input type="number" id="r_repeat_penalty" value="1" step="0.05" min="1"></label>
-    <label class="f">Token budget<input type="number" id="r_max_tokens" value="1500" min="64" max="8192" step="100"></label>
+    <label class="f">Token budget<input type="number" id="r_max_tokens" value="1500" min="64" max="16384" step="100"></label>
     <label class="f w"><textarea id="r_sys" placeholder="Optional: replace the built-in instructions the reasoning model gets. Leave empty for the default."></textarea></label>
     <h3>Images</h3>
     <label class="f">Size<select id="img_size"><option value="1024x1024">1024 × 1024</option><option value="832x1216">832 × 1216 portrait</option><option value="1216x832">1216 × 832 landscape</option><option value="768x768">768 × 768 faster</option><option value="640x640">640 × 640 fastest</option></select></label>
@@ -919,9 +919,9 @@ function setBusy(b){busy=b;const g=$('#go');g.classList.toggle('stop',b);g.setAt
    Tokens land in m.full. A rAF loop reveals them at an eased pace (faster when the backlog grows, snapped to word
    boundaries) so text flows steadily instead of arriving in bursts; markdown is re-rendered at most ~22x/s. */
 async function send(raw,opts={}){
-  let text=$('#input').value.trim();const typed=text;if((!text&&!att.some(a=>a.thumb))||busy)return;
-  const gi=imgIntent(text);if(gi)return sendImage(gi);
-  if(!text)text='What is in this image? Summarize it and tell me what we could do with it.';SENT.push(text);si=0;
+  let text=$('#input').value.trim();const typed=text;if((!text&&!att.length)||busy)return;
+  const gi=text?imgIntent(text):(att.some(a=>a.thumb)?imgIntent(text):null);if(gi)return sendImage(gi);
+  if(!text)text=att.some(a=>a.thumb)?'What is in this image? Summarize it and tell me what we could do with it.':'Read the attached file(s) and summarize them.';SENT.push(text);si=0;
   if(raw!==true){text=await expand(text);if(text==null)return}
   $('#input').value='';grow();pop.hidden=true;
   const planOn=!opts.noPlan&&(planMode||planOnce);planOnce=false;
@@ -1039,6 +1039,14 @@ async function attachPath(rel,isDir){
 const IMG_RE=/^image\/(png|jpe?g|gif|webp|bmp)$/,IMG_MAX=1280,MAX_IMGS=4;
 const readURL=f=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=()=>no(r.error);r.readAsDataURL(f)});
 const loadImg=src=>new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(new Error('could not read this image'));i.src=src});
+async function addPdf(f){
+  if(f.size>20*1024*1024){note(f.name+': PDF is too large to attach (maximum 20 MB).');return}
+  let r;try{r=await fetch('/api/pdf',{method:'POST',headers:{'Content-Type':'application/pdf','X-Cressy':'1'},body:f})}
+  catch(e){note(f.name+': '+e.message);return}
+  let d;try{d=await r.json()}catch{note(f.name+': Server returned an invalid response.');return}
+  if(!r.ok){note(f.name+': '+(d.detail||'Could not read PDF'));return}
+  addAtt({...d,name:f.name});note('Added '+f.name+' ('+d.pages+' pages read)',true);
+}
 async function addImage(f){
   if(!CAPS.vision&&!CAPS.image){note('Images need the Qwen2.5-VL models or a Stable Diffusion model: '+(CAPS.vision_why||'not found'));return}
   if(!CAPS.vision){note('Images need the Qwen2.5-VL models: '+(CAPS.vision_why||'not found'));return}
@@ -1059,6 +1067,7 @@ async function addImage(f){
 async function addLocal(files){
   note();for(const f of files){
     if(IMG_RE.test(f.type)){await addImage(f);continue}
+    if(f.type==='application/pdf'||/\.pdf$/i.test(f.name)){await addPdf(f);continue}
     let text=await f.text(),truncated=false;
     if(text.includes('\u0000'))note(f.name+': binary file, skipped');
     else{if(text.length>2e5){text=text.slice(0,2e5);truncated=true}
@@ -1143,11 +1152,11 @@ compact:['d','Summarize this chat to free up context space'],continue:['d','Keep
 SUGG.push(['Summarize text','/summarize','Paste an article or attach a file'],['Write an email','/email','Describe the situation, get a ready draft'],['Make a plan','/plan','Turn a goal into steps and milestones'],['Brainstorm','/brainstorm','Ten concrete ideas on any topic']);
 Object.assign(CMDS,{
 chart:['d','Make a chart (reply with one short sentence and a single chart block) from the data or request below. Use only the numbers given'],
-diagram:['d','Draw a diagram (reply with one short sentence and a single mermaid block) of'],
+diagram:['d','Draw the requested diagram (reply with one short sentence and a single mermaid block). Choose the clearest Mermaid 12 diagram type. For UML use-case diagrams, use Mermaid 12 syntax beginning with usecase-beta, declare actors with actor ID("Display name"), put use cases inside systemBoundary "System name" ... end, and connect them with -->. Use ..> : include TARGET or ..> : extend TARGET for those relationships, and --|> for generalization.'],
 newfile:['d','Create the file(s) described below. Use one file: block per file with the complete contents'],
 edit:['d','Change the attached file(s) as requested below. Use edit: blocks with SEARCH/REPLACE sections, not a full rewrite'],
 run:['d','Give me the terminal command(s), in one bash block, to do this']});
-SUGG.push(['Plan a feature','/plan','Get a step-by-step plan first, then approve it'],['Make a chart','/chart','Bar, line, pie and more from your data'],['Create a file','/newfile','Generate files you can save or download'],['Edit a file','/edit','Attach a file, describe the change, review the diff']);
+SUGG.push(['Plan a feature','/plan','Get a step-by-step plan first, then approve it'],['Make a chart','/chart','Bar, line, pie and more from your data'],['Create a diagram','/diagram','Flowcharts, UML use-case and more'],['Create a file','/newfile','Generate files you can save or download'],['Edit a file','/edit','Attach a file, describe the change, review the diff']);
 Object.assign(CMDS,{imagine:['d','Generate an image with Stable Diffusion XL from your description (aliases: /img, /draw)'],
 imgedit:['d','Edit the attached image, or the last generated one, as you describe (alias: /retouch)']});
 SUGG.push(['Generate an image','/imagine','Stable Diffusion XL on your machine'],['Edit an image','/imgedit','Change the last or an attached picture']);
@@ -1217,7 +1226,7 @@ const base_=p=>p.split('/').pop();
 const fenced=t=>{const f='`'.repeat((t.match(/`+/g)||[]).reduce((m,s)=>Math.max(m,s.length+1),3));return f+'text\n'+t+'\n'+f};
 function toast(msg,kind){const t=document.createElement('div');t.className='toast '+(kind||'');t.setAttribute('role','status');t.textContent=msg;document.body.append(t);setTimeout(()=>t.remove(),kind==='bad'?6000:3500)}
 /* lazy-loaded libraries (cdnjs, pinned) */
-const LIB={chart:'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js',zip:'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',mermaid:'https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js',katex:'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js'},libs={};
+const LIB={chart:'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js',zip:'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',mermaid:'https://cdnjs.cloudflare.com/ajax/libs/mermaid/12.0.0/mermaid.min.js',katex:'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js'},libs={};
 const lib=k=>libs[k]||(libs[k]=new Promise((res,rej)=>{const s=document.createElement('script');s.src=LIB[k];s.onload=res;s.onerror=()=>{delete libs[k];s.remove();rej(new Error('Could not load the '+k+' library from cdnjs.cloudflare.com. Check your internet connection.'))};document.head.append(s)}));
 /* small modal */
 function modal(title){
@@ -1435,7 +1444,7 @@ function toolsPrompt(){
   '1. New file or full rewrite: a fenced block whose info string is file:PATH (relative path, no spaces) with the complete file inside. Example info string: '+T3+'file:src/app.py',
   '2. Change an existing file: a fenced block with info string edit:PATH holding one or more blocks like:\n<<<<<<< SEARCH\n(old lines, copied exactly from the current file)\n=======\n(new lines)\n>>>>>>> REPLACE\nNever use "..." in SEARCH. You can only edit files you have been shown; otherwise ask the user to attach them with @path.',
   '3. Chart: a '+T3+'chart block with JSON like {"type":"bar","title":"Sales","labels":["Jan","Feb"],"datasets":[{"label":"2025","data":[10,12]}]}. Types: bar, line, area, pie, doughnut, radar, scatter. Use only numbers the user gave you; never invent data.',
-  '4. Diagram or flowchart: a '+T3+'mermaid block. Put any node label that contains ( ) or quotes inside double quotes, like A["Step (one)"].',
+  '4. Diagram: a '+T3+'mermaid block using a Mermaid 12 diagram type. For UML use-case diagrams, use the native usecase-beta syntax: actor Customer("Customer"), systemBoundary "Online Store", use cases such as Browse("Browse items") inside the boundary, then end and connect them with -->. Use ..> : include TARGET, ..> : extend TARGET, and --|> for generalization. Use a single physical line for each statement.',
   '5. Terminal command: a '+T3+'bash block, one command per line, nothing destructive. The user decides whether to run it and can show you the output.',
   'If a file itself contains triple backticks, use a four-backtick fence. Write one short sentence before each block and do not repeat file contents elsewhere.'].join('\n');
 }

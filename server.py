@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """Local GGUF chat server.   python server.py --model path/to/model.gguf   (or start without --model and pick models in the app)"""
 import argparse, base64, codecs, gc, importlib.util, json, math, os, platform, re, shutil, signal, subprocess, sys, tempfile, threading, time, uuid, webbrowser
+from io import BytesIO
 from collections import deque
 from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from pypdf import PdfReader
+from pypdf.errors import PdfReadError
 from starlette.concurrency import run_in_threadpool
 from llama_cpp import Llama
 
@@ -387,6 +390,8 @@ HERE = Path(__file__).parent
 ROOT = Path(args.root).expanduser().resolve()
 BIN = {".png", ".jpg", ".jpeg", ".gif", ".ico", ".pdf", ".zip", ".gz", ".gguf", ".pyc", ".exe", ".dll", ".so", ".woff", ".woff2", ".mp3", ".mp4"}
 MAX_FILE = 200_000      # bytes read per file
+MAX_PDF_BYTES = 20 * 1024 * 1024
+MAX_PDF_TEXT = 200_000
 FOLDER_FILE = 40_000    # bytes per file when attaching a whole folder
 FOLDER_TOTAL = 300_000  # total bytes when attaching a whole folder
 SKIP = {".git", "node_modules", "__pycache__", ".venv", "venv", ".idea", ".vscode"}
@@ -420,6 +425,39 @@ def load_text(p, limit):
         lossy = not (len(data) > limit and e.start >= limit - 3)
     toks = ntok(text)
     return {"name": rel_of(p) or p.name, "text": text, "tokens": toks, "truncated": len(data) > limit, "lossy": lossy}
+
+
+def load_pdf(data, name):
+    """Extract selectable text from a PDF attachment, bounded by file and prompt size."""
+    try:
+        reader = PdfReader(BytesIO(data), strict=False)
+        if reader.is_encrypted and not reader.decrypt(""):
+            raise HTTPException(400, "This PDF is password-protected.")
+        text = ""
+        pages_read = 0
+        truncated = False
+        for page in reader.pages:
+            pages_read += 1
+            page_text = page.extract_text() or ""
+            if not page_text:
+                continue
+            separator = "\n\n" if text else ""
+            remaining = MAX_PDF_TEXT - len(text) - len(separator)
+            if remaining <= 0:
+                truncated = True
+                break
+            if len(page_text) > remaining:
+                text += separator + page_text[:remaining]
+                truncated = True
+                break
+            text += separator + page_text
+        if not text.strip():
+            raise HTTPException(422, "This PDF has no selectable text. Scanned PDFs need OCR, which is not supported yet.")
+        return {"name": name, "text": text, "tokens": ntok(text), "truncated": truncated, "pages": pages_read}
+    except HTTPException:
+        raise
+    except (PdfReadError, ValueError, KeyError) as e:
+        raise HTTPException(400, f"Could not read PDF: {e}") from e
 
 
 def fit(messages, max_new, model=None):
@@ -541,10 +579,34 @@ def read_file(path: str):
         raise HTTPException(404, "No such file")
     if not p.is_file():
         raise HTTPException(400, "Not a file")
+    if p.suffix.lower() == ".pdf":
+        try:
+            with p.open("rb") as f:
+                data = f.read(MAX_PDF_BYTES + 1)
+        except OSError as e:
+            raise HTTPException(500, f"Could not read PDF: {e}") from e
+        if len(data) > MAX_PDF_BYTES:
+            raise HTTPException(413, "PDF is too large to attach (maximum 20 MB).")
+        return load_pdf(data, rel_of(p) or p.name)
     r = load_text(p, MAX_FILE)
     if r is None:
         raise HTTPException(415, "Binary or unreadable file")
     return r
+
+
+@app.post("/api/pdf")
+async def read_uploaded_pdf(req: Request):
+    need_ui(req)
+    if req.headers.get("content-type", "").split(";", 1)[0].strip().lower() != "application/pdf":
+        raise HTTPException(415, "Upload a PDF file.")
+    data = bytearray()
+    async for chunk in req.stream():
+        if len(data) + len(chunk) > MAX_PDF_BYTES:
+            raise HTTPException(413, "PDF is too large to attach (maximum 20 MB).")
+        data.extend(chunk)
+    if not data:
+        raise HTTPException(400, "The PDF is empty.")
+    return await run_in_threadpool(load_pdf, bytes(data), "document.pdf")
 
 
 @app.get("/api/folder")
@@ -568,12 +630,13 @@ def read_folder(path: str = ""):
     return {"files": files, "skipped": skipped}
 
 
-def walk_files():
+def walk_files(include_pdf=False):
     out = []
     for dp, dns, fns in os.walk(ROOT):
         dns[:] = sorted(d for d in dns if d not in SKIP)
         for fn in sorted(fns):
-            if Path(fn).suffix.lower() not in BIN:
+            suffix = Path(fn).suffix.lower()
+            if suffix not in BIN or (include_pdf and suffix == ".pdf"):
                 out.append(Path(dp) / fn)
             if len(out) >= 4000:
                 return out
@@ -582,7 +645,7 @@ def walk_files():
 
 @app.get("/api/files")
 def files():
-    return {"files": [rel_of(p) for p in walk_files()]}
+    return {"files": [rel_of(p) for p in walk_files(include_pdf=True)]}
 
 
 @app.get("/api/search")
