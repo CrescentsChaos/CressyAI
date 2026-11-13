@@ -11,7 +11,7 @@ python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\
 pip install -r requirements.txt
 python server.py --model /path/to/model.gguf --root ~/my-project --open
 ```
-Or use `./run.sh model.gguf [project-folder]` (macOS/Linux) / `run.bat model.gguf [project-folder]` (Windows).
+Or use `./run.sh model.gguf [project-folder]` (macOS/Linux) / `run.bat model.gguf [project-folder] [searxng-url]` (Windows). The optional third Windows argument overrides `SEARXNG_URL`.
 Then open http://127.0.0.1:8000 (`--open` does it for you).
 
 | Flag | Default | Meaning |

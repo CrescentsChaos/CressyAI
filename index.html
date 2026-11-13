@@ -326,6 +326,7 @@ label.chk{display:flex;gap:8px;align-items:center;color:var(--mut);font-size:13p
 .body mark{background:linear-gradient(transparent 52%,color-mix(in srgb,#fbbf24 55%,transparent) 52%);color:inherit;padding:0 .12em;border-radius:3px}
 .body kbd{font:500 .82em var(--mono);padding:.1em .45em;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;background:var(--card2)}
 .body pre.wrap code{white-space:pre-wrap;overflow-wrap:anywhere}
+.body pre code,.vizcode{font-variant-ligatures:none}
 /* callouts: > [!NOTE] / [!TIP] / [!IMPORTANT] / [!WARNING] / [!CAUTION] */
 .body blockquote.callout{--c:var(--acc);border-left:4px solid var(--c);background:color-mix(in srgb,var(--c) 9%,transparent);color:var(--ink);padding:.7em 1em;border-radius:0 12px 12px 0}
 .callout .co-t{display:flex;align-items:center;gap:8px;font-weight:700;font-size:.92em;color:var(--c);margin-bottom:.2em}
@@ -661,11 +662,7 @@ moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',half:'<circle cx="12" cy="
 keys:'<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>'};
 Object.assign(P,{list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
 image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',
-expand:'<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>'});
-const ic=(n,s=16)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${P[n]}</svg>`;
-$$('[data-ic]').forEach(e=>e.innerHTML=ic(e.dataset.ic,+e.dataset.s||16));
-
-let refreshInfo=null,info=null,msgs=[],busy=false,ctl=null,hist=[],stick=true,att=[],cwd='',imgMode=false,editFrom=null;
+expand:'<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>',
 globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
 info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
 alert:'<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>',
@@ -673,7 +670,7 @@ wrap:'<path d="M3 6h18M3 12h15a3 3 0 0 1 0 6h-5M3 18h4"/><path d="m15 15-2 3 2 3
 const ic=(n,s=16)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${P[n]}</svg>`;
 $$('[data-ic]').forEach(e=>e.innerHTML=ic(e.dataset.ic,+e.dataset.s||16));
 
-let refreshInfo=null,info=null,msgs=[],busy=false,ctl=null,hist=[],stick=true,att=[],cwd='';
+let refreshInfo=null,info=null,msgs=[],busy=false,ctl=null,hist=[],stick=true,att=[],cwd='',imgMode=false,editFrom=null;
 const chat=$('#chat'),msgsEl=$('#msgs'),app=$('#app');
 const LS=(k,v)=>{try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch{return null}};
 
@@ -697,8 +694,6 @@ function split(c,live){
   else if(e>=0){think=c.slice(0,e);done=true;ans=c.slice(e+8)}
   return{think:think.trim(),done,ans:ans.replace(/^\s+/,'')};
 }
-function render(t){
-  try{return DOMPurify.sanitize(marked.parse(t,{gfm:true,breaks:false}))}catch{return '<p style="white-space:pre-wrap">'+esc(t)+'</p>'}
 function stashMath(t,list){   // pull LaTeX out before markdown sees it (underscores and stars would be eaten)
   const fe=[...t.matchAll(/^ {0,3}(```|~~~)/gm)],cut=fe.length%2?fe[fe.length-1].index:t.length,tail=t.slice(cut);
   const tok=(raw,x,d)=>{list.push({raw,tex:x.trim(),d});return 'zzmath'+(list.length-1)+'zz'};
@@ -782,7 +777,6 @@ function addCaret(tpl){   // blinking cursor at the end of the last paragraph / 
   const l=n.lastElementChild,t=l&&/^(P|H[1-6])$/.test(l.tagName)?l:(n!==tpl&&!l?n:null);
   if(t){const c=document.createElement('span');c.className='caret';t.append(c)}
 }
-function setBody(b,md,streaming){
 function setBody(b,md,streaming,m){
   const open=streaming&&((md.match(/^ {0,3}(```|~~~)/gm)||[]).length%2===1);
   const tpl=document.createElement('div');tpl.innerHTML=render(streaming?healMd(md):md);
@@ -790,8 +784,6 @@ function setBody(b,md,streaming,m){
     const k=classify((code.className.match(/language-(\S+)/)||[])[1]||'');
     if((k.kind==='chart'||k.kind==='mermaid')&&!(open&&i===all.length-1)){pre.replaceWith(vizEl(k.kind,code.textContent));return}
     bar(pre,code)});
-  if(streaming&&!open&&md)addCaret(tpl);
-  morph(b,tpl);mountViz(b);
   callouts(tpl);tables(tpl);inlineMarks(tpl,m?.web?.results);
   if(streaming&&!open&&md)addCaret(tpl);
   morph(b,tpl);mountViz(b);mountMath(b);
@@ -812,7 +804,6 @@ function startStatus(m){
   const f=m.el.querySelector('.foot');
   f.innerHTML='<span class="status"><span class="orb"></span><span class="ph shimmer"></span><span class="dots"><i></i><i></i><i></i></span><span class="clk"></span></span>';
   m.st=f.firstChild;m.stop1=ticker(f.querySelector('.ph'),m.gen?IMGP:PHRASES,2600);
-  m.st=f.firstChild;m.stop1=ticker(f.querySelector('.ph'),PHRASES,2600);
   const t0=performance.now(),upd=()=>{
     m.st.querySelector('.clk').textContent=clock(((performance.now()-t0)/1000)|0);
     if(m.t0&&!m.thinkMs){const tt=m.el.querySelector('.think-time');if(tt)tt.textContent=clock(((performance.now()-m.t0)/1000)|0)}
@@ -844,8 +835,7 @@ function paint(m,live){
   const s=split(m.content,live);
   if(m.gen)paintGen(m);
   paintThink(m,s,live);
-  setBody(b,s.ans,live);
-  paintThink(m,s,live);paintWeb(m);
+  paintWeb(m);
   setBody(b,s.ans,live,m);
   if(live){if(!m.st)startStatus(m)}
   else{endStatus(m);const t=foot(m);if(f.textContent!==t)f.textContent=t;paintPlan(m)}
@@ -869,12 +859,6 @@ function paintImgs(m){
   });
 }
 const THINKHTML=`<div class="think" hidden><button type="button" class="think-h"><span class="orb"></span><span class="ph shimmer"></span><span class="done-l"></span><span class="think-time"></span><span class="chev">${ic('chev',15)}</span></button><div class="think-w"><div><div class="think-s"></div></div></div></div>`;
-function addMsg(m){
-  $('#empty')?.remove();
-  const d=document.createElement('div'),a=m.role==='assistant';d.className='msg '+m.role;
-  d.innerHTML=(a?'<div class="av"><img src="/assets/logo-mark.png" alt=""></div>':'')+'<div class="col">'+(a?THINKHTML:'')+'<div class="body"></div><div class="plan" hidden></div><div class="foot"></div><div class="acts"></div></div>';
-  msgsEl.append(d);m.el=d;
-  if(a)d.querySelector('.think-h').onclick=()=>{m.touched=true;d.querySelector('.think').classList.toggle('open')};
 const WEBHTML=`<div class="web" hidden><button type="button" class="web-h"><span class="gl">${ic('globe',15)}</span><span class="wq"></span><span class="chev">${ic('chev',15)}</span></button><div class="web-w"><div><ol class="web-l"></ol><div class="web-err" hidden></div></div></div></div>`;
 function addMsg(m){
   $('#empty')?.remove();
@@ -946,16 +930,11 @@ async function send(raw,opts={}){
   att=[];renderTray();setBusy(true);ctl=new AbortController();toBottom();
   const rOnce=reasonOnce;reasonOnce=false;
   const doReason=!/^Continue exactly where you stopped/.test(text)&&wantReason(text,planOn,rOnce);
-  if(u.files.some(f=>typeof f.image==='string'&&f.image.length>1&&!f.desc)&&!await analyze(u,m,typed,doReason))return;
-  const mem=$('#mem').value.trim(),seen=msgs.some(x=>x.files?.some(f=>f.desc)),
-    sys=[$('#sys').value.trim(),toolsPrompt(),seen&&IMG_SYS,planOn&&PLAN_PROMPT,mem&&'Standing notes about the user (always respect them):\n'+mem].filter(Boolean).join('\n\n');
-  const payload={messages:[...(sys?[{role:'system',content:sys}]:[]),...msgs.slice(0,-1).map(x=>({role:x.role,content:x.role==='user'?withFiles(x.content,x.files||[]):asst(x)}))],...params()};
   const webReq=wantWeb(text,webOnce);webOnce=null;
-  const doReason=!/^Continue exactly where you stopped/.test(text)&&wantReason(text,planOn,rOnce);
   if(u.files.some(f=>typeof f.image==='string'&&f.image.length>1&&!f.desc)&&!await analyze(u,m,typed,doReason))return;
   const mem=$('#mem').value.trim(),seen=msgs.some(x=>x.files?.some(f=>f.desc)),
     sys=[$('#sys').value.trim(),toolsPrompt(),formatPrompt(),todayLine(),seen&&IMG_SYS,planOn&&PLAN_PROMPT,mem&&'Standing notes about the user (always respect them):\n'+mem].filter(Boolean).join('\n\n');
-  const payload={messages:[...(sys?[{role:'system',content:sys}]:[]),...msgs.slice(0,-1).map(x=>({role:x.role,content:x.role==='user'?withFiles(x.content,x.files||[]):(split(x.content).ans||x.content)}))],...params()};
+  const payload={messages:[...(sys?[{role:'system',content:sys}]:[]),...msgs.slice(0,-1).map(x=>({role:x.role,content:x.role==='user'?withFiles(x.content,x.files||[]):asst(x)}))],...params()};
   const t0=performance.now();let tf=0,n=0,last=t0,acc=0,lastR=0,dirty=false,fin=false,aborted=false,raf=0,done;
   const drained=new Promise(r=>done=r);
   const loop=ts=>{
@@ -1174,7 +1153,6 @@ imgedit:['d','Edit the attached image, or the last generated one, as you describ
 SUGG.push(['Generate an image','/imagine','Stable Diffusion XL on your machine'],['Edit an image','/imgedit','Change the last or an attached picture']);
 let HELP=`**Slash commands** (paste code after the command, attach files, or use the last code block in the chat)\n\n`+Object.entries(CMDS).map(([k,[t,d]])=>`- \`/${k}\` ${t==='c'?'code':'description'} — ${d}`).join('\n')+`\n\n\`/commit\` with nothing else uses your **staged** git diff; \`/review\` uses your **working** diff.\n\n**@file** — type \`@path/to/file.py\` to attach a file (Tab completes).\n\n**Files panel:** click a folder to enter it, **Back** (button, Backspace or Alt+←) to return, Alt+→ forward, breadcrumbs to jump up.\n\n**Images:** attach, drop or paste a PNG / JPG / WebP / GIF. Qwen2.5-VL reads it first (the coder is unloaded meanwhile), is unloaded again, then the coder comes back and answers using what was extracted. Open *Image details* under your message to see it.\n\n**Reasoning:** the *Reason* button (or \`/think\`) makes a separate reasoning model (gemma-4-12b-it / Qwen3-8B from your models folder) think the task through first while the coder stays unloaded; then the coder loads and answers using its notes. Load, unload and tweak every model in the *Model* tab.\n\n**Shortcuts:** Enter send · Shift+Enter newline · Esc stop / close popup · ↑ recall previous message · Alt+N new chat · Alt+L focus input · Alt+R retry last reply · Alt+C copy last reply · Alt+E export chat · Alt+S tools panel · Alt+B chat list · Alt+/ this help · Alt+I image mode · Alt+G new seed for the last image · Alt+V edit the last image`;
 HELP+=`\n\n**Images (Stable Diffusion XL):** \`/imagine a lighthouse at dawn, oil painting\` makes an image; \`/imgedit make it night\` edits the attached image, or the last one generated. The *Image* button (Alt+I) turns every message into an image prompt, and an attached picture is then edited instead. Under each image: enlarge, download, edit, vary, re-roll (new seed) and save to the project. The coder writes the Stable Diffusion prompt for you (turn that off in Settings → Images); it is unloaded while the image is made and comes back afterwards. Editing is img2img: describe how the picture should look afterwards, and raise or lower *Edit strength* to change more or less.`;
-let HELP=`**Slash commands** (paste code after the command, attach files, or use the last code block in the chat)\n\n`+Object.entries(CMDS).map(([k,[t,d]])=>`- \`/${k}\` ${t==='c'?'code':'description'} — ${d}`).join('\n')+`\n\n\`/commit\` with nothing else uses your **staged** git diff; \`/review\` uses your **working** diff.\n\n**@file** — type \`@path/to/file.py\` to attach a file (Tab completes).\n\n**Files panel:** click a folder to enter it, **Back** (button, Backspace or Alt+←) to return, Alt+→ forward, breadcrumbs to jump up.\n\n**Images:** attach, drop or paste a PNG / JPG / WebP / GIF. Qwen2.5-VL reads it first (the coder is unloaded meanwhile), is unloaded again, then the coder comes back and answers using what was extracted. Open *Image details* under your message to see it.\n\n**Reasoning:** the *Reason* button (or \`/think\`) makes a separate reasoning model (gemma-4-12b-it / Qwen3-8B from your models folder) think the task through first while the coder stays unloaded; then the coder loads and answers using its notes. Load, unload and tweak every model in the *Model* tab.\n\n**Shortcuts:** Enter send · Shift+Enter newline · Esc stop / close popup · ↑ recall previous message · Alt+N new chat · Alt+L focus input · Alt+R retry last reply · Alt+C copy last reply · Alt+E export chat · Alt+S tools panel · Alt+B chat list · Alt+/ this help`;
 function preview(lang,code){
   let html=code;
   if(/^(js|javascript)$/.test(lang))html='<body style="font:14px monospace;padding:12px"><pre id=o style="white-space:pre-wrap"></pre><script>const o=document.getElementById("o"),p=(...a)=>o.textContent+=a.map(x=>typeof x==="object"?JSON.stringify(x):x).join(" ")+"\\n";console.log=p;onerror=m=>p("Error: "+m);try{'+code+'\n}catch(e){p("Error: "+e.message)}<\/script>';
@@ -1197,7 +1175,6 @@ async function compact(){
   setBusy(true);ctl=new AbortController();note('Summarizing this chat…',true);
   try{
     const hist=msgs.map(x=>({role:x.role,content:x.role==='user'?withFiles(x.content,x.files||[]):asst(x)}));
-    const hist=msgs.map(x=>({role:x.role,content:x.role==='user'?withFiles(x.content,x.files||[]):(split(x.content).ans||x.content)}));
     const sum=await complete([{role:'system',content:'You compress conversations. Keep every decision, fact, name, file name, code detail and open task. Be brief.'},...hist,{role:'user',content:'Summarize everything above as compact bullet notes so the conversation can continue from them alone.'}],600);
     const a='Understood. I have the summary and will continue from there.';
     msgs=[{role:'user',content:'Summary of our conversation so far:\n\n'+sum,full:sum},{role:'assistant',content:a,full:a}];
@@ -1240,7 +1217,6 @@ const base_=p=>p.split('/').pop();
 const fenced=t=>{const f='`'.repeat((t.match(/`+/g)||[]).reduce((m,s)=>Math.max(m,s.length+1),3));return f+'text\n'+t+'\n'+f};
 function toast(msg,kind){const t=document.createElement('div');t.className='toast '+(kind||'');t.setAttribute('role','status');t.textContent=msg;document.body.append(t);setTimeout(()=>t.remove(),kind==='bad'?6000:3500)}
 /* lazy-loaded libraries (cdnjs, pinned) */
-const LIB={chart:'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js',zip:'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',mermaid:'https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js'},libs={};
 const LIB={chart:'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js',zip:'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',mermaid:'https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js',katex:'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js'},libs={};
 const lib=k=>libs[k]||(libs[k]=new Promise((res,rej)=>{const s=document.createElement('script');s.src=LIB[k];s.onload=res;s.onerror=()=>{delete libs[k];s.remove();rej(new Error('Could not load the '+k+' library from cdnjs.cloudflare.com. Check your internet connection.'))};document.head.append(s)}));
 /* small modal */
@@ -1260,7 +1236,6 @@ const showTab=n=>{tab(n);if(mob()){app.classList.remove('lopen');app.classList.a
 /* ---------- workspace state: files the model produced this chat ---------- */
 let WS=new Map();   // path -> {orig:string|null, cur, saved, crlf}
 const resetWS=()=>{WS=new Map();paintChanges();editFrom=null;if(window.paintEditChip)paintEditChip()};
-const resetWS=()=>{WS=new Map();paintChanges()};
 function recordWS(path,before,after,saved,crlf){
   const e=WS.get(path);WS.set(path,{orig:e?e.orig:before,cur:after,saved:!!saved,crlf:e?e.crlf:!!crlf});paintChanges();
 }
@@ -1362,7 +1337,6 @@ function paintCaps(){
   paintTerm();paintChanges();
 }
 fetch('/api/caps').then(r=>r.json()).then(c=>{CAPS=c;paintCaps();paintImgBtn()}).catch(()=>paintCaps());
-fetch('/api/caps').then(r=>r.json()).then(c=>{CAPS=c;paintCaps()}).catch(()=>paintCaps());
 async function runCommand(cmd,sink){
   if(!CAPS.terminal){toast('The terminal is disabled on this server','bad');return null}
   if(term.running){toast('A command is already running. Stop it first.','bad');return null}
@@ -1461,7 +1435,7 @@ function toolsPrompt(){
   '1. New file or full rewrite: a fenced block whose info string is file:PATH (relative path, no spaces) with the complete file inside. Example info string: '+T3+'file:src/app.py',
   '2. Change an existing file: a fenced block with info string edit:PATH holding one or more blocks like:\n<<<<<<< SEARCH\n(old lines, copied exactly from the current file)\n=======\n(new lines)\n>>>>>>> REPLACE\nNever use "..." in SEARCH. You can only edit files you have been shown; otherwise ask the user to attach them with @path.',
   '3. Chart: a '+T3+'chart block with JSON like {"type":"bar","title":"Sales","labels":["Jan","Feb"],"datasets":[{"label":"2025","data":[10,12]}]}. Types: bar, line, area, pie, doughnut, radar, scatter. Use only numbers the user gave you; never invent data.',
-  '4. Diagram or flowchart: a '+T3+'mermaid block.',
+  '4. Diagram or flowchart: a '+T3+'mermaid block. Put any node label that contains ( ) or quotes inside double quotes, like A["Step (one)"].',
   '5. Terminal command: a '+T3+'bash block, one command per line, nothing destructive. The user decides whether to run it and can show you the output.',
   'If a file itself contains triple backticks, use a four-backtick fence. Write one short sentence before each block and do not repeat file contents elsewhere.'].join('\n');
 }
@@ -1504,11 +1478,22 @@ async function mountOne(el){
     const id='mm'+(++mmN);
     try{
       mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:isDark()?'dark':'neutral',fontFamily:'Inter, sans-serif'});   // 'strict' makes Mermaid sanitize labels and disable click handlers
-      const{svg}=await mermaid.render(id,raw);
+      const{svg}=await mermaidRender(id,raw);
       body.innerHTML=svg;el._svg=svg;
       btn('Save SVG',()=>dl_('diagram.svg',el._svg));btn('Code',code);
     }catch(e){document.getElementById('d'+id)?.remove();fail('Diagram error: '+String(e.message||e).split('\n')[0])}
   }
+}
+function fixMermaid(src){   // models often leave ( ) or quotes bare inside node labels, which Mermaid rejects
+  const q=l=>'"'+l.replace(/"/g,'#quot;')+'"';
+  return src.split('\n').map(line=>line
+    .replace(/(\b[\w-]+)\[(?!["(\[\/\\])([^\]\n]*[()"][^\]\n]*)\]/g,(m,id,l)=>id+'['+q(l)+']')
+    .replace(/(\b[\w-]+)\{(?!["{])([^}\n]*[()"][^}\n]*)\}/g,(m,id,l)=>id+'{'+q(l)+'}')).join('\n');
+}
+async function mermaidRender(id,raw){
+  try{return await mermaid.render(id,raw)}
+  catch(e){const fx=fixMermaid(raw);if(fx===raw)throw e;document.getElementById('d'+id)?.remove();
+    try{return await mermaid.render(id+'r',fx)}catch{document.getElementById('d'+id+'r')?.remove();throw e}}
 }
 function mountViz(root){root.querySelectorAll('.viz:not([data-m])').forEach(el=>{el.dataset.m='1';mountOne(el)})}
 function remountViz(){$$('.viz').forEach(el=>{el._chart?.destroy?.();delete el.dataset.m;el.querySelector('.vizbody').innerHTML='<div class="vizload">Drawing…</div>'});mountViz(document)}
@@ -1524,8 +1509,7 @@ function save(){
   if(!msgs.length)return;
   if(!cid)cid=Date.now().toString(36);
   const old=chats().find(c=>c.id===cid),rest=chats().filter(c=>c.id!==cid);
-  rest.unshift({id:cid,pin:old?.pin,title:titleOf().slice(0,48),msgs:msgs.map(({role,content,files,stats,thinkMs,plan,planDone,gen})=>({role,content,stats,thinkMs,plan,planDone,gen,files:(files||[]).map(x=>({name:x.name,tokens:x.tokens,text:'',image:x.image?1:undefined,thumb:x.thumb,desc:x.desc}))}))});
-  rest.unshift({id:cid,pin:old?.pin,title:titleOf().slice(0,48),msgs:msgs.map(({role,content,files,stats,thinkMs,plan,planDone,web})=>({role,content,stats,thinkMs,plan,planDone,web:web&&!web.busy?web:undefined,files:(files||[]).map(x=>({name:x.name,tokens:x.tokens,text:'',image:x.image?1:undefined,thumb:x.thumb,desc:x.desc}))}))});
+  rest.unshift({id:cid,pin:old?.pin,title:titleOf().slice(0,48),msgs:msgs.map(({role,content,files,stats,thinkMs,plan,planDone,gen,web})=>({role,content,stats,thinkMs,plan,planDone,gen,web:web&&!web.busy?web:undefined,files:(files||[]).map(x=>({name:x.name,tokens:x.tokens,text:'',image:x.image?1:undefined,thumb:x.thumb,desc:x.desc}))}))});
   LS('gc.chats',rest.slice(0,50));hist_();
 }
 function load(id){
@@ -1560,10 +1544,13 @@ function acts(m){
   mk('trash','Delete',()=>{if(busy)return;const i=msgs.indexOf(m);if(i>=0)msgs.splice(i,1);m.el.remove();if(!msgs.length)renderEmpty();setTitle();save()});
 }
 function regen(m){
-  if(busy)return;if(m.gen)return imgRetry(m);if(msgs[msgs.length-1]!==m){note('Only the last reply can be retried');return}
-  msgs.pop();m.el.remove();const u=msgs.pop();u.el.remove();att=u.files||[];renderTray();$('#input').value=u.content;planOnce=!!m.plan;send(true);
-  if(busy)return;if(msgs[msgs.length-1]!==m){note('Only the last reply can be retried');return}
-  msgs.pop();m.el.remove();const u=msgs.pop();u.el.remove();att=u.files||[];renderTray();$('#input').value=u.content;planOnce=!!m.plan;if(m.web?.urls?.length)webOnce={urls:m.web.urls};else if(m.web?.query)webOnce=m.web.query;send(true);
+  if(busy)return;
+  if(m.gen)return imgRetry(m);
+  if(msgs[msgs.length-1]!==m){note('Only the last reply can be retried');return}
+  msgs.pop();m.el.remove();const u=msgs.pop();u.el.remove();
+  att=u.files||[];renderTray();$('#input').value=u.content;planOnce=!!m.plan;
+  if(m.web?.urls?.length)webOnce={urls:m.web.urls};else if(m.web?.query)webOnce=m.web.query;
+  send(true);
 }
 function edit(m){
   const i=msgs.indexOf(m);if(busy||i<0)return;
@@ -1573,8 +1560,7 @@ function edit(m){
 const lastReply=()=>[...msgs].reverse().find(m=>m.role==='assistant');
 function exportMd(){dl_('chat.md',msgs.map(m=>`## ${m.role==='user'?'You':'Model'}\n\n${m.content}\n`).join('\n'))}
 /* ---------- settings ---------- */
-const SET=['mem','sys','temperature','top_p','top_k','repeat_penalty','max_tokens','tools','confirmrun','runtimeout','rmode','r_temperature','r_top_p','r_top_k','r_repeat_penalty','r_max_tokens','r_sys','img_size','img_steps','img_cfg','img_sampler','img_sched','img_seed','img_count','img_strength','img_enhance','img_neg'];
-const SET=['mem','sys','temperature','top_p','top_k','repeat_penalty','max_tokens','tools','confirmrun','runtimeout','rmode','r_temperature','r_top_p','r_top_k','r_repeat_penalty','r_max_tokens','r_sys','wmode','wn','wread','wbudget','wtime','wcat','fstyle','fmath','ffont','fsize','flh','fwidth','faccent'];
+const SET=['mem','sys','temperature','top_p','top_k','repeat_penalty','max_tokens','tools','confirmrun','runtimeout','rmode','r_temperature','r_top_p','r_top_k','r_repeat_penalty','r_max_tokens','r_sys','img_size','img_steps','img_cfg','img_sampler','img_sched','img_seed','img_count','img_strength','img_enhance','img_neg','wmode','wn','wread','wbudget','wtime','wcat','fstyle','fmath','ffont','fsize','flh','fwidth','faccent'];
 $('#mode').innerHTML=Object.keys(MODES).map(k=>`<option>${k}</option>`).join('');
 const saveSet=()=>LS('gc.set',{...Object.fromEntries(SET.map(i=>[i,$('#'+i).value])),mode:$('#mode').value});
 const st=LS('gc.set');
@@ -1584,7 +1570,6 @@ $('#preset').onchange=e=>{const p=PRE[e.target.value];if(p)['temperature','top_p
 SET.forEach(i=>$('#'+i).addEventListener('change',saveSet));$('#sys').addEventListener('input',saveSet);$('#r_sys').addEventListener('input',saveSet);$('#mem').addEventListener('input',saveSet);
 /* theme */
 let th=LS('gc.theme')||'auto';
-function applyTheme(){document.documentElement.dataset.theme=th;setTimeout(()=>window.remountViz&&remountViz(),0);$$('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.th===th));$('#theme').innerHTML=ic(th==='dark'?'moon':th==='light'?'sun':'half',16)+'Theme: '+th}
 function applyTheme(){document.documentElement.dataset.theme=th;try{applyLook()}catch{}setTimeout(()=>window.remountViz&&remountViz(),0);$$('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.th===th));$('#theme').innerHTML=ic(th==='dark'?'moon':th==='light'?'sun':'half',16)+'Theme: '+th}
 $('#theme').onclick=()=>{th={auto:'light',light:'dark',dark:'auto'}[th];LS('gc.theme',th);applyTheme()};
 $('#seg').onclick=e=>{const b=e.target.closest('[data-th]');if(b){th=b.dataset.th;LS('gc.theme',th);applyTheme()}};
@@ -1643,7 +1628,6 @@ addEventListener('keydown',e=>{
   if(e.key==='Escape'){if(!pop.hidden)pop.hidden=true;else if(busy)ctl.abort();else app.classList.remove('lopen','ropen');return}
   if(!e.altKey)return;
   const A={KeyN:newChat,KeyL:()=>$('#input').focus(),KeyR:()=>{const l=lastReply();l&&regen(l)},KeyC:()=>{const l=lastReply();l&&navigator.clipboard.writeText(l.content)},KeyE:exportMd,KeyS:togR,KeyB:togL,KeyT:()=>showTab('term'),Slash:()=>localMsg(HELP),KeyI:()=>setImgMode(!imgMode),KeyG:()=>imgRerollLast(),KeyV:()=>imgEditLast()}[e.code];
-  const A={KeyN:newChat,KeyL:()=>$('#input').focus(),KeyR:()=>{const l=lastReply();l&&regen(l)},KeyC:()=>{const l=lastReply();l&&navigator.clipboard.writeText(l.content)},KeyE:exportMd,KeyS:togR,KeyB:togL,KeyT:()=>showTab('term'),Slash:()=>localMsg(HELP)}[e.code];
   if(A){e.preventDefault();A()}
 });
 $('#clear').onclick=newChat;$('#exp').onclick=exportMd;$('#help').onclick=()=>{localMsg(HELP);if(mob())app.classList.remove('lopen')};
@@ -1659,7 +1643,6 @@ poll();setInterval(poll,2000);refreshModels(true);setInterval(()=>{if(!document.
 let MS=null,MOP=false,msig='';const MERR={},MOPEN={};
 const SLOT_INFO={coder:['Coder','Answers your messages and writes the code.'],reasoner:['Reasoner','Thinks the task through first. The coder is unloaded while it runs.'],vision:['Vision','Reads attached images. It loads only while an image is being read.'],
   image:['Image','Makes and edits pictures (Stable Diffusion). It loads only while an image is being made; the coder is unloaded meanwhile.']};
-const SLOT_INFO={coder:['Coder','Answers your messages and writes the code.'],reasoner:['Reasoner','Thinks the task through first. The coder is unloaded while it runs.'],vision:['Vision','Reads attached images. It loads only while an image is being read.']};
 async function post_(url,body){
   const r=await fetch(url,{method:'POST',headers:HDR,body:JSON.stringify(body)});let d={};try{d=await r.json()}catch{}
   if(!r.ok)throw new Error(d.detail||('server answered '+r.status));return d;
@@ -1680,7 +1663,6 @@ async function refreshModels(force){
   MS=d;
   if(d.state==='coder'&&info&&(!info.loaded||info.file!==d.slots.coder.name)&&refreshInfo)refreshInfo().catch(()=>{});
   const sig=JSON.stringify([d.state,d.busy,d.available.length,Object.values(d.slots).map(s=>[s.loaded,s.path,s.dirty,s.cfg,s.available]),(d.image_models||[]).length]);
-  const sig=JSON.stringify([d.state,d.busy,d.available.length,Object.values(d.slots).map(s=>[s.loaded,s.path,s.dirty,s.cfg])]);
   if((force||sig!==msig)&&(force||!$('#slots').contains(document.activeElement))){msig=sig;renderSlots()}
   paintPill();
 }
@@ -1717,7 +1699,6 @@ function slotCard(k){
 function renderSlots(){
   if(!MS)return;
   $('#slots').innerHTML=['coder','reasoner','vision','image'].map(slotCard).join('');
-  $('#slots').innerHTML=['coder','reasoner','vision'].map(slotCard).join('');
   const n=MS.available.length;
   $('#mdirs').textContent=(n?n+' model file'+(n>1?'s':'')+' found in ':'No .gguf files found in ')+MS.dirs.join(' · ')+'.  ★ = looked for first as the reasoner.';
   $$('#slots details').forEach(d=>d.addEventListener('toggle',()=>{MOPEN[d.closest('.mc').dataset.slot]=d.open}));
