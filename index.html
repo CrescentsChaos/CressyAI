@@ -2,6 +2,7 @@
 <html lang="en" data-theme="auto"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CressyAI</title>
+<link rel="icon" type="image/png" href="/assets/logo-mark.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
@@ -28,12 +29,12 @@ kbd{font:500 11px var(--mono);color:var(--mut);border:1px solid var(--line);bord
 ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px;border:3px solid transparent;background-clip:content-box}::-webkit-scrollbar-thumb:hover{background:var(--mut);background-clip:content-box;border:3px solid transparent}
 
 /* layout */
-.app{position:relative;z-index:1;display:grid;grid-template-columns:var(--lw) minmax(0,1fr) var(--rw);height:100vh;height:100dvh;grid-template-rows:minmax(0,1fr);--lw:268px;--rw:352px;transition:grid-template-columns .28s cubic-bezier(.4,0,.2,1)}
+.app{position:relative;z-index:1;display:grid;grid-template-columns:var(--lw) minmax(0,1fr) var(--rw);height:100vh;height:100dvh;grid-template-rows:minmax(0,1fr);--lw:268px;--rw:392px;transition:grid-template-columns .28s cubic-bezier(.4,0,.2,1)}
 .app.noleft{--lw:0px}.app.noright{--rw:0px}
 .left,.right{overflow:hidden;min-width:0;min-height:0;background:color-mix(in srgb,var(--panel) 88%,transparent);backdrop-filter:blur(16px)}
 .left{border-right:1px solid var(--line)}.right{border-left:1px solid var(--line)}
 .lin{width:268px;height:100%;display:flex;flex-direction:column;padding:14px 12px}
-.rin{width:352px;height:100%;display:flex;flex-direction:column}
+.rin{width:392px;height:100%;display:flex;flex-direction:column}
 .brand{display:flex;align-items:center;gap:10px;padding:2px 6px 14px;font:700 18px Sora,Inter,sans-serif;letter-spacing:-.02em}
 .brand i{font-style:normal;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 .logo{width:32px;height:32px;border-radius:11px;background:var(--grad);display:grid;place-items:center;color:#fff;box-shadow:0 6px 20px -6px #7c6cffcc}
@@ -143,6 +144,15 @@ main{display:flex;flex-direction:column;min-width:0;min-height:0;height:100%;pos
 #tray{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:2px 2px 8px;font-size:12px}#tray[hidden]{display:none}
 .chip{display:inline-flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:3px 4px 3px 9px;animation:pop .2s ease both}
 .chip button{border:0;padding:2px;color:var(--mut);border-radius:50%}.chip button:hover{color:var(--danger)}
+.chip .th{width:22px;height:22px;border-radius:6px;object-fit:cover;flex:none;margin-left:-4px}
+.imgs{display:flex;flex-direction:column;align-items:flex-end;gap:8px;margin-bottom:6px;max-width:100%}
+.imgs .im{display:flex;flex-direction:column;align-items:flex-end;gap:5px;max-width:100%}
+.imgs img{display:block;max-width:230px;max-height:170px;object-fit:cover;border-radius:14px;border:1px solid var(--line)}
+.imgs details{font-size:12px;color:var(--mut);max-width:100%}
+.imgs summary{cursor:pointer;text-align:right;user-select:none;list-style:none}.imgs summary::-webkit-details-marker{display:none}
+.imgs summary:hover{color:var(--ink)}
+.imgs pre{margin:6px 0 0;padding:10px 12px;background:var(--card2);border:1px solid var(--line);border-radius:12px;white-space:pre-wrap;word-break:break-word;max-height:260px;overflow:auto;font:12px/1.5 var(--mono);color:var(--ink);text-align:left}
+.pill.swap .dot{background:#f59e0b;box-shadow:0 0 0 3px #f59e0b33;animation:pulse 1.6s ease-in-out infinite}
 .tot{color:var(--mut)}.tot.warn{color:var(--danger);font-weight:600}
 .pop{position:absolute;bottom:calc(100% + 8px);left:0;right:0;max-height:240px;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:5px;box-shadow:var(--shadow);z-index:6;animation:pop .15s ease both}.pop[hidden]{display:none}
 .prow{display:flex;gap:10px;align-items:center;border-radius:9px;padding:0 8px 0 0}.prow.sel{background:var(--card2)}
@@ -155,6 +165,15 @@ main{display:flex;flex-direction:column;min-width:0;min-height:0;height:100%;pos
 .tabs .sp{flex:1}
 .tbody{flex:1;overflow:auto;padding:14px 14px 22px}
 .tab{display:none}.tab.on{display:block;animation:fade .25s ease both}
+.mc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0}
+.mc-h{display:flex;align-items:center;gap:8px;font-weight:600}.mc-h small{font-weight:400;color:var(--mut)}
+.bdg{margin-left:auto;font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--mut);white-space:nowrap}
+.bdg.on{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 55%,var(--line))}.bdg.wait{color:#f59e0b;border-color:#f59e0b77}
+.mc-n{color:var(--mut);font-size:12px;margin:3px 0 8px;line-height:1.5;overflow-wrap:anywhere}
+.mc details{margin-top:9px}.mc summary{cursor:pointer;color:var(--mut);font-size:12.5px;user-select:none}.mc summary:hover{color:var(--ink)}
+.mc .warn{color:#f59e0b;font-size:12px;margin-top:8px}.mc .err{color:var(--danger);font-size:12px;margin-top:8px;overflow-wrap:anywhere}
+.mc label.f.t{grid-template-columns:1fr 150px}.mc .btns button.primary{background:var(--grad);border-color:transparent;color:#fff}
+.mc .btns button.primary:hover{filter:brightness(1.08)}
 .tab h3{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:20px 0 8px}.tab h3:first-child{margin-top:0}
 dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0;font-size:13px}dt{color:var(--mut)}dd{margin:0;text-align:right;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
 .big{display:grid;grid-template-columns:1fr 1fr;gap:8px}.big div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
@@ -202,16 +221,82 @@ input[type=number]:focus,input[type=text]:focus,.tab textarea:focus,.tab select:
  #tl{display:inline-flex}.hint{display:none}.msg.user .col{max-width:92%}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+.hsearch{margin:0 0 6px}.hsearch input{padding:5px 9px;font-size:13px}
+.hi .pn{opacity:0;padding:3px 6px;border:0}.hi:hover .pn,.hi .pn.on{opacity:1}.hi .pn.on{color:var(--acc)}
+.pv{position:fixed;inset:0;z-index:50;background:#0009;display:flex;align-items:center;justify-content:center;padding:3vh 3vw}
+.pvb{width:min(1100px,100%);height:100%;background:var(--panel);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow)}
+.pvh{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line)}.pvh span{color:var(--mut);font-size:12px;flex:1}
+.pvb iframe{flex:1;border:0;background:#fff}
+
+/* ---- logo ---- */
+img.logo{width:34px;height:34px;border-radius:11px;background:#fff;padding:3px;object-fit:contain;box-shadow:0 6px 20px -8px #38bdf8aa,0 0 0 1px #0001}
+.av{background:#fff;padding:3px;box-shadow:0 5px 16px -7px #38bdf8aa,0 0 0 1px #0001}.av img{width:100%;height:100%;object-fit:contain;display:block}
+img.hlogo{display:block;width:168px;height:auto;margin:0 auto;padding:14px 20px;border-radius:26px;background:#fff;box-shadow:0 18px 50px -14px #38bdf8aa,0 0 0 1px #0001;animation:float 5s ease-in-out infinite}
+/* ---- tabs ---- */
+.tabs{overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tabs{gap:1px;padding:12px 8px 0}.tabs button{padding:8px 8px;white-space:nowrap}
+.bd{font:600 10.5px var(--mono);font-style:normal;background:var(--acc);color:#fff;border-radius:99px;padding:0 6px;margin-left:6px}.bd:empty{display:none}
+/* ---- composer plan toggle ---- */
+.pbtn{border-radius:999px;padding:4px 11px;font-size:12.5px;color:var(--mut)}.pbtn:hover{color:var(--ink)}
+.pbtn.on{color:#fff;background:var(--grad);border-color:transparent}.pbtn.on:hover{background:var(--grad);filter:brightness(1.08)}
+/* ---- code cards ---- */
+.body pre[data-kind=file],.body pre[data-kind=edit]{border-color:color-mix(in srgb,var(--acc) 50%,#ffffff14)}
+.codebar .stat{color:var(--ok);font:500 11.5px Inter,sans-serif;margin:0 8px 0 auto;padding-left:10px}
+.codebar>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.runout{border-top:1px solid #ffffff14;background:#06080c;color:#cfd8e3;font:12.5px/1.55 var(--mono)}
+.runh{display:flex;align-items:center;gap:8px;padding:5px 10px;color:#9aa7b8;font:500 12px Inter,sans-serif;border-bottom:1px solid #ffffff10}.runh .sp{flex:1}
+.runh .ok{color:#34d399}.runh .bad{color:#ff6b6b}
+.runh button{color:#cfd8e3;border-color:#ffffff22;padding:2px 9px;font:500 12px Inter,sans-serif;border-radius:7px}
+.runb{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;padding:8px 12px}
+/* ---- charts & diagrams ---- */
+.viz{margin:.9em 0;border:1px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden}
+.vizbar{display:flex;justify-content:space-between;align-items:center;padding:5px 8px 5px 14px;background:var(--card2);color:var(--mut);font:500 12px var(--mono);border-bottom:1px solid var(--line)}
+.vizbar button{padding:2px 9px;font:500 12px Inter,sans-serif;border-radius:7px;margin-left:6px}
+.vizbody{padding:12px}.cv{position:relative;height:300px}.vizbody svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.vizload{color:var(--mut);font-size:13px}.vizerr{color:var(--danger);font-size:13px;margin-bottom:8px}
+.vizcode{margin:8px 0 0;padding:10px 12px;background:var(--code);color:#e6edf3;border-radius:10px;font:12px/1.55 var(--mono);white-space:pre-wrap;overflow:auto;max-height:240px}
+/* ---- plan card ---- */
+.plan{margin:12px 0 0;border:1px solid color-mix(in srgb,var(--acc) 40%,var(--line));border-radius:14px;background:color-mix(in srgb,var(--acc) 6%,var(--card));padding:12px 14px}.plan[hidden]{display:none}
+.planh{display:flex;align-items:center;gap:8px;font-weight:600}.planh .sp{flex:1}.planh .pc{color:var(--mut);font-weight:500;font-size:12.5px}
+.steps{list-style:none;margin:8px 0 10px;padding:0;display:grid;gap:2px}
+.steps li{display:flex;gap:9px;align-items:flex-start;padding:6px 8px;border-radius:9px}.steps li:hover{background:var(--card2)}
+.steps li.done span{color:var(--mut);text-decoration:line-through}.steps input{margin-top:4px;accent-color:var(--acc)}.steps span{flex:1;min-width:0;overflow-wrap:anywhere}
+.steps .go{border:0;padding:1px 8px;color:var(--acc);opacity:0;font-size:12.5px}.steps li:hover .go,.steps li:focus-within .go{opacity:1}@media(hover:none){.steps .go{opacity:1}}
+.planb{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}.planb .primary,.mfoot .primary{background:var(--grad);color:#fff;border:0;font-weight:600}.planb .primary:hover,.mfoot .primary:hover{background:var(--grad);filter:brightness(1.08)}
+/* ---- terminal tab ---- */
+.termlog{background:#06080c;color:#d6deeb;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:0;font:12.5px/1.55 var(--mono);height:clamp(200px,46vh,520px);overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+.termlog .cmd{color:#7dd3fc;font-weight:500}.termlog .ex.ok{color:#34d399}.termlog .ex.bad{color:#ff6b6b}
+.termf{display:flex;gap:6px;align-items:center;margin-top:8px}.termf>span{font:600 13px var(--mono);color:var(--acc)}.termf input{flex:1;font:13px var(--mono)}
+.termf button.stop{background:var(--danger);color:#fff;border-color:transparent}
+#termnote{color:var(--mut);font-size:12px;margin-top:8px}
+/* ---- changes tab ---- */
+.chrow{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:11px;background:var(--card);margin-bottom:6px;flex-wrap:wrap}
+.chrow .p{flex:1 1 140px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 12.5px var(--mono)}
+.tag{font-size:11px;font-weight:600;padding:1px 8px;border-radius:99px;background:var(--card2);color:var(--mut)}.tag.ok{color:var(--ok)}
+.chrow .st{font-style:normal;color:var(--mut);font-size:11.5px}.chrow .a{display:flex;gap:4px;flex-basis:100%}.chrow .a button{padding:2px 9px;font-size:12px}
+/* ---- review dialog + toast ---- */
+.mdl{width:min(900px,100%);height:auto;max-height:100%}
+.mbody{flex:1;overflow:auto;padding:12px 14px;min-height:70px}.mfoot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--line)}
+.diff{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.dl{font:12.5px/1.55 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;padding:0 10px;border-left:3px solid transparent}
+.dl.a{background:#34d39922;border-color:#34d399}.dl.d{background:#ff6b6b22;border-color:#ff6b6b}.dl.g{color:var(--mut);background:var(--card2);font-style:italic}
+.warn{border:1px solid #f59e0b88;background:#f59e0b18;border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:13px}.warn.good{border-color:#34d39988;background:#34d39918}.warn.bad{border-color:#ff6b6b88;background:#ff6b6b18}.warn[hidden]{display:none}
+.cmdprev{background:var(--code);color:#e6edf3;border-radius:10px;padding:10px 12px;font:13px/1.5 var(--mono);white-space:pre-wrap;overflow:auto;max-height:200px}
+label.chk{display:flex;gap:8px;align-items:center;color:var(--mut);font-size:13px;margin-top:8px}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:12px;padding:9px 14px;z-index:70;max-width:min(92vw,520px);font-size:13px;animation:pop .2s ease both}
+.toast.good{border-color:var(--ok)}.toast.bad{border-color:var(--danger)}
 </style></head><body>
 <div class="bg"></div>
 <div class="app" id="app">
  <aside class="left" id="left"><div class="lin">
-  <div class="brand"><span class="logo" data-ic="spark" data-s="18"></span><span>Cressy<i>AI</i></span></div>
+  <div class="brand"><img class="logo" src="/assets/logo-mark.png" alt=""><span>Cressy<i>AI</i></span></div>
   <button type="button" id="clear" class="newchat" title="Alt+N"><i data-ic="plus"></i>New chat <kbd>Alt N</kbd></button>
   <div class="sec">Recent chats</div>
-  <div class="hist" id="hist"></div>
+  <div class="hsearch"><input type="text" id="hq" placeholder="Search chats…" aria-label="Search chats"></div><div class="hist" id="hist"></div>
   <div class="lfoot">
    <button type="button" id="exp"><i data-ic="download"></i>Export chat as .md</button>
+   <button type="button" id="bk"><i data-ic="download"></i>Back up all chats (.json)</button>
+   <button type="button" id="rs"><i data-ic="clip"></i>Restore backup</button><input type="file" id="rsf" accept=".json" hidden>
    <button type="button" id="help"><i data-ic="keys"></i>Commands &amp; shortcuts</button>
    <button type="button" id="theme"></button>
   </div>
@@ -234,6 +319,8 @@ input[type=number]:focus,input[type=text]:focus,.tab textarea:focus,.tab select:
     <textarea id="input" rows="1" placeholder="Ask anything…  /command · @file · Shift+Enter for newline" aria-label="Message"></textarea>
     <div class="crow">
      <button type="button" class="ib" id="attach" aria-label="Attach files" title="Attach files from your computer" data-ic="clip" data-s="18"></button>
+     <button type="button" class="pbtn" id="reason" aria-pressed="false" title="Reason first: a separate reasoning model thinks the task through (the coder is unloaded meanwhile), then the coder answers using its notes"><i data-ic="spark" data-s="14"></i>Reason</button>
+     <button type="button" class="pbtn" id="plan" aria-pressed="false" title="Plan mode: the model writes a plan first, you approve it, then it builds"><i data-ic="list" data-s="14"></i>Plan</button>
      <select id="mode" class="msel" aria-label="Mode"></select>
      <span class="hint">Enter to send · ↑ recalls · Esc stops</span>
      <button id="go" type="submit" aria-label="Send"><span class="sd" data-ic="up" data-s="19"></span><span class="st" data-ic="stop" data-s="17"></span></button>
@@ -244,7 +331,7 @@ input[type=number]:focus,input[type=text]:focus,.tab textarea:focus,.tab select:
  </main>
 
  <aside class="right" id="right"><div class="rin">
-  <div class="tabs" role="tablist"><button type="button" data-tab="files" class="on">Files</button><button type="button" data-tab="model">Model</button><button type="button" data-tab="set">Settings</button></div>
+  <div class="tabs" role="tablist"><button type="button" data-tab="files" class="on">Files</button><button type="button" data-tab="changes">Changes<i class="bd" id="bd-changes"></i></button><button type="button" data-tab="term">Terminal</button><button type="button" data-tab="model">Model</button><button type="button" data-tab="set">Settings</button></div>
   <div class="tbody">
    <section class="tab on" id="tab-files">
     <div class="nav">
@@ -260,8 +347,21 @@ input[type=number]:focus,input[type=text]:focus,.tab textarea:focus,.tab select:
     <div id="note"></div>
     <div class="files" id="files"></div>
    </section>
+   <section class="tab" id="tab-changes">
+    <h3>Files from the chat</h3>
+    <div class="btns"><button type="button" id="zipall"><i data-ic="download" data-s="14"></i>Download all (.zip)</button><button type="button" id="saveall">Save all to project</button><button type="button" id="clrchg">Clear</button></div>
+    <div id="chg" style="margin-top:12px"></div>
+   </section>
+   <section class="tab" id="tab-term">
+    <h3>Terminal</h3>
+    <pre class="termlog" id="termlog" tabindex="0" aria-live="polite"></pre>
+    <form class="termf" id="termf"><span>$</span><input type="text" id="termin" placeholder="Run a command…  (↑ ↓ history)" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Command"><button type="submit" id="termgo">Run</button></form>
+    <div class="btns"><button type="button" id="termsend">Send last output to chat</button><button type="button" id="termclear">Clear log</button></div>
+    <div id="termnote"></div>
+   </section>
    <section class="tab" id="tab-model">
-    <h3>Model</h3><dl id="info"><dt>Status</dt><dd>loading…</dd></dl>
+    <h3>Models</h3><div id="slots"><div class="mc-n">loading…</div></div><div class="mc-n" id="mdirs"></div>
+    <h3>Coder details</h3><dl id="info"><dt>Status</dt><dd>loading…</dd></dl>
     <h3>Generation</h3>
     <div class="big"><div><b id="tps">–</b><span>tokens / sec</span></div><div><b id="ttft">–</b><span>first token (s)</span></div>
      <div><b id="ptok">–</b><span>prompt tokens</span></div><div><b id="ctok">–</b><span>generated tokens</span></div></div>
@@ -278,7 +378,20 @@ input[type=number]:focus,input[type=text]:focus,.tab textarea:focus,.tab select:
     <label class="f">Top-p<input type="number" id="top_p" value="0.95" step="0.05" min="0" max="1"></label>
     <label class="f">Top-k<input type="number" id="top_k" value="40" min="0"></label>
     <label class="f">Repeat penalty<input type="number" id="repeat_penalty" value="1.1" step="0.05" min="1"></label>
-    <label class="f">Max new tokens<input type="number" id="max_tokens" value="1024" min="1"></label>
+    <label class="f">Max new tokens<input type="number" id="max_tokens" value="4096" min="1"></label>
+    <h3>Reasoning</h3>
+    <label class="f">When Reason is on<select id="rmode"><option value="always">Every message</option><option value="auto">Only complex ones</option></select></label>
+    <label class="f">Temperature<input type="number" id="r_temperature" value="0.6" step="0.05" min="0" max="2"></label>
+    <label class="f">Top-p<input type="number" id="r_top_p" value="0.95" step="0.05" min="0" max="1"></label>
+    <label class="f">Top-k<input type="number" id="r_top_k" value="20" min="0"></label>
+    <label class="f">Repeat penalty<input type="number" id="r_repeat_penalty" value="1" step="0.05" min="1"></label>
+    <label class="f">Token budget<input type="number" id="r_max_tokens" value="1500" min="64" max="8192" step="100"></label>
+    <label class="f w"><textarea id="r_sys" placeholder="Optional: replace the built-in instructions the reasoning model gets. Leave empty for the default."></textarea></label>
+    <h3>Workspace</h3>
+    <label class="f">Teach file / chart / command formats<select id="tools"><option value="1">On</option><option value="0">Off</option></select></label>
+    <label class="f">Confirm model commands<select id="confirmrun"><option value="ask">Ask</option><option value="no">Never</option></select></label>
+    <label class="f">Command time limit<select id="runtimeout"><option value="30">30 s</option><option value="60" selected>60 s</option><option value="120">2 min</option><option value="300">5 min</option></select></label>
+    <h3>Memory</h3><label class="f w"><textarea id="mem" placeholder="Things to always remember: your name, role, tech stack, tone you like. Add more with /remember …"></textarea></label>
     <h3>System prompt</h3><label class="f w"><textarea id="sys" placeholder="Optional. Picking a mode in the composer fills this in."></textarea></label>
    </section>
   </div>
@@ -292,6 +405,129 @@ const fmtS=n=>n<1024?n+' B':n<1048576?(n/1024).toFixed(0)+' KB':(n/1048576).toFi
 const dur=ms=>ms<1000?'<1s':ms<60000?(ms/1000).toFixed(1)+'s':Math.floor(ms/60000)+'m '+Math.round(ms%60000/1000)+'s';
 const clock=s=>s<60?s+'s':Math.floor(s/60)+'m '+(s%60)+'s';
 const FT={0:'F32',1:'F16',2:'Q4_0',3:'Q4_1',7:'Q8_0',8:'Q5_0',9:'Q5_1',10:'Q2_K',11:'Q3_K_S',12:'Q3_K_M',13:'Q3_K_L',14:'Q4_K_S',15:'Q4_K_M',16:'Q5_K_S',17:'Q5_K_M',18:'Q6_K'};
+/*==PURE==*/
+const LANGX={py:'python',js:'javascript',mjs:'javascript',cjs:'javascript',ts:'typescript',tsx:'typescript',jsx:'javascript',html:'xml',htm:'xml',xml:'xml',svg:'xml',css:'css',json:'json',sh:'bash',bash:'bash',bat:'dos',sql:'sql',java:'java',c:'c',h:'c',cpp:'cpp',go:'go',rs:'rust',yml:'yaml',yaml:'yaml',md:'markdown',cs:'csharp',php:'php',rb:'ruby',toml:'ini',ini:'ini',txt:'plaintext'};
+const extOf=p=>(String(p).match(/\.([\w-]+)$/)||[])[1]?.toLowerCase()||'';
+function cleanPath(p){
+  p=String(p||'').trim().replace(/^["'`]+|["'`]+$/g,'').replace(/\\/g,'/').replace(/^(\.\/)+/,'').replace(/^\/+/,'');
+  if(!p||p.length>200||/[\0<>|?*:]/.test(p)||p.split('/').some(s=>s===''||s==='..'))return'';
+  return p;
+}
+/* what a fenced block is, from its info string (the class after "language-") */
+function classify(cls){
+  const l=String(cls||'');let m;
+  if(m=l.match(/^(?:file|new|create|write):(.+)$/i)){const p=cleanPath(m[1]);return p?{kind:'file',path:p,lang:LANGX[extOf(p)]||'plaintext'}:{kind:'code',lang:'text'}}
+  if(m=l.match(/^(?:edit|patch|update|modify):(.+)$/i)){const p=cleanPath(m[1]);return p?{kind:'edit',path:p,lang:LANGX[extOf(p)]||'plaintext'}:{kind:'code',lang:'text'}}
+  if(m=l.match(/^[\w+#.-]+:(.+\.\w{1,8})$/)){const p=cleanPath(m[1]);if(p)return{kind:'file',path:p,lang:LANGX[extOf(p)]||'plaintext'}}
+  if(/^chart(js)?$/i.test(l))return{kind:'chart',lang:'json'};
+  if(/^mermaid$/i.test(l))return{kind:'mermaid',lang:'plaintext'};
+  if(/^(bash|sh|shell|zsh|console|terminal|powershell|ps1|cmd|bat|batch)$/i.test(l))return{kind:'term',lang:l.toLowerCase()==='terminal'?'bash':l};
+  return{kind:'code',lang:l||'text'};
+}
+/* SEARCH/REPLACE blocks */
+function parseEdits(t){
+  const L=String(t).replace(/\r\n/g,'\n').split('\n'),edits=[];let st=0,a=[],b=[],seen=false;
+  for(const ln of L){
+    if(st===0){if(/^<{5,9}\s*SEARCH\s*$/.test(ln)){st=1;a=[];b=[];seen=true}}
+    else if(st===1){if(/^={5,9}\s*$/.test(ln))st=2;else a.push(ln)}
+    else if(/^>{5,9}\s*REPLACE\s*$/.test(ln)){edits.push({search:a.join('\n'),replace:b.join('\n')});st=0}
+    else b.push(ln);
+  }
+  return{edits,complete:st===0,seen};
+}
+function findAll(text,needle){const r=[];let i=-1;while((i=text.indexOf(needle,i+1))>=0){r.push(i);if(r.length>1)break}return r}
+function applyEdits(base,edits){
+  let text=base,applied=0,already=0;const errors=[];
+  edits.forEach((e,n)=>{
+    const tag='Edit '+(n+1)+': ';
+    if(!e.search.trim()){errors.push(tag+'the SEARCH part is empty');return}
+    const hits=findAll(text,e.search);
+    if(hits.length===1){text=text.slice(0,hits[0])+e.replace+text.slice(hits[0]+e.search.length);applied++;return}
+    if(hits.length>1){errors.push(tag+'the SEARCH text matches more than one place; it needs more surrounding lines');return}
+    // tolerant match: ignore leading/trailing whitespace on each line
+    const tl=text.split('\n'),sl=e.search.split('\n'),norm=x=>x.trim(),found=[];
+    for(let i=0;i+sl.length<=tl.length;i++){let ok=true;for(let j=0;j<sl.length;j++)if(norm(tl[i+j])!==norm(sl[j])){ok=false;break}if(ok){found.push(i);if(found.length>1)break}}
+    if(found.length===1){tl.splice(found[0],sl.length,...(e.replace===''?[]:e.replace.split('\n')));text=tl.join('\n');applied++;return}
+    if(found.length>1){errors.push(tag+'the SEARCH text matches more than one place');return}
+    if(e.replace.trim()&&text.includes(e.replace)){already++;return}
+    errors.push(tag+'could not find the SEARCH text: "'+e.search.split('\n')[0].trim().slice(0,60)+'"');
+  });
+  return{text,applied,already,errors};
+}
+/* line diff: trims common ends, LCS on the middle, falls back to replace-all when huge */
+function diffOps(a,b){
+  const A=a.split('\n'),B=b.split('\n');let s=0;
+  while(s<A.length&&s<B.length&&A[s]===B[s])s++;
+  let ea=A.length,eb=B.length;while(ea>s&&eb>s&&A[ea-1]===B[eb-1]){ea--;eb--}
+  const ops=[];for(let i=0;i<s;i++)ops.push({t:' ',s:A[i]});
+  const X=A.slice(s,ea),Y=B.slice(s,eb),n=X.length,m=Y.length;
+  if(n*m>4e6){X.forEach(x=>ops.push({t:'-',s:x}));Y.forEach(y=>ops.push({t:'+',s:y}))}
+  else{
+    const w=m+1,D=new Uint32Array((n+1)*w);
+    for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)D[i*w+j]=X[i]===Y[j]?D[(i+1)*w+j+1]+1:Math.max(D[(i+1)*w+j],D[i*w+j+1]);
+    let i=0,j=0;
+    while(i<n&&j<m){if(X[i]===Y[j]){ops.push({t:' ',s:X[i]});i++;j++}else if(D[(i+1)*w+j]>=D[i*w+j+1])ops.push({t:'-',s:X[i++]});else ops.push({t:'+',s:Y[j++]})}
+    while(i<n)ops.push({t:'-',s:X[i++]});while(j<m)ops.push({t:'+',s:Y[j++]});
+  }
+  for(let i=ea;i<A.length;i++)ops.push({t:' ',s:A[i]});
+  return ops;
+}
+function diffStat(ops){let add=0,del=0;ops.forEach(o=>{if(o.t==='+')add++;else if(o.t==='-')del++});return{add,del}}
+function collapseOps(ops,ctx=3){   // keep changed lines plus context, mark the rest as a gap
+  const keep=new Array(ops.length).fill(false);
+  ops.forEach((o,i)=>{if(o.t!==' ')for(let k=Math.max(0,i-ctx);k<=Math.min(ops.length-1,i+ctx);k++)keep[k]=true});
+  const out=[];let gap=0;
+  ops.forEach((o,i)=>{if(keep[i]){if(gap){out.push({t:'~',s:gap+' unchanged lines'});gap=0}out.push(o)}else gap++});
+  if(gap)out.push({t:'~',s:gap+' unchanged lines'});
+  return out;
+}
+/* chart spec -> a normalized description the renderer can feed to Chart.js */
+function normChart(raw){
+  let s;try{s=typeof raw==='string'?JSON.parse(raw):raw}catch(e){return{error:'The chart block is not valid JSON ('+e.message+')'}}
+  if(!s||typeof s!=='object'||Array.isArray(s))return{error:'The chart block must be a JSON object'};
+  if(s.data&&!Array.isArray(s.data)&&typeof s.data==='object'){s={...s,...s.data}}
+  const alias={column:'bar',columns:'bar',bars:'bar',horizontalbar:'hbar',barh:'hbar',hbar:'hbar',area:'area',lines:'line',donut:'doughnut',polar:'polararea',polararea:'polararea',pie:'pie',doughnut:'doughnut',radar:'radar',scatter:'scatter',line:'line',bar:'bar'};
+  const type=alias[String(s.type||'bar').toLowerCase().replace(/[\s_-]/g,'')];
+  if(!type)return{error:'Unknown chart type "'+s.type+'" (use bar, line, area, pie, doughnut, radar, polarArea or scatter)'};
+  let ds=Array.isArray(s.datasets)?s.datasets:null;
+  if(!ds&&s.series&&typeof s.series==='object')ds=Array.isArray(s.series)?s.series:Object.entries(s.series).map(([label,data])=>({label,data}));
+  if(!ds){const v=s.values||(Array.isArray(s.data)?s.data:null)||s.y;if(Array.isArray(v))ds=[{label:s.label||s.title||'Value',data:v}]}
+  if(!ds||!ds.length)return{error:'The chart has no data. Add "labels" and "datasets": [{"label": "...", "data": [...]}]'};
+  if(ds.length>12)return{error:'Too many datasets (max 12)'};
+  const sc=type==='scatter',out=[];
+  for(const [i,d] of ds.entries()){
+    const label=String(d&&d.label!=null?d.label:'Series '+(i+1)),arr=Array.isArray(d)?d:d&&d.data;
+    if(!Array.isArray(arr)||!arr.length)return{error:'Dataset "'+label+'" has no data array'};
+    if(arr.length>2000)return{error:'Too many points (max 2000)'};
+    const data=[];
+    for(const v of arr){
+      if(sc){const p=Array.isArray(v)?{x:+v[0],y:+v[1]}:v&&typeof v==='object'?{x:+v.x,y:+v.y}:null;if(!p||!isFinite(p.x)||!isFinite(p.y))return{error:'Scatter points must be {"x":n,"y":n} or [x,y] ("'+label+'")'};data.push(p)}
+      else if(v===null)data.push(null);
+      else{const n=typeof v==='number'?v:typeof v==='string'&&v.trim()!==''?+v.replace(/,/g,''):NaN;if(!isFinite(n))return{error:'Dataset "'+label+'" has a non-numeric value: '+JSON.stringify(v)};data.push(n)}
+    }
+    out.push({label,data});
+  }
+  let labels=s.labels||s.x||s.categories;
+  if(!sc){
+    const n=Math.max(...out.map(d=>d.data.length));
+    labels=Array.isArray(labels)?labels.map(String):[];
+    while(labels.length<n)labels.push(String(labels.length+1));
+  }
+  return{type:type==='hbar'?'bar':type==='area'?'line':type==='polararea'?'polarArea':type,horizontal:type==='hbar',fill:type==='area',stacked:!!s.stacked,
+    title:s.title?String(s.title):'',xLabel:s.xLabel||s.xlabel||s.xAxis||'',yLabel:s.yLabel||s.ylabel||s.yAxis||'',labels,datasets:out};
+}
+/* plan text -> list of step strings */
+function parsePlan(t){
+  const L=String(t).split('\n'),item=/^\s*(?:[-*+]\s+(?:\[[ xX]\]\s*)?|\d+[.)]\s+)(.+?)\s*$/,clean=x=>x.replace(/\*\*|__/g,'').trim();
+  let i=L.findIndex(l=>/^#{1,4}\s*(?:\d+[.)]\s*)?(?:steps|implementation|tasks|plan)\b/i.test(l.trim()));const steps=[];
+  if(i>=0){for(i++;i<L.length&&!/^#{1,4}\s/.test(L[i]);i++){const m=L[i].match(item);if(m&&!/^\s{2,}/.test(L[i]))steps.push(clean(m[1]))}}
+  if(!steps.length)L.forEach(l=>{const m=l.match(/^\s*[-*]\s+\[[ xX]\]\s*(.+)$/);if(m)steps.push(clean(m[1]))});
+  return steps.slice(0,30);
+}
+/* terminal output: drop colour codes, keep only the last \r-overwritten segment of each line */
+const cleanOut=s=>String(s).replace(/\x1b\[[0-9;?]*[ -\/]*[@-~]/g,'').replace(/\x1b\][^\x07]*\x07/g,'').replace(/\r\n/g,'\n').replace(/[^\n]*\r(?!\n)/g,'');
+/*==END PURE==*/
+
 /* icons */
 const P={plus:'<path d="M12 5v14M5 12h14"/>',copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',check:'<path d="M20 6 9 17l-5-5"/>',
 refresh:'<path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M8 16H3v5"/>',pencil:'<path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>',
@@ -307,10 +543,11 @@ chev:'<path d="m6 9 6 6 6-6"/>',download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 
 sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
 moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',half:'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>',
 keys:'<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>'};
+Object.assign(P,{list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>'});
 const ic=(n,s=16)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${P[n]}</svg>`;
 $$('[data-ic]').forEach(e=>e.innerHTML=ic(e.dataset.ic,+e.dataset.s||16));
 
-let info=null,msgs=[],busy=false,ctl=null,hist=[],stick=true,att=[],cwd='';
+let refreshInfo=null,info=null,msgs=[],busy=false,ctl=null,hist=[],stick=true,att=[],cwd='';
 const chat=$('#chat'),msgsEl=$('#msgs'),app=$('#app');
 const LS=(k,v)=>{try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch{return null}};
 
@@ -346,13 +583,24 @@ function healMd(t){
   return head+x;
 }
 function bar(pre,code){
-  const lang=(code.className.match(/language-(\S+)/)||[])[1]||'text';
+  const k=classify((code.className.match(/language-(\S+)/)||[])[1]||''),lang=k.lang,raw=()=>code.dataset.raw??code.innerText;
+  pre.dataset.kind=k.kind;if(k.path)pre.dataset.path=k.path;
+  if(k.kind==='file'||k.kind==='edit')code.className='language-'+(k.kind==='edit'?'plaintext':k.lang);
   const bar=document.createElement('div');bar.className='codebar';
-  const s=document.createElement('span');s.textContent=lang;
-  const b=document.createElement('button');b.type='button';b.innerHTML=ic('copy',13)+'Copy';
-  b.onclick=()=>{navigator.clipboard.writeText(code.innerText);b.innerHTML=ic('check',13)+'Copied';setTimeout(()=>b.innerHTML=ic('copy',13)+'Copy',1200)};
-  const dl=document.createElement('button');dl.type='button';dl.innerHTML=ic('download',13)+'Save';dl.title='Download as a file';dl.onclick=()=>dl_('snippet.'+(EXT[lang]||'txt'),code.innerText);
-  const g=document.createElement('span');g.style.display='flex';g.append(dl,b);bar.append(s,g);pre.prepend(bar);
+  const s=document.createElement('span');s.textContent=k.kind==='file'?k.path:k.kind==='edit'?'edit · '+k.path:lang;
+  const mk=(icon,text,fn,title)=>{const b=document.createElement('button');b.type='button';b.innerHTML=ic(icon,13)+text;if(title)b.title=title;b.onclick=()=>fn(b);return b};
+  const cp=mk('copy','Copy',b=>{navigator.clipboard.writeText(raw());b.innerHTML=ic('check',13)+'Copied';setTimeout(()=>b.innerHTML=ic('copy',13)+'Copy',1200)});
+  const g=document.createElement('span');g.style.display='flex';g.style.gap='6px';
+  if(k.kind==='file'){
+    g.append(mk('download','Save…',()=>actFile(pre,'save'),'Review the change and save it into the project folder'),mk('download','Download',()=>actFile(pre,'download'),'Download this file'));
+    if(/\.(html?|svg)$/i.test(k.path))g.prepend(mk('right','Preview',()=>preview(/svg$/i.test(k.path)?'svg':'html',raw())));
+  }else if(k.kind==='edit')g.append(mk('pencil','Review edit',()=>actFile(pre,'save'),'Show the diff, then save or download the edited file'));
+  else{
+    g.append(mk('download','Save',()=>dl_('snippet.'+(EXT[lang]||'txt'),raw()),'Download as a file'));
+    if(/^(html|svg|js|javascript)$/.test(lang))g.prepend(mk('right',/^js|^javascript/.test(lang)?'Run':'Preview',()=>preview(lang,raw())));
+    if(k.kind==='term')g.prepend(mk('right','Run',()=>runFromBlock(pre),'Run in the project folder'));
+  }
+  g.append(cp);bar.append(s,g);pre.prepend(bar);
 }
 const sameNode=(x,y)=>x.nodeType===y.nodeType&&(x.nodeType!==1||x.tagName===y.tagName);
 function syncAttrs(x,y){
@@ -360,6 +608,7 @@ function syncAttrs(x,y){
   for(const a of [...y.attributes])if(x.getAttribute(a.name)!==a.value)x.setAttribute(a.name,a.value);
 }
 function syncPre(x,y){
+  if(x.dataset.kind!==y.dataset.kind||x.dataset.path!==y.dataset.path){x.replaceWith(y);return}
   const xc=x.querySelector('code'),yc=y.querySelector('code');
   if(!xc||!yc){x.replaceWith(y);return}
   if(xc.dataset.raw!==yc.dataset.raw){
@@ -376,6 +625,8 @@ function morph(dst,src){
     if(!x){dst.append(y);continue}
     if(!sameNode(x,y)){x.replaceWith(y);continue}
     if(x.nodeType!==1){if(x.data!==y.data)x.data=y.data;continue}
+    if(x.classList.contains('viz')!==y.classList.contains('viz')){x._chart?.destroy?.();x.replaceWith(y);continue}
+    if(x.classList.contains('viz')){if(x.dataset.raw!==y.dataset.raw){x._chart?.destroy?.();x.replaceWith(y)}continue}
     if(x.tagName==='PRE'){syncPre(x,y);continue}
     syncAttrs(x,y);morph(x,y);
   }
@@ -388,9 +639,12 @@ function addCaret(tpl){   // blinking cursor at the end of the last paragraph / 
 function setBody(b,md,streaming){
   const open=streaming&&((md.match(/^ {0,3}(```|~~~)/gm)||[]).length%2===1);
   const tpl=document.createElement('div');tpl.innerHTML=render(streaming?healMd(md):md);
-  tpl.querySelectorAll('pre').forEach(pre=>{const code=pre.querySelector('code');if(!code)return;code.dataset.raw=code.textContent;bar(pre,code)});
+  const all=[...tpl.querySelectorAll('pre')];all.forEach((pre,i)=>{const code=pre.querySelector('code');if(!code)return;code.dataset.raw=code.textContent;
+    const k=classify((code.className.match(/language-(\S+)/)||[])[1]||'');
+    if((k.kind==='chart'||k.kind==='mermaid')&&!(open&&i===all.length-1)){pre.replaceWith(vizEl(k.kind,code.textContent));return}
+    bar(pre,code)});
   if(streaming&&!open&&md)addCaret(tpl);
-  morph(b,tpl);
+  morph(b,tpl);mountViz(b);
   const pres=[...b.querySelectorAll('pre code')];
   pres.forEach((code,i)=>{if(code.dataset.hl||(open&&i===pres.length-1))return;try{hljs.highlightElement(code)}catch{}code.dataset.hl='1'});
 }
@@ -433,19 +687,37 @@ function paintThink(m,s,live){
   if(!m.touched)t.classList.toggle('open',thinking);
 }
 function paint(m,live){
-  const el=m.el,b=el.querySelector('.body'),f=el.querySelector('.foot');
-  if(m.role==='user'){if(b.textContent!==m.content)b.textContent=m.content;const t=foot(m);if(f.textContent!==t)f.textContent=t;return}
+  const el=m.el,b=el.querySelector('.body'),f=el.querySelector('.foot');el.classList.toggle('streaming',!!live);
+  if(m.role==='user'){if(b.textContent!==m.content)b.textContent=m.content;const t=foot(m);if(f.textContent!==t)f.textContent=t;paintImgs(m);return}
   const s=split(m.content,live);
   paintThink(m,s,live);
   setBody(b,s.ans,live);
   if(live){if(!m.st)startStatus(m)}
-  else{endStatus(m);const t=foot(m);if(f.textContent!==t)f.textContent=t}
+  else{endStatus(m);const t=foot(m);if(f.textContent!==t)f.textContent=t;paintPlan(m)}
+}
+/* images on a user message: thumbnail + the details the vision model extracted (live while it reads) */
+function paintImgs(m){
+  const col=m.el.querySelector('.col'),ims=(m.files||[]).filter(f=>f.thumb||typeof f.image==='string');let box=col.querySelector('.imgs');
+  if(!ims.length){box?.remove();return}
+  if(!box||box.children.length!==ims.length){
+    box?.remove();box=document.createElement('div');box.className='imgs';
+    ims.forEach(f=>{const w=document.createElement('div'),i=document.createElement('img'),d=document.createElement('details');w.className='im';
+      i.alt=f.name;i.src=f.thumb||f.image;d.append(document.createElement('summary'),document.createElement('pre'));w.append(i,d);box.append(w)});
+    col.insertBefore(box,col.querySelector('.body'));
+  }
+  [...box.children].forEach((w,k)=>{const f=ims[k],d=w.querySelector('details'),sm=d.firstChild,pr=d.lastChild;
+    sm.textContent=f.busy?'Reading '+f.name+'…':'Image details · '+f.name;
+    if(pr.textContent!==(f.desc||''))pr.textContent=f.desc||'';
+    d.hidden=!f.desc&&!f.busy;
+    if(f.busy&&!d.dataset.t){d.open=true;d.dataset.t='1'}else if(!f.busy&&d.dataset.t==='1'){d.open=false;d.dataset.t='2'}
+    if(f.busy)pr.scrollTop=pr.scrollHeight;
+  });
 }
 const THINKHTML=`<div class="think" hidden><button type="button" class="think-h"><span class="orb"></span><span class="ph shimmer"></span><span class="done-l"></span><span class="think-time"></span><span class="chev">${ic('chev',15)}</span></button><div class="think-w"><div><div class="think-s"></div></div></div></div>`;
 function addMsg(m){
   $('#empty')?.remove();
   const d=document.createElement('div'),a=m.role==='assistant';d.className='msg '+m.role;
-  d.innerHTML=(a?`<div class="av">${ic('spark',16)}</div>`:'')+'<div class="col">'+(a?THINKHTML:'')+'<div class="body"></div><div class="foot"></div><div class="acts"></div></div>';
+  d.innerHTML=(a?'<div class="av"><img src="/assets/logo-mark.png" alt=""></div>':'')+'<div class="col">'+(a?THINKHTML:'')+'<div class="body"></div><div class="plan" hidden></div><div class="foot"></div><div class="acts"></div></div>';
   msgsEl.append(d);m.el=d;
   if(a)d.querySelector('.think-h').onclick=()=>{m.touched=true;d.querySelector('.think').classList.toggle('open')};
   paint(m,!!m.live);acts(m);
@@ -461,27 +733,29 @@ $('#down').onclick=toBottom;
 /* ---------- empty state ---------- */
 const SUGG=[['Explain code','/explain','Paste code and get a step-by-step walkthrough'],['Fix a bug','/fix','Drop in code or an error and find the cause'],['Review my diff','/review','Reviews your working git diff for bugs and security'],['Write tests','/test','Unit tests with edge cases for your code'],['Commit message','/commit','Conventional Commit from your staged diff'],['Regex helper','/regex','Describe the pattern, get the regex plus examples']];
 const greet=()=>{const h=new Date().getHours();return h<5?'Burning the midnight oil':h<12?'Good morning':h<18?'Good afternoon':'Good evening'};
+const HERO=['Plan a feature','Create a file','Edit a file','Make a chart','Explain code','Fix a bug'];   // the rest stay available through /commands
 function renderEmpty(txt){
-  msgsEl.innerHTML=`<div class="hero" id="empty"><div class="hlogo">${ic('spark',30)}</div><h1>${greet()}.<br><b>What are we building?</b></h1><p>${txt||'Your private coding helper. Attach files with @, run commands with /, and everything stays on this machine.'}</p><div class="cards">${SUGG.map(([t,c,d],i)=>`<button type="button" class="sc" data-s="${i}"><b>${t}</b><span>${d}</span><code>${c}</code></button>`).join('')}</div></div>`;
+  msgsEl.innerHTML=`<div class="hero" id="empty"><img class="hlogo" src="/assets/logo.png" alt="CressyAI"><h1>${greet()}.<br><b>What are we building?</b></h1><p>${txt||'Your private coding helper. Attach files with @, run commands with /, and everything stays on this machine.'}</p><div class="cards">${HERO.map(n=>SUGG.findIndex(x=>x[0]===n)).filter(i=>i>=0).map(i=>{const[t,c,d]=SUGG[i];return`<button type="button" class="sc" data-s="${i}"><b>${t}</b><span>${d}</span><code>${c}</code></button>`}).join('')}</div></div>`;
+  stick=false;chat.scrollTop=0;$('#down').hidden=true;
 }
 msgsEl.addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(!b)return;const i=$('#input');i.value=SUGG[+b.dataset.s][1]+' ';grow();i.focus();suggest()});
 
 /* ---------- stats panel ---------- */
 function setDl(el,rows){el.innerHTML=rows.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v??'–')}</dd>`).join('')}
 function showInfo(i){
-  info=i;const md=i.metadata,a=md['general.architecture']||'?',k=x=>md[a+'.'+x];
+  info=i;const md=i.metadata||{},a=md['general.architecture']||'?',k=x=>md[a+'.'+x];
   const bpw=i.n_params?(i.file_size*8/i.n_params).toFixed(2):null,q=FT[md['general.file_type']]||md['general.file_type'];
-  setDl($('#info'),[['Name',md['general.name']||i.file],['File',i.file],['Size',fmtB(i.file_size)],['Architecture',a],
+  setDl($('#info'),[['Status',i.loaded?'loaded':'not loaded (use the Models section above)'],['Name',md['general.name']||i.file],['File',i.file],['Size',fmtB(i.file_size)],['Architecture',a],
    ['Parameters',i.n_params?(i.n_params/1e9).toFixed(2)+' B':null],['Quantization',q],
    ['Bits per weight',bpw],['Layers',k('block_count')],['Embedding size',i.n_embd],
    ['Heads / KV heads',k('attention.head_count')+' / '+(k('attention.head_count_kv')||'–')],['Vocabulary',i.n_vocab?.toLocaleString()],
-   ['Trained context',k('context_length')],['Loaded context',i.n_ctx],['GPU layers',i.n_gpu_layers],['Threads',i.n_threads],['Load time',i.load_seconds+' s']]);
+   ['Trained context',k('context_length')],['Loaded context',i.n_ctx],['GPU layers',i.n_gpu_layers],['Threads',i.n_threads],['Load time',i.load_seconds+' s'],['Vision (on demand)',i.vision||'not found']]);
   const f=$('#mf').value.toLowerCase();
   setDl($('#meta'),Object.entries(md).filter(([k])=>k.toLowerCase().includes(f)));
-  $('#pill').className='pill ok';$('#pilltx').textContent=(md['general.name']||i.file)+(q?' · '+q:'');
+  paintPill();
   ctx(0);
 }
-function ctx(used){
+function ctx(used){if(info?.n_ctx&&used>info.n_ctx*.85)note('Context almost full. Type /compact to summarize this chat and free space.');
   const n=info?.n_ctx||0,w=n?Math.min(100,used/n*100)+'%':'0';$('#ctxbar').style.width=w;$('#ctxmini').style.width=w;
   $('#ctxtxt').textContent=used.toLocaleString()+' / '+n.toLocaleString()+' tokens';
 }
@@ -497,15 +771,21 @@ function setBusy(b){busy=b;const g=$('#go');g.classList.toggle('stop',b);g.setAt
 /* ---------- sending + smooth streaming ----------
    Tokens land in m.full. A rAF loop reveals them at an eased pace (faster when the backlog grows, snapped to word
    boundaries) so text flows steadily instead of arriving in bursts; markdown is re-rendered at most ~22x/s. */
-async function send(raw){
-  let text=$('#input').value.trim();if(!text||busy)return;SENT.push(text);si=0;
+async function send(raw,opts={}){
+  let text=$('#input').value.trim();const typed=text;if((!text&&!att.some(a=>a.thumb))||busy)return;
+  if(!text)text='What is in this image? Summarize it and tell me what we could do with it.';SENT.push(text);si=0;
   if(raw!==true){text=await expand(text);if(text==null)return}
   $('#input').value='';grow();pop.hidden=true;
-  const u={role:'user',content:text,full:text,files:att},m={role:'assistant',content:'',full:'',shown:0,stats:null,live:true};
+  const planOn=!opts.noPlan&&(planMode||planOnce);planOnce=false;
+  const u={role:'user',content:text,full:text,files:att},m={role:'assistant',content:'',full:'',shown:0,stats:null,live:true,plan:planOn||undefined};
   msgs.push(u,m);addMsg(u);addMsg(m);setTitle();
-  const sys=$('#sys').value.trim();
-  const payload={messages:[...(sys?[{role:'system',content:sys}]:[]),...msgs.slice(0,-1).map(x=>({role:x.role,content:x.role==='user'?withFiles(x.content,x.files||[]):(split(x.content).ans||x.content)}))],...params()};
   att=[];renderTray();setBusy(true);ctl=new AbortController();toBottom();
+  const rOnce=reasonOnce;reasonOnce=false;
+  const doReason=!/^Continue exactly where you stopped/.test(text)&&wantReason(text,planOn,rOnce);
+  if(u.files.some(f=>typeof f.image==='string'&&f.image.length>1&&!f.desc)&&!await analyze(u,m,typed,doReason))return;
+  const mem=$('#mem').value.trim(),seen=msgs.some(x=>x.files?.some(f=>f.desc)),
+    sys=[$('#sys').value.trim(),toolsPrompt(),seen&&IMG_SYS,planOn&&PLAN_PROMPT,mem&&'Standing notes about the user (always respect them):\n'+mem].filter(Boolean).join('\n\n');
+  const payload={messages:[...(sys?[{role:'system',content:sys}]:[]),...msgs.slice(0,-1).map(x=>({role:x.role,content:x.role==='user'?withFiles(x.content,x.files||[]):(split(x.content).ans||x.content)}))],...params()};
   const t0=performance.now();let tf=0,n=0,last=t0,acc=0,lastR=0,dirty=false,fin=false,aborted=false,raf=0,done;
   const drained=new Promise(r=>done=r);
   const loop=ts=>{
@@ -530,6 +810,7 @@ async function send(raw){
       $('#ttft').textContent=ev.ttft?.toFixed(2)??'–';$('#ptok').textContent=ev.prompt_tokens??'–';$('#ctok').textContent=ev.completion_tokens;ctx(ev.ctx_used||0)}
   };
   try{
+    if(doReason){const rr=await reasonStep(m,payload);if(rr.notes)addNotes(payload,rr.notes,rr.cut)}
     const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:ctl.signal});
     if(!r.ok)m.full+='\n\n> **Error:** '+(await r.text()).slice(0,200);
     else{const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
@@ -539,23 +820,63 @@ async function send(raw){
   fin=true;
   if(aborted||document.hidden){m.shown=m.full.length;cancelAnimationFrame(raf);done()}
   await drained;cancelAnimationFrame(raf);
-  m.content=m.full;m.live=false;paint(m,false);setBusy(false);save();
+  m.content=m.full;m.live=false;paint(m,false);setBusy(false);save();refreshModels();
+  if(m.stats?.finish_reason==='length'){const b=document.createElement('button');b.type='button';b.innerHTML=ic('right',14)+'<span>Continue</span>';b.onclick=()=>{b.remove();$('#input').value='/continue';send()};m.el.querySelector('.acts').append(b)}
+}
+const IMG_SYS='The user can attach images. A separate vision model reads each image first; its extracted description appears in the message under "Image:". Treat that description as what the picture contains and work from it. Never say you cannot see images; if a detail is missing from the description, say so.';
+/* image step: coder out -> Qwen2.5-VL reads the image(s) -> VL out -> coder back in (all done by the server) */
+async function analyze(u,m,typed,reasonNext){
+  const todo=u.files.filter(f=>typeof f.image==='string'&&f.image.length>1&&!f.desc);
+  const ph=m.el.querySelector('.foot .ph'),pill=$('#pilltx'),pill0=pill.textContent;
+  const say=l=>{if(m.stop1){m.stop1();m.stop1=null}if(ph){ph.textContent=l}pill.textContent=l;$('#pill').className='pill swap'};
+  const rest=()=>{pill.textContent=pill0;$('#pill').className='pill ok';todo.forEach(f=>f.busy=false)};
+  let err=null,fin=false;
+  try{
+    const r=await fetch('/api/vision',{method:'POST',headers:HDR,body:JSON.stringify({images:todo.map(f=>({name:f.name,data:f.image})),hint:u.content.slice(0,600),keep_unloaded:!!reasonNext}),signal:ctl.signal});
+    if(!r.ok){let d='';try{d=(await r.json()).detail}catch{}throw new Error(d||('server answered '+r.status))}
+    const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
+    for(;;){const{done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});
+      let i;while((i=buf.indexOf('\n\n'))>=0){const line=buf.slice(0,i);buf=buf.slice(i+2);if(!line.startsWith('data: '))continue;
+        let ev;try{ev=JSON.parse(line.slice(6))}catch{continue}
+        const f=todo[ev.index];
+        if(ev.type==='stage')say(ev.label);
+        else if(ev.type==='image_start'&&f){f.desc='';f.busy=true;paintImgs(u)}
+        else if(ev.type==='token'&&f){f.desc+=ev.text;paintImgs(u)}
+        else if(ev.type==='image_done'&&f){f.busy=false;f.desc=f.desc.trim()||'(the vision model returned no details for this image)';
+          if(ev.finish_reason==='length')f.desc+='\n[details cut off at the vision token limit]';paintImgs(u)}
+        else if(ev.type==='error')err=ev.message;
+        else if(ev.type==='done')fin=true}}
+    if(err)throw new Error(err);
+    if(!fin)throw new Error('the vision step ended early');
+  }catch(e){
+    rest();paintImgs(u);endStatus(m);
+    msgs.splice(msgs.indexOf(u),2);u.el.remove();m.el.remove();   // nothing was sent: put the message back in the composer
+    att=u.files;renderTray();$('#input').value=typed;grow();setBusy(false);setTitle();if(!msgs.length)renderEmpty();
+    note(e.name==='AbortError'?'Image reading stopped. Your message is back in the box.':'Image reading failed: '+e.message);
+    return false;
+  }
+  rest();paintImgs(u);
+  if(ph)m.stop1=ticker(ph,PHRASES,2600);   // back to the normal "Cooking…" ticker while the coder answers
+  return true;
 }
 const note=(t,good)=>{const n=$('#note');n.textContent=t||'';n.classList.toggle('good',!!good)};
 function withFiles(text,files){
-  files=files.filter(f=>f.text);if(!files.length)return text;
-  return files.map(f=>{const fence='`'.repeat((f.text.match(/`+/g)||[]).reduce((m,s)=>Math.max(m,s.length+1),3));
-    return `File: ${f.name}\n${fence}\n${f.text}\n${fence}`}).join('\n\n')+'\n\n'+text;
+  files=files.filter(f=>f.text||f.desc);if(!files.length)return text;
+  const blk=(label,body)=>{const fence='`'.repeat((body.match(/`+/g)||[]).reduce((m,s)=>Math.max(m,s.length+1),3));return `${label}\n${fence}\n${body}\n${fence}`};
+  return files.map(f=>f.desc?blk(`Image: ${f.name} (described by the vision model; you cannot see the picture, this extracted description is all you have)`,f.desc):blk(`File: ${f.name}`,f.text)).join('\n\n')+'\n\n'+text;
 }
 function renderTray(){
   const t=$('#tray');t.innerHTML='';t.hidden=!att.length;if(!att.length)return;
   att.forEach((a,i)=>{const c=document.createElement('span');c.className='chip';
-    c.innerHTML=ic('file',13)+'<span></span>';c.lastChild.textContent=a.name+' · '+a.tokens.toLocaleString()+' tok'+(a.truncated?' (truncated)':'');
+    if(a.thumb){const im=document.createElement('img');im.className='th';im.alt='';im.src=a.thumb;c.append(im)}else c.innerHTML=ic('file',13);
+    const lb=document.createElement('span');lb.textContent=a.thumb?a.name+(a.desc?' · read':' · image'):a.name+' · '+a.tokens.toLocaleString()+' tok'+(a.truncated?' (truncated)':'');c.append(lb);
     const x=document.createElement('button');x.type='button';x.innerHTML=ic('x',13);x.setAttribute('aria-label','Remove '+a.name);
     x.onclick=()=>{att.splice(i,1);renderTray()};c.append(x);t.append(c)});
-  const tot=att.reduce((s,a)=>s+a.tokens,0),n=info?.n_ctx||0,s=document.createElement('span');
-  s.className='tot'+(n&&tot>n*.7?' warn':'');s.textContent=`${tot.toLocaleString()} of ${n.toLocaleString()} context tokens`+(n&&tot>n*.7?' – too large, remove files or raise --n-ctx':'');
-  t.append(s);
+  const txt=att.filter(a=>!a.thumb),ni=att.length-txt.length,tot=txt.reduce((s,a)=>s+a.tokens,0),n=info?.n_ctx||0,s=document.createElement('span');
+  s.className='tot'+(n&&tot>n*.7?' warn':'');
+  s.textContent=(txt.length?`${tot.toLocaleString()} of ${n.toLocaleString()} context tokens`+(n&&tot>n*.7?' – too large, remove files or raise --n-ctx':''):'')
+    +(ni&&att.some(a=>a.thumb&&!a.desc)?(txt.length?'  ·  ':'')+'images are read by the vision model when you send (the coder is swapped out for a moment)':'');
+  if(s.textContent)t.append(s);
 }
 function addAtt(f){if(!att.some(a=>a.name===f.name))att.push(f);renderTray()}
 async function attachPath(rel,isDir){
@@ -564,8 +885,28 @@ async function attachPath(rel,isDir){
   if(isDir){d.files.forEach(addAtt);note(`${d.files.length} files added`+(d.skipped?`, ${d.skipped} skipped (binary or over the limit)`:''),true)}else{addAtt(d);note('Added '+d.name,true)}
   return true;
 }
+const IMG_RE=/^image\/(png|jpe?g|gif|webp|bmp)$/,IMG_MAX=1280,MAX_IMGS=4;
+const readURL=f=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=()=>no(r.error);r.readAsDataURL(f)});
+const loadImg=src=>new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(new Error('could not read this image'));i.src=src});
+async function addImage(f){
+  if(!CAPS.vision){note('Images need the Qwen2.5-VL models: '+(CAPS.vision_why||'not found'));return}
+  if(att.filter(a=>a.thumb).length>=MAX_IMGS){note('Up to '+MAX_IMGS+' images per message');return}
+  try{
+    const raw=await readURL(f),img=await loadImg(raw),w=img.naturalWidth,h=img.naturalHeight,k=Math.min(1,IMG_MAX/Math.max(w,h));
+    let url=raw;   // png/jpeg within the size limit go through untouched; everything else is re-encoded (webp/gif/bmp, or too big)
+    if(k<1||!/^image\/(png|jpeg)$/.test(f.type)){
+      const c=document.createElement('canvas');c.width=Math.max(1,Math.round(w*k));c.height=Math.max(1,Math.round(h*k));
+      const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);url=c.toDataURL('image/jpeg',.92);
+    }
+    const t=Math.min(1,200/Math.max(w,h)),c2=document.createElement('canvas');c2.width=Math.max(1,Math.round(w*t));c2.height=Math.max(1,Math.round(h*t));
+    const x2=c2.getContext('2d');x2.fillStyle='#fff';x2.fillRect(0,0,c2.width,c2.height);x2.drawImage(img,0,0,c2.width,c2.height);
+    const name=f.name&&f.name!=='image.png'?f.name:'pasted-'+Date.now().toString(36)+'.png';
+    addAtt({name,image:url,thumb:c2.toDataURL('image/jpeg',.65),tokens:0});note('Added '+name+' (read when you send)',true);
+  }catch(e){note((f.name||'image')+': '+e.message)}
+}
 async function addLocal(files){
   note();for(const f of files){
+    if(IMG_RE.test(f.type)){await addImage(f);continue}
     let text=await f.text(),truncated=false;
     if(text.includes('\u0000'))note(f.name+': binary file, skipped');
     else{if(text.length>2e5){text=text.slice(0,2e5);truncated=true}
@@ -615,6 +956,7 @@ $('#tab-files').addEventListener('keydown',e=>{
 $('#nb').onclick=goBack;$('#nf').onclick=goFwd;$('#nu').onclick=goUp;$('#nh').onclick=()=>ls('');
 const pickFiles=()=>$('#fi').click();$('#pick').onclick=pickFiles;$('#attach').onclick=pickFiles;
 $('#fi').onchange=e=>{addLocal([...e.target.files]);e.target.value=''};
+$('#input').addEventListener('paste',e=>{const im=[...(e.clipboardData?.files||[])].filter(f=>IMG_RE.test(f.type));if(im.length){e.preventDefault();addLocal(im)}});
 addEventListener('dragover',e=>e.preventDefault());
 addEventListener('drop',e=>{e.preventDefault();addLocal([...e.dataTransfer.files])});
 ls('');
@@ -625,16 +967,80 @@ const EXT={python:'py',javascript:'js',js:'js',typescript:'ts',ts:'ts',tsx:'tsx'
 const MODES={'General':'','Code helper':'You are a senior software engineer helping a junior/intermediate developer. Be concise and correct. Use fenced code blocks with a language tag. State assumptions, point out edge cases and security issues, and say when you are unsure instead of guessing.','Code reviewer':'You are a strict but kind code reviewer. List issues by severity (bug, security, performance, readability), cite the snippet, and propose a concrete fix.','Debugger':'You are a debugging expert. List the most likely causes in order of probability and how to verify each one. Ask for missing info if needed.','Tutor':'You are a patient programming tutor. Explain step by step with small examples and end with one check-in question.'};
 const PRE={Precise:[.2,.9,40,1.1],Balanced:[.7,.95,40,1.1],Creative:[1,.98,60,1.05]};
 const CMDS={explain:['c','Explain what this code does step by step for a junior developer. Note pitfalls.'],fix:['c','Find the bug(s) in this code or error. Explain the cause, then give corrected code.'],review:['c','Review this code for bugs, security, performance and readability. Be specific and propose fixes.'],test:['c','Write unit tests for this code (pytest/Jest unless another framework is implied). Cover edge cases.'],refactor:['c','Refactor for readability and maintainability without changing behaviour. Briefly explain each change.'],doc:['c','Add clear docstrings/comments and a short usage example.'],bigo:['c','Analyze time and space complexity and suggest improvements.'],commit:['c','Write a Conventional Commits message (subject <=72 chars, optional body) for this diff.'],regex:['d','Write a regular expression for the following, with a short explanation and 3 test examples'],sql:['d','Write an SQL query for the following (state the dialect you assume)'],shell:['d','Give the shell command for the following and explain each flag'],convert:['d','Convert the code below to the language named first, keeping behaviour identical'],eli5:['d','Explain simply, with an analogy and a tiny code example'],name:['d','Suggest 8 good names (variables/functions/classes) for']};
-const HELP=`**Slash commands** (paste code after the command, attach files, or use the last code block in the chat)\n\n`+Object.entries(CMDS).map(([k,[t,d]])=>`- \`/${k}\` ${t==='c'?'code':'description'} — ${d}`).join('\n')+`\n\n\`/commit\` with nothing else uses your **staged** git diff; \`/review\` uses your **working** diff.\n\n**@file** — type \`@path/to/file.py\` to attach a file (Tab completes).\n\n**Files panel:** click a folder to enter it, **Back** (button, Backspace or Alt+←) to return, Alt+→ forward, breadcrumbs to jump up.\n\n**Shortcuts:** Enter send · Shift+Enter newline · Esc stop / close popup · ↑ recall previous message · Alt+N new chat · Alt+L focus input · Alt+R retry last reply · Alt+C copy last reply · Alt+E export chat · Alt+S tools panel · Alt+B chat list · Alt+/ this help`;
+Object.assign(MODES,{
+'Writer':'You are an expert writing partner. Write clear, natural prose in the requested tone. Match length to the request, avoid filler and cliches, and offer one short alternative only when useful.',
+'Analyst':'You are a careful data and business analyst. Work step by step, show calculations, state assumptions, present results in tables when helpful, and flag anything that cannot be concluded from the data given.',
+'Study buddy':'You are a patient tutor. Explain from first principles with simple examples, check understanding with a short question at the end, and correct mistakes kindly.',
+'Brainstorm':'You are a creative brainstorming partner. Give varied, concrete ideas (not generic ones), group them, and mark the 2-3 most promising with a one-line reason.',
+'Translator':'You are a professional translator. Translate faithfully and naturally, keep tone and formatting, and add a short note only for ambiguous phrases.'});
+Object.assign(CMDS,{
+summarize:['d','Summarize the following in 5 short bullets, then a one-sentence takeaway'],
+tldr:['d','Give a TL;DR in at most two sentences for'],
+rewrite:['d','Rewrite this to be clearer and more concise while keeping the meaning'],
+proofread:['d','Proofread this. Fix grammar, spelling and punctuation, then list the changes you made'],
+translate:['d','Translate to the language named on the first line (or to English if none is named), keeping tone and formatting'],
+email:['d','Write a clear, polite, professional email for this situation. Include a subject line'],
+outline:['d','Create a structured outline (headings and sub-points) for'],
+plan:['d','Make a practical step-by-step plan with milestones and rough time estimates for'],
+brainstorm:['d','Brainstorm 10 distinct, concrete ideas for'],
+proscons:['d','Compare options with a pros and cons table, then give a recommendation for'],
+table:['d','Organize the following information into a clean markdown table'],
+quiz:['d','Write a 5-question quiz with answers and short explanations on'],
+steps:['d','Explain, as numbered steps a beginner can follow, how to'],
+compact:['d','Summarize this chat to free up context space'],continue:['d','Keep going after a reply was cut off'],remember:['d','Save a fact to Memory so it is used in every chat'],think:['d','Reason first for this one message: the reasoning model thinks (coder unloaded meanwhile), then the coder answers']});
+SUGG.push(['Summarize text','/summarize','Paste an article or attach a file'],['Write an email','/email','Describe the situation, get a ready draft'],['Make a plan','/plan','Turn a goal into steps and milestones'],['Brainstorm','/brainstorm','Ten concrete ideas on any topic']);
+Object.assign(CMDS,{
+chart:['d','Make a chart (reply with one short sentence and a single chart block) from the data or request below. Use only the numbers given'],
+diagram:['d','Draw a diagram (reply with one short sentence and a single mermaid block) of'],
+newfile:['d','Create the file(s) described below. Use one file: block per file with the complete contents'],
+edit:['d','Change the attached file(s) as requested below. Use edit: blocks with SEARCH/REPLACE sections, not a full rewrite'],
+run:['d','Give me the terminal command(s), in one bash block, to do this']});
+SUGG.push(['Plan a feature','/plan','Get a step-by-step plan first, then approve it'],['Make a chart','/chart','Bar, line, pie and more from your data'],['Create a file','/newfile','Generate files you can save or download'],['Edit a file','/edit','Attach a file, describe the change, review the diff']);
+let HELP=`**Slash commands** (paste code after the command, attach files, or use the last code block in the chat)\n\n`+Object.entries(CMDS).map(([k,[t,d]])=>`- \`/${k}\` ${t==='c'?'code':'description'} — ${d}`).join('\n')+`\n\n\`/commit\` with nothing else uses your **staged** git diff; \`/review\` uses your **working** diff.\n\n**@file** — type \`@path/to/file.py\` to attach a file (Tab completes).\n\n**Files panel:** click a folder to enter it, **Back** (button, Backspace or Alt+←) to return, Alt+→ forward, breadcrumbs to jump up.\n\n**Images:** attach, drop or paste a PNG / JPG / WebP / GIF. Qwen2.5-VL reads it first (the coder is unloaded meanwhile), is unloaded again, then the coder comes back and answers using what was extracted. Open *Image details* under your message to see it.\n\n**Reasoning:** the *Reason* button (or \`/think\`) makes a separate reasoning model (gemma-4-12b-it / Qwen3-8B from your models folder) think the task through first while the coder stays unloaded; then the coder loads and answers using its notes. Load, unload and tweak every model in the *Model* tab.\n\n**Shortcuts:** Enter send · Shift+Enter newline · Esc stop / close popup · ↑ recall previous message · Alt+N new chat · Alt+L focus input · Alt+R retry last reply · Alt+C copy last reply · Alt+E export chat · Alt+S tools panel · Alt+B chat list · Alt+/ this help`;
+function preview(lang,code){
+  let html=code;
+  if(/^(js|javascript)$/.test(lang))html='<body style="font:14px monospace;padding:12px"><pre id=o style="white-space:pre-wrap"></pre><script>const o=document.getElementById("o"),p=(...a)=>o.textContent+=a.map(x=>typeof x==="object"?JSON.stringify(x):x).join(" ")+"\\n";console.log=p;onerror=m=>p("Error: "+m);try{'+code+'\n}catch(e){p("Error: "+e.message)}<\/script>';
+  else if(lang==='svg')html='<body style="margin:0;display:grid;place-items:center;height:100vh">'+code;
+  const d=document.createElement('div');d.className='pv';
+  d.innerHTML='<div class="pvb"><div class="pvh"><b>'+(/^js|^javascript/.test(lang)?'Output':'Preview')+'</b><span>sandboxed, runs in your browser only</span><button type="button" aria-label="Close">'+ic('x',16)+'</button></div><iframe sandbox="allow-scripts allow-forms allow-modals"></iframe></div>';
+  d.querySelector('iframe').srcdoc=html;
+  const close=()=>{d.remove();removeEventListener('keydown',k,true)},k=e=>{if(e.key==='Escape'){e.stopPropagation();close()}};
+  addEventListener('keydown',k,true);d.querySelector('button').onclick=close;d.onclick=e=>{if(e.target===d)close()};document.body.append(d)
+}
+async function complete(messages,max){
+  const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl.signal,body:JSON.stringify({messages,max_tokens:max,temperature:.2})});
+  const rd=r.body.getReader(),dec=new TextDecoder();let out='',buf='';
+  for(;;){const{done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
+    while((i=buf.indexOf('\n\n'))>=0){const l=buf.slice(0,i);buf=buf.slice(i+2);if(l.startsWith('data: ')){try{const e=JSON.parse(l.slice(6));if(e.type==='token')out+=e.text;else if(e.type==='error')throw new Error(e.message)}catch(x){if(x.message&&!(x instanceof SyntaxError))throw x}}}}
+  return split(out).ans||out;
+}
+async function compact(){
+  if(busy||msgs.length<2){note('Nothing to compact yet');return}
+  setBusy(true);ctl=new AbortController();note('Summarizing this chat…',true);
+  try{
+    const hist=msgs.map(x=>({role:x.role,content:x.role==='user'?withFiles(x.content,x.files||[]):(split(x.content).ans||x.content)}));
+    const sum=await complete([{role:'system',content:'You compress conversations. Keep every decision, fact, name, file name, code detail and open task. Be brief.'},...hist,{role:'user',content:'Summarize everything above as compact bullet notes so the conversation can continue from them alone.'}],600);
+    const a='Understood. I have the summary and will continue from there.';
+    msgs=[{role:'user',content:'Summary of our conversation so far:\n\n'+sum,full:sum},{role:'assistant',content:a,full:a}];
+    msgsEl.innerHTML='';msgs.forEach(addMsg);ctx(0);save();note('Chat compacted',true);
+  }catch(e){note(e.name==='AbortError'?'Cancelled':'Compact failed: '+e.message)}
+  setBusy(false);
+}
 function dl_(n,t){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t]));a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function localMsg(md){addMsg({role:'assistant',content:md,full:md,stats:null});toBottom()}
 function lastCode(){for(let i=msgs.length-1;i>=0;i--){const m=[...msgs[i].content.matchAll(/```[\w+-]*\n([\s\S]*?)```/g)];if(m.length)return m.pop()[1].trim()}return''}
 async function expand(t){
   const mt=t.match(/^\/(\w+)\s*([\s\S]*)$/);
+  if(mt&&mt[1]==='compact'){$('#input').value='';grow();compact();return null}
+  if(mt&&mt[1]==='continue'){return 'Continue exactly where you stopped. Do not repeat anything.'}
+  if(mt&&mt[1]==='plan'){const g=mt[2].trim();if(!g&&!att.length){note('Describe what to build after /plan');return null}planOnce=true;return g||'Plan the work described in the attached file(s).'}
+  if(mt&&mt[1]==='think'){const g=mt[2].trim();if(!g&&!att.length){note('Describe the task after /think');return null}reasonOnce=true;return g||'Think through the work described in the attached file(s) and answer it.'}
+  if(mt&&mt[1]==='remember'){const f=mt[2].trim();if(!f){note('Write a fact after /remember');return null}
+    const m=$('#mem');m.value=(m.value.trim()?m.value.trim()+'\n':'')+'- '+f;saveSet();$('#input').value='';grow();localMsg('Saved to **Memory**: '+f);return null}
   if(mt&&mt[1]==='help'){$('#input').value='';grow();localMsg(HELP);return null}
   if(mt&&CMDS[mt[1]]){
     const[k,tpl]=CMDS[mt[1]];let rest=mt[2].trim();
-    if(k==='d'){if(!rest){note('Add a description after /'+mt[1]);return null}return tpl+':\n'+rest}
+    if(k==='d'){if(!rest&&!att.length){note('Add text after /'+mt[1]+' or attach a file');return null}return rest?tpl+':\n'+rest:tpl+' (see the attached file(s)).'}
     if(!rest&&!att.length){
       const g={commit:'staged',review:'work'}[mt[1]];
       if(g){const r=await fetch('/api/git?mode='+g),d=await r.json();if(!r.ok){note(d.detail);return null}addAtt(d)}
@@ -645,6 +1051,288 @@ async function expand(t){
   for(const p of new Set([...t.matchAll(/(?:^|\s)@([\w.\/-]+)/g)].map(x=>x[1]))){const r=await fetch('/api/file?path='+encodeURIComponent(p));if(r.ok)addAtt(await r.json())}
   return t;
 }
+/* ================= workspace: files, terminal, plan, charts ================= */
+const T3='```';
+const HDR={'Content-Type':'application/json','X-Cressy':'1'};
+const jpost=(u,b,o={})=>fetch(u,{method:'POST',headers:HDR,body:JSON.stringify(b),...o});
+let CAPS={terminal:false,write:false,root:'',os:'',shell:'',vision:false,vision_why:''};
+const base_=p=>p.split('/').pop();
+const fenced=t=>{const f='`'.repeat((t.match(/`+/g)||[]).reduce((m,s)=>Math.max(m,s.length+1),3));return f+'text\n'+t+'\n'+f};
+function toast(msg,kind){const t=document.createElement('div');t.className='toast '+(kind||'');t.setAttribute('role','status');t.textContent=msg;document.body.append(t);setTimeout(()=>t.remove(),kind==='bad'?6000:3500)}
+/* lazy-loaded libraries (cdnjs, pinned) */
+const LIB={chart:'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js',zip:'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',mermaid:'https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js'},libs={};
+const lib=k=>libs[k]||(libs[k]=new Promise((res,rej)=>{const s=document.createElement('script');s.src=LIB[k];s.onload=res;s.onerror=()=>{delete libs[k];s.remove();rej(new Error('Could not load the '+k+' library from cdnjs.cloudflare.com. Check your internet connection.'))};document.head.append(s)}));
+/* small modal */
+function modal(title){
+  const d=document.createElement('div');d.className='pv';
+  d.innerHTML='<div class="pvb mdl" role="dialog" aria-modal="true"><div class="pvh"><b></b><span></span><button type="button" aria-label="Close"></button></div><div class="mbody"></div><div class="mfoot"></div></div>';
+  const M={el:d,title:d.querySelector('b'),sub:d.querySelector('.pvh span'),body:d.querySelector('.mbody'),foot:d.querySelector('.mfoot'),onclose:null};
+  M.title.textContent=title;d.querySelector('.pvh button').innerHTML=ic('x',16);
+  const k=e=>{if(e.key==='Escape'){e.stopPropagation();M.close()}};
+  M.close=()=>{if(!d.isConnected)return;d.remove();removeEventListener('keydown',k,true);M.onclose&&M.onclose()};
+  addEventListener('keydown',k,true);d.querySelector('.pvh button').onclick=M.close;d.onmousedown=e=>{if(e.target===d)M.close()};
+  M.btn=(label,fn,cls,title)=>{const b=document.createElement('button');b.type='button';b.textContent=label;if(cls)b.className=cls;if(title)b.title=title;b.onclick=()=>fn(b);M.foot.append(b);return b};
+  document.body.append(d);return M;
+}
+const showTab=n=>{tab(n);if(mob()){app.classList.remove('lopen');app.classList.add('ropen')}else app.classList.remove('noright')};
+
+/* ---------- workspace state: files the model produced this chat ---------- */
+let WS=new Map();   // path -> {orig:string|null, cur, saved, crlf}
+const resetWS=()=>{WS=new Map();paintChanges()};
+function recordWS(path,before,after,saved,crlf){
+  const e=WS.get(path);WS.set(path,{orig:e?e.orig:before,cur:after,saved:!!saved,crlf:e?e.crlf:!!crlf});paintChanges();
+}
+async function getBase(path){
+  const e=WS.get(path);if(e)return{text:e.cur,crlf:e.crlf};
+  try{
+    const r=await fetch('/api/file?path='+encodeURIComponent(path));
+    if(r.ok){const d=await r.json();
+      if(d.truncated)return{err:path+' is too large to edit safely. Ask for a full file: block instead.'};
+      if(d.lossy)return{err:path+' is not valid UTF-8, so it cannot be edited safely.'};
+      return{text:d.text.replace(/\r\n/g,'\n'),crlf:d.text.includes('\r\n')}}
+    if(r.status!==404){const d=await r.json().catch(()=>({}));return{err:path+': '+(d.detail||'cannot be read')}}
+  }catch{}
+  const f=[...att,...msgs.flatMap(m=>m.files||[])].find(f=>f.text&&!f.truncated&&(f.name===path||f.name===base_(path)));
+  if(f)return{text:f.text.replace(/\r\n/g,'\n'),crlf:f.text.includes('\r\n')};
+  return{text:null,crlf:false};
+}
+async function blockChange(pre){
+  const k=pre.dataset.kind,path=pre.dataset.path,code=pre.querySelector('code'),raw=code.dataset.raw??code.textContent;
+  const b=await getBase(path);if(b.err)return{err:b.err};
+  if(k==='file')return{path,before:b.text,after:raw.replace(/\s+$/,'')+'\n',crlf:b.crlf};
+  const pe=parseEdits(raw);
+  if(!pe.seen)return{err:'No <<<<<<< SEARCH / ======= / >>>>>>> REPLACE markers found in this edit block.'};
+  if(!pe.complete)return{err:'This edit block is incomplete (the reply may have been cut off).'};
+  if(b.text===null)return{err:path+' does not exist in the project or your attachments. Attach it with @'+path+' or ask for a file: block.'};
+  const r=applyEdits(b.text,pe.edits);
+  if(!r.applied&&!r.already)return{err:r.errors.join(' ')||'Nothing to apply.'};
+  return{path,before:b.text,after:r.text,crlf:b.crlf,warnings:r.errors,already:r.already};
+}
+async function saveFile(path,text){
+  const r=await jpost('/api/write',{path,text}),d=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(d.detail||'HTTP '+r.status);return d;
+}
+const asDisk=(t,crlf)=>crlf?t.replace(/\n/g,'\r\n'):t;
+function setBadge(pre,text){const bar=pre.querySelector('.codebar');if(!bar)return;let s=bar.querySelector('.stat');if(!s){s=document.createElement('span');s.className='stat';bar.insertBefore(s,bar.lastChild)}s.textContent='✓ '+text}
+function reviewChange(ch,o={}){
+  const M=modal(ch.path),isNew=ch.before===null,ops=diffOps(ch.before??'',ch.after),st=diffStat(ops);
+  M.sub.textContent=isNew?'New file · '+ch.after.split('\n').length+' lines':st.add||st.del?`+${st.add}  −${st.del}`:'no changes';
+  if(ch.warnings?.length){const w=document.createElement('div');w.className='warn';w.textContent='Some edits could not be applied: '+ch.warnings.join(' ');M.body.append(w)}
+  if(ch.already){const w=document.createElement('div');w.className='warn good';w.textContent=ch.already+' edit(s) look already applied.';M.body.append(w)}
+  const rows=isNew?ops.filter(x=>x.t==='+'):collapseOps(ops,3);
+  if(!isNew&&!st.add&&!st.del){const p=document.createElement('p');p.textContent='The file already matches this change.';M.body.append(p)}
+  else{const box=document.createElement('div');box.className='diff';
+    rows.slice(0,700).forEach(x=>{const l=document.createElement('div');l.className='dl '+({'+':'a','-':'d','~':'g',' ':''}[x.t]);l.textContent=(x.t==='~'?'… '+x.s:(x.t===' '?'  ':x.t+' ')+x.s);box.append(l)});
+    if(rows.length>700){const l=document.createElement('div');l.className='dl g';l.textContent='… '+(rows.length-700)+' more lines';box.append(l)}
+    M.body.append(box)}
+  const err=document.createElement('div');err.className='warn bad';err.hidden=true;M.body.append(err);
+  const done=how=>{recordWS(ch.path,ch.before,ch.after,how==='save',ch.crlf);o.pre&&setBadge(o.pre,how==='save'?'Saved to project':how==='download'?'Downloaded':'Added to Changes');M.close()};
+  const sv=M.btn('Save to project',async()=>{try{const r=await saveFile(ch.path,asDisk(ch.after,ch.crlf));toast((r.created?'Created ':'Saved ')+r.path,'good');FILES=null;ls(cwd,'none');done('save')}catch(e){err.hidden=false;err.textContent=e.message}},'primary');
+  if(!CAPS.write){sv.disabled=true;sv.title='Writing is off (--read-only or non-loopback host). Use Download.'}
+  M.btn('Download',()=>{dl_(base_(ch.path),asDisk(ch.after,ch.crlf));done('download')});
+  if(!o.view)M.btn('Add to Changes',()=>done('stage'));
+  M.btn('Close',M.close);
+}
+/* ---------- fenced-block actions ---------- */
+const streamingGuard=pre=>{if(pre.closest('.msg.streaming')){toast('Wait for the reply to finish first');return true}return false};
+async function actFile(pre,mode){
+  if(streamingGuard(pre))return;
+  const code=pre.querySelector('code'),path=pre.dataset.path;
+  if(mode==='download'){const after=(code.dataset.raw??code.textContent).replace(/\s+$/,'')+'\n',b=await getBase(path);
+    dl_(base_(path),asDisk(after,b.crlf));recordWS(path,b.err?null:b.text,after,false,b.crlf);setBadge(pre,'Downloaded');return}
+  const ch=await blockChange(pre);if(ch.err)return toast(ch.err,'bad');reviewChange(ch,{pre});
+}
+/* ---------- Changes tab ---------- */
+function paintChanges(){
+  const box=$('#chg');if(!box)return;box.innerHTML='';
+  const n=WS.size,bd=$('#bd-changes');if(bd)bd.textContent=n||'';
+  ['zipall','saveall','clrchg'].forEach(i=>$('#'+i).disabled=!n);
+  if(!n){box.innerHTML='<div class="nohist">Files the model creates or edits appear here after you review or download them, so you can grab them all at once.</div>';return}
+  WS.forEach((e,p)=>{
+    const st=diffStat(diffOps(e.orig??'',e.cur)),r=document.createElement('div');r.className='chrow';
+    r.innerHTML=`<span class="p"></span><span class="tag${e.saved?' ok':''}">${e.orig===null?'new':'edited'}${e.saved?' · saved':''}</span><em class="st">+${st.add} −${st.del}</em><span class="a"></span>`;
+    r.querySelector('.p').textContent=p;r.querySelector('.p').title=p;
+    const mk=(t,f)=>{const b=document.createElement('button');b.type='button';b.textContent=t;b.onclick=f;r.querySelector('.a').append(b)};
+    mk('Diff',()=>reviewChange({path:p,before:e.orig,after:e.cur,crlf:e.crlf},{view:true}));
+    mk('Download',()=>dl_(base_(p),asDisk(e.cur,e.crlf)));
+    mk('Save',async()=>{try{await saveFile(p,asDisk(e.cur,e.crlf));e.saved=true;toast('Saved '+p,'good');FILES=null;ls(cwd,'none');paintChanges()}catch(x){toast(x.message,'bad')}});
+    if(!CAPS.write)r.querySelector('.a').lastChild.disabled=true;
+    mk('×',()=>{WS.delete(p);paintChanges()});r.querySelector('.a').lastChild.title='Remove from list';
+    box.append(r)});
+}
+$('#clrchg').onclick=resetWS;
+$('#zipall').onclick=async()=>{
+  try{await lib('zip');const z=new JSZip();WS.forEach((e,p)=>z.file(p,asDisk(e.cur,e.crlf),{createFolders:false}));dl_('cressyai-files.zip',await z.generateAsync({type:'blob'}))}
+  catch(e){toast(e.message+' Downloading the files one by one instead.','bad');WS.forEach((e2,p)=>dl_(base_(p),asDisk(e2.cur,e2.crlf)))}
+};
+$('#saveall').onclick=async()=>{
+  const todo=[...WS].filter(([,e])=>!e.saved);if(!todo.length)return toast('Everything is already saved');
+  if(!confirm('Write '+todo.length+' file(s) into the project folder?\n\n'+todo.map(([p,e])=>(e.orig===null?'+ ':'~ ')+p).join('\n')))return;
+  let ok=0;for(const [p,e] of todo){try{await saveFile(p,asDisk(e.cur,e.crlf));e.saved=true;ok++}catch(x){toast(p+': '+x.message,'bad')}}
+  paintChanges();FILES=null;ls(cwd,'none');if(ok)toast('Saved '+ok+' file(s)','good');
+};
+/* ---------- terminal ---------- */
+const term={running:false,ctl:null,id:null,last:null,hist:LS('gc.thist')||[],hi:-1,trust:false};
+function logAdd(text,cls){const l=$('#termlog'),s=document.createElement('span');if(cls)s.className=cls;s.textContent=text;l.append(s);while(l.childNodes.length>400)l.firstChild.remove();l.scrollTop=l.scrollHeight;return s}
+function paintTerm(){const g=$('#termgo');g.textContent=term.running?'Stop':'Run';g.classList.toggle('stop',term.running);g.disabled=!CAPS.terminal;$('#termin').disabled=!CAPS.terminal||term.running;$('#termsend').disabled=!term.last}
+function paintCaps(){
+  $('#termnote').textContent=CAPS.terminal?'Every command starts fresh in '+CAPS.root+' ('+(CAPS.os||'shell')+'). It runs with your user permissions.':'The terminal is turned off for this server (started with --no-terminal, or on a non-loopback host).';
+  paintTerm();paintChanges();
+}
+fetch('/api/caps').then(r=>r.json()).then(c=>{CAPS=c;paintCaps()}).catch(()=>paintCaps());
+async function runCommand(cmd,sink){
+  if(!CAPS.terminal){toast('The terminal is disabled on this server','bad');return null}
+  if(term.running){toast('A command is already running. Stop it first.','bad');return null}
+  term.running=true;term.ctl=new AbortController();term.id=null;paintTerm();
+  logAdd('$ '+cmd+'\n','cmd');const live=logAdd('');
+  let out='',fin=null,err=null,pend=false;const secs=+$('#runtimeout').value||60;
+  const upd=()=>{pend=false;const t=cleanOut(out);live.textContent=t;sink&&sink.update&&sink.update(t);const l=$('#termlog');l.scrollTop=l.scrollHeight};
+  sink&&sink.start&&sink.start();
+  try{
+    const r=await jpost('/api/run',{cmd,cwd:'',timeout:secs},{signal:term.ctl.signal});
+    if(!r.ok){let d={};try{d=await r.json()}catch{}throw new Error(d.detail||'HTTP '+r.status)}
+    const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
+    for(;;){const{done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
+      while((i=buf.indexOf('\n\n'))>=0){const line=buf.slice(0,i);buf=buf.slice(i+2);if(!line.startsWith('data: '))continue;let ev;try{ev=JSON.parse(line.slice(6))}catch{continue}
+        if(ev.type==='start')term.id=ev.id;else if(ev.type==='out'){out+=ev.text;if(!pend){pend=true;requestAnimationFrame(upd)}}else if(ev.type==='done')fin=ev;else if(ev.type==='error')err=ev.message}}
+  }catch(e){if(e.name==='AbortError')fin=fin||{code:null,killed:true};else err=e.message}
+  if(term.ctl.signal.aborted&&term.id)jpost('/api/kill',{id:term.id}).catch(()=>{});
+  upd();term.running=false;
+  const clean=cleanOut(out),res={cmd,out:clean,code:fin?fin.code:null,timeout:!!fin?.timeout,killed:!!fin?.killed,truncated:!!fin?.truncated,error:err};
+  const msg=err?'error: '+err:res.killed?'stopped':res.timeout?'timed out after '+secs+' s':'exit '+fin?.code+(fin?.seconds!=null?' · '+fin.seconds+' s':'');
+  logAdd((clean&&!clean.endsWith('\n')?'\n':'')+'['+msg+']'+(res.truncated?' · output truncated':'')+'\n\n',err||res.killed||res.timeout||res.code?'ex bad':'ex ok');
+  term.last=res;paintTerm();sink&&sink.done&&sink.done(res,msg);return res;
+}
+function sendOutput(r){
+  if(!r)return;if(busy){toast('Wait for the current reply to finish','bad');return}
+  const tail=r.out.length>6000?'(earlier output omitted)\n'+r.out.slice(-6000):r.out;
+  $('#input').value='I ran `'+r.cmd.split('\n')[0].slice(0,120)+'` in the project folder ('+(r.timeout?'timed out':r.killed?'stopped by me':'exit code '+r.code)+'). Output:\n\n'+fenced(tail||'(no output)')+'\n\nWhat does this tell us, and what should I do next?';
+  grow();send(true,{noPlan:true});
+}
+$('#termf').onsubmit=e=>{e.preventDefault();
+  if(term.running){term.ctl.abort();return}
+  const i=$('#termin'),c=i.value.trim();if(!c)return;
+  term.hist=[...term.hist.filter(x=>x!==c),c].slice(-50);LS('gc.thist',term.hist);term.hi=-1;i.value='';runCommand(c)};
+$('#termin').onkeydown=e=>{
+  if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();const h=term.hist;if(!h.length)return;
+    term.hi=e.key==='ArrowUp'?Math.min(h.length-1,term.hi+1):Math.max(-1,term.hi-1);e.target.value=term.hi<0?'':h[h.length-1-term.hi]}};
+$('#tab-term').addEventListener('keydown',e=>{if(e.key==='Escape'&&term.running){e.stopPropagation();term.ctl.abort()}});
+$('#termclear').onclick=()=>{$('#termlog').textContent=''};
+$('#termsend').onclick=()=>sendOutput(term.last);
+$('#termgo').addEventListener('click',e=>{if(term.running){e.preventDefault();term.ctl.abort()}});
+const cmdFrom=t=>t.split('\n').map(l=>l.replace(/^\s*(?:\$|PS [^>]*>|>)\s+/,'')).join('\n').trim();
+function confirmRun(cmd){
+  if(term.trust||$('#confirmrun').value==='no')return Promise.resolve(true);
+  return new Promise(res=>{let decided=false;const M=modal('Run this command?');M.sub.textContent='in '+(CAPS.root||'the project folder');
+    const p=document.createElement('p');p.textContent='The model suggested this. It will run on your computer with your user permissions, so read it first.';
+    const pre=document.createElement('pre');pre.className='cmdprev';pre.textContent=cmd;
+    const lab=document.createElement('label');lab.className='chk';const cb=document.createElement('input');cb.type='checkbox';lab.append(cb,' Don\'t ask again until I reload this page');
+    M.body.append(p,pre,lab);M.btn('Run',()=>{decided=true;if(cb.checked)term.trust=true;res(true);M.close()},'primary');M.btn('Cancel',M.close);
+    M.onclose=()=>{if(!decided)res(false)}});
+}
+async function runFromBlock(pre){
+  if(streamingGuard(pre))return;
+  const code=pre.querySelector('code'),cmd=cmdFrom(code.dataset.raw??code.textContent);if(!cmd)return;
+  if(!CAPS.terminal)return toast('The terminal is disabled on this server','bad');
+  if(!await confirmRun(cmd))return;
+  let o=pre.querySelector('.runout');
+  if(!o){o=document.createElement('div');o.className='runout';o.innerHTML='<div class="runh"><span class="rs"></span><span class="sp"></span><button type="button" class="rsend">Send output to chat</button></div><div class="runb"></div>';pre.append(o)}
+  const rs=o.querySelector('.rs'),rb=o.querySelector('.runb'),rsend=o.querySelector('.rsend');rsend.disabled=true;
+  runCommand(cmd,{start:()=>{rs.className='rs';rs.textContent='Running…';rb.textContent=''},update:t=>{rb.textContent=t;rb.scrollTop=rb.scrollHeight},
+    done:(r,msg)=>{rs.textContent=msg;rs.className='rs '+(r.error||r.code||r.timeout||r.killed?'bad':'ok');rsend.disabled=false;rsend.onclick=()=>sendOutput(r);if(!r.out)rb.textContent='(no output)'}});
+}
+/* ---------- plan mode ---------- */
+let planMode=false,planOnce=false;const DEFPH=$('#input').placeholder;
+function setPlan(v){planMode=v;$('#plan').classList.toggle('on',v);$('#plan').setAttribute('aria-pressed',v);$('#input').placeholder=v?'Plan mode: describe what to build. I will plan first, you approve, then we build it…':DEFPH}
+$('#plan').onclick=()=>{setPlan(!planMode);$('#input').focus()};
+const PLAN_PROMPT='PLAN MODE. Do not write code, files or commands yet. Reply with a plan in exactly this structure:\n## Goal\nOne sentence.\n## Approach\n2-4 bullets with the key decisions and assumptions.\n## Files\n- `path` (new or modify): why\n## Steps\n- [ ] Small, verifiable step 1\n- [ ] Step 2\n(each step should be doable in one reply)\n## Risks and questions\n- anything unclear or risky\nEnd with: "Approve the plan or tell me what to change."';
+function paintPlan(m){
+  const box=m.el.querySelector('.plan');if(!box)return;
+  if(!m.plan||m.live){box.hidden=true;return}
+  const steps=parsePlan(split(m.content).ans);m.planDone=m.planDone||[];
+  const nd=steps.filter((_,i)=>m.planDone[i]).length;box.hidden=false;
+  box.innerHTML=`<div class="planh">${ic('list',15)}<b>Plan</b><span class="sp"></span><span class="pc">${steps.length?nd+' / '+steps.length+' done':'review it, then approve'}</span></div>`+
+   (steps.length?'<ul class="steps">'+steps.map((s,i)=>`<li class="${m.planDone[i]?'done':''}"><input type="checkbox" data-i="${i}" ${m.planDone[i]?'checked':''} aria-label="Mark done"><span></span><button type="button" class="go" data-go="${i}" title="Build this step">${ic('right',13)}Build</button></li>`).join('')+'</ul>':'')+
+   `<div class="planb"><button type="button" class="primary" data-a="${steps.length?'next':'all'}">${steps.length?'Approve &amp; build next step':'Approve &amp; build'}</button>${steps.length>1?'<button type="button" data-a="all">Build everything</button>':''}<button type="button" data-a="rev">Revise plan</button></div>`;
+  box.querySelectorAll('.steps li span').forEach((sp,i)=>sp.textContent=steps[i]);
+  box.onclick=e=>{
+    const cb=e.target.closest('input[data-i]');if(cb){m.planDone[+cb.dataset.i]=cb.checked;save();paintPlan(m);return}
+    const go=e.target.closest('[data-go]');if(go)return buildStep(m,steps,+go.dataset.go);
+    const a=e.target.closest('[data-a]')?.dataset.a;if(!a)return;
+    if(a==='rev'){$('#input').value='Change the plan: ';grow();$('#input').focus();return}
+    if(a==='next'){const i=steps.findIndex((_,j)=>!m.planDone[j]);if(i<0)return toast('All steps are done','good');return buildStep(m,steps,i)}
+    if(busy)return toast('Wait for the current reply to finish','bad');
+    setPlan(false);steps.forEach((_,i)=>m.planDone[i]=true);save();paintPlan(m);
+    $('#input').value='The plan is approved. Implement all of it now. Use file: blocks for new files, edit: blocks for changes to existing files, and a bash block for commands. Keep explanations short.';grow();send(true,{noPlan:true});
+  };
+}
+function buildStep(m,steps,i){
+  if(busy)return toast('Wait for the current reply to finish','bad');
+  setPlan(false);m.planDone[i]=true;save();paintPlan(m);
+  $('#input').value=`The plan is approved. Implement step ${i+1} of ${steps.length} only: "${steps[i]}"\nUse file: blocks for new files, edit: blocks for changes to existing files, and a bash block for commands. Keep explanations short.`;grow();send(true,{noPlan:true});
+}
+/* ---------- system prompt for the workspace formats ---------- */
+function toolsPrompt(){
+  if($('#tools').value==='0')return'';
+  return['You work inside the user\'s project. When the answer needs files, charts or commands, use these exact formats.',
+  '1. New file or full rewrite: a fenced block whose info string is file:PATH (relative path, no spaces) with the complete file inside. Example info string: '+T3+'file:src/app.py',
+  '2. Change an existing file: a fenced block with info string edit:PATH holding one or more blocks like:\n<<<<<<< SEARCH\n(old lines, copied exactly from the current file)\n=======\n(new lines)\n>>>>>>> REPLACE\nNever use "..." in SEARCH. You can only edit files you have been shown; otherwise ask the user to attach them with @path.',
+  '3. Chart: a '+T3+'chart block with JSON like {"type":"bar","title":"Sales","labels":["Jan","Feb"],"datasets":[{"label":"2025","data":[10,12]}]}. Types: bar, line, area, pie, doughnut, radar, scatter. Use only numbers the user gave you; never invent data.',
+  '4. Diagram or flowchart: a '+T3+'mermaid block.',
+  '5. Terminal command: a '+T3+'bash block, one command per line, nothing destructive. The user decides whether to run it and can show you the output.',
+  'If a file itself contains triple backticks, use a four-backtick fence. Write one short sentence before each block and do not repeat file contents elsewhere.'].join('\n');
+}
+/* ---------- charts and diagrams ---------- */
+const PALETTE=['#8b7cff','#2dd4bf','#38bdf8','#f59e0b','#f472b6','#34d399','#fb7185','#a3e635','#c084fc','#60a5fa','#fbbf24','#4ade80'];
+const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const isDark=()=>th==='dark'||(th==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches);
+const vizEl=(kind,raw)=>{const d=document.createElement('div');d.className='viz';d.dataset.kind=kind;d.dataset.raw=raw;d.innerHTML=`<div class="vizbar"><span>${kind}</span><span class="vg"></span></div><div class="vizbody"><div class="vizload">Drawing ${kind}…</div></div>`;return d};
+function buildChart(cv,c){
+  const ink=cssv('--ink')||'#e9ecf5',mut=cssv('--mut')||'#8d95aa',line=cssv('--line')||'#252b3b',card=cssv('--card')||'#141822';
+  const circ=['pie','doughnut','polarArea'].includes(c.type),rad=c.type==='radar'||c.type==='polarArea',multi=c.datasets.length>1;
+  const ds=c.datasets.map((d,i)=>{const col=PALETTE[i%PALETTE.length];
+    if(circ)return{label:d.label,data:d.data,backgroundColor:d.data.map((_,j)=>PALETTE[j%PALETTE.length]+'dd'),borderColor:card,borderWidth:2};
+    const o={label:d.label,data:d.data,borderColor:col,backgroundColor:col+(c.type==='bar'||c.type==='scatter'?'cc':'33'),borderWidth:2};
+    if(c.type==='line')Object.assign(o,{tension:.3,fill:c.fill,pointRadius:3,pointBackgroundColor:col});
+    if(c.type==='radar')o.fill=true;if(c.type==='bar')Object.assign(o,{borderRadius:6,borderWidth:0});if(c.type==='scatter')o.pointRadius=5;return o});
+  const ax=(t,extra)=>({ticks:{color:mut},grid:{color:line},title:{display:!!t,text:t,color:mut},...extra});
+  const scales=circ&&c.type!=='polarArea'?{}:rad?{r:{grid:{color:line},angleLines:{color:line},pointLabels:{color:mut},ticks:{color:mut,backdropColor:'transparent'}}}:
+    {x:ax(c.horizontal?c.yLabel:c.xLabel,{stacked:c.stacked,...(c.type==='scatter'?{type:'linear'}:{})}),y:ax(c.horizontal?c.xLabel:c.yLabel,{stacked:c.stacked,beginAtZero:c.type==='bar'})};
+  return new Chart(cv,{type:c.type,data:{labels:c.type==='scatter'?undefined:c.labels,datasets:ds},
+    options:{responsive:true,maintainAspectRatio:false,devicePixelRatio:Math.max(2,devicePixelRatio||1),indexAxis:c.horizontal?'y':'x',animation:{duration:350},
+      plugins:{legend:{display:multi||circ,labels:{color:mut}},title:{display:!!c.title,text:c.title,color:ink,font:{size:14,weight:'600'}}},scales},
+    plugins:[{id:'bg',beforeDraw(ch){const x=ch.ctx;x.save();x.globalCompositeOperation='destination-over';x.fillStyle=card;x.fillRect(0,0,ch.width,ch.height);x.restore()}}]});
+}
+let mmN=0;
+async function mountOne(el){
+  const kind=el.dataset.kind,raw=el.dataset.raw,body=el.querySelector('.vizbody'),vg=el.querySelector('.vg');vg.innerHTML='';
+  const btn=(t,f)=>{const b=document.createElement('button');b.type='button';b.textContent=t;b.onclick=()=>f(b);vg.append(b);return b};
+  const code=()=>{let p=body.querySelector('.vizcode');if(p){p.remove();return}p=document.createElement('pre');p.className='vizcode';p.textContent=raw;body.append(p)};
+  const fail=msg=>{body.innerHTML='';const e=document.createElement('div');e.className='vizerr';e.textContent=msg;body.append(e);const p=document.createElement('pre');p.className='vizcode';p.textContent=raw;body.append(p)};
+  if(kind==='chart'){
+    const c=normChart(raw);if(c.error)return fail(c.error);
+    try{await lib('chart')}catch(e){return fail(e.message)}
+    body.innerHTML='<div class="cv"><canvas></canvas></div>';
+    try{el._chart=buildChart(body.querySelector('canvas'),c)}catch(e){return fail('Could not draw the chart: '+e.message)}
+    btn('Save PNG',()=>{const a=document.createElement('a');a.href=el._chart.toBase64Image('image/png',1);a.download=((c.title||'chart').replace(/[^\w-]+/g,'_')||'chart')+'.png';a.click()});
+    btn('Spec',code);
+  }else{
+    try{await lib('mermaid')}catch(e){return fail(e.message)}
+    const id='mm'+(++mmN);
+    try{
+      mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:isDark()?'dark':'neutral',fontFamily:'Inter, sans-serif'});   // 'strict' makes Mermaid sanitize labels and disable click handlers
+      const{svg}=await mermaid.render(id,raw);
+      body.innerHTML=svg;el._svg=svg;
+      btn('Save SVG',()=>dl_('diagram.svg',el._svg));btn('Code',code);
+    }catch(e){document.getElementById('d'+id)?.remove();fail('Diagram error: '+String(e.message||e).split('\n')[0])}
+  }
+}
+function mountViz(root){root.querySelectorAll('.viz:not([data-m])').forEach(el=>{el.dataset.m='1';mountOne(el)})}
+function remountViz(){$$('.viz').forEach(el=>{el._chart?.destroy?.();delete el.dataset.m;el.querySelector('.vizbody').innerHTML='<div class="vizload">Drawing…</div>'});mountViz(document)}
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>setTimeout(remountViz,0));
+HELP+='\n\n**Workspace** — the model can create and edit files (review the diff, then *Save to project* or *Download*; everything lands in the **Changes** tab, with *Download all (.zip)*), run terminal commands (the **Terminal** tab, or the *Run* button on a `bash` block), draw charts and diagrams, and **plan first**: switch on *Plan* next to the paperclip, or use `/plan`. Alt+T opens the terminal.';
+paintChanges();
+
 /* ---------- chats ---------- */
 const chats=()=>LS('gc.chats')||[];
 const titleOf=()=>{const f=msgs.find(m=>m.role==='user');return(f?.content||'').replace(/\s+/g,' ').slice(0,60)||'New chat'};
@@ -652,25 +1340,34 @@ const setTitle=()=>{$('#ttl').textContent=titleOf()};
 function save(){
   if(!msgs.length)return;
   if(!cid)cid=Date.now().toString(36);
-  const rest=chats().filter(c=>c.id!==cid);
-  rest.unshift({id:cid,title:titleOf().slice(0,48),msgs:msgs.map(({role,content,files,stats,thinkMs})=>({role,content,stats,thinkMs,files:(files||[]).map(x=>({name:x.name,tokens:x.tokens,text:''}))}))});
+  const old=chats().find(c=>c.id===cid),rest=chats().filter(c=>c.id!==cid);
+  rest.unshift({id:cid,pin:old?.pin,title:titleOf().slice(0,48),msgs:msgs.map(({role,content,files,stats,thinkMs,plan,planDone})=>({role,content,stats,thinkMs,plan,planDone,files:(files||[]).map(x=>({name:x.name,tokens:x.tokens,text:'',image:x.image?1:undefined,thumb:x.thumb,desc:x.desc}))}))});
   LS('gc.chats',rest.slice(0,50));hist_();
 }
 function load(id){
   const c=chats().find(x=>x.id===id);if(!c)return;if(busy)ctl.abort();
-  cid=id;msgs=c.msgs.map(m=>({...m,full:m.content}));msgsEl.innerHTML='';msgs.forEach(addMsg);ctx(0);hist_();setTitle();toBottom();
+  cid=id;resetWS();msgs=c.msgs.map(m=>({...m,full:m.content}));msgsEl.innerHTML='';msgs.forEach(addMsg);ctx(0);hist_();setTitle();toBottom();
   if(innerWidth<=900)app.classList.remove('lopen');
 }
-function newChat(){if(busy)ctl.abort();save();cid=null;msgs=[];att=[];renderTray();renderEmpty();ctx(0);hist_();setTitle();$('#input').focus();app.classList.remove('lopen')}
+function newChat(){if(busy)ctl.abort();save();cid=null;resetWS();msgs=[];att=[];renderTray();renderEmpty();ctx(0);hist_();setTitle();$('#input').focus();app.classList.remove('lopen')}
 function hist_(){
-  const b=$('#hist');b.innerHTML='';const cs=chats();
-  if(!cs.length){b.innerHTML='<div class="nohist">No saved chats yet.</div>';return}
+  const b=$('#hist');b.innerHTML='';const q=$('#hq').value.trim().toLowerCase();
+  const all=chats(),cs=all.filter(c=>!q||c.title.toLowerCase().includes(q)||c.msgs.some(m=>m.content.toLowerCase().includes(q))).sort((x,y)=>(!!y.pin)-(!!x.pin));
+  if(!cs.length){b.innerHTML='<div class="nohist">'+(q?'No chats match.':'No saved chats yet.')+'</div>';return}
   cs.forEach(c=>{const r=document.createElement('div');r.className='hi'+(c.id===cid?' on':'');
     const n=document.createElement('button');n.type='button';n.className='t';n.textContent=c.title;n.title=c.title;n.onclick=()=>load(c.id);
+    const p=document.createElement('button');p.type='button';p.className='pn'+(c.pin?' on':'');p.innerHTML=ic('spark',13);p.title=c.pin?'Unpin':'Pin to top';p.setAttribute('aria-label',p.title);
+    p.onclick=()=>{LS('gc.chats',all.map(y=>y.id===c.id?{...y,pin:!y.pin}:y));hist_()};
     const x=document.createElement('button');x.type='button';x.className='x';x.innerHTML=ic('trash',14);x.setAttribute('aria-label','Delete chat');
-    x.onclick=()=>{if(!confirm('Delete this chat?'))return;LS('gc.chats',chats().filter(y=>y.id!==c.id));if(c.id===cid){cid=null;msgs=[];renderEmpty();setTitle()}hist_()};
-    r.append(n,x);b.append(r)})
+    x.onclick=()=>{if(!confirm('Delete this chat?'))return;LS('gc.chats',chats().filter(y=>y.id!==c.id));if(c.id===cid){cid=null;resetWS();msgs=[];renderEmpty();setTitle()}hist_()};
+    r.append(n,p,x);b.append(r)})
 }
+$('#hq').oninput=hist_;
+$('#bk').onclick=()=>dl_('cressyai-chats.json',JSON.stringify({app:'cressyai',chats:chats(),memory:$('#mem').value},null,1));
+$('#rs').onclick=()=>$('#rsf').click();
+$('#rsf').onchange=async e=>{try{const d=JSON.parse(await e.target.files[0].text()),have=new Set(chats().map(c=>c.id));
+  const add=(d.chats||[]).filter(c=>c&&c.id&&Array.isArray(c.msgs)&&!have.has(c.id));LS('gc.chats',[...chats(),...add].slice(0,100));
+  if(d.memory&&!$('#mem').value.trim()){$('#mem').value=d.memory;saveSet()}hist_();note(add.length+' chats restored',true)}catch{note('That file is not a valid backup')}e.target.value=''};
 /* ---------- message actions ---------- */
 function acts(m){
   const a=m.el.querySelector('.acts'),mk=(i,t,f)=>{const b=document.createElement('button');b.type='button';b.title=t;b.innerHTML=ic(i,14)+'<span>'+t+'</span>';b.onclick=()=>f(b);a.append(b);return b};
@@ -680,7 +1377,7 @@ function acts(m){
 }
 function regen(m){
   if(busy)return;if(msgs[msgs.length-1]!==m){note('Only the last reply can be retried');return}
-  msgs.pop();m.el.remove();const u=msgs.pop();u.el.remove();att=u.files||[];renderTray();$('#input').value=u.content;send(true);
+  msgs.pop();m.el.remove();const u=msgs.pop();u.el.remove();att=u.files||[];renderTray();$('#input').value=u.content;planOnce=!!m.plan;send(true);
 }
 function edit(m){
   const i=msgs.indexOf(m);if(busy||i<0)return;
@@ -690,17 +1387,17 @@ function edit(m){
 const lastReply=()=>[...msgs].reverse().find(m=>m.role==='assistant');
 function exportMd(){dl_('chat.md',msgs.map(m=>`## ${m.role==='user'?'You':'Model'}\n\n${m.content}\n`).join('\n'))}
 /* ---------- settings ---------- */
-const SET=['sys','temperature','top_p','top_k','repeat_penalty','max_tokens'];
+const SET=['mem','sys','temperature','top_p','top_k','repeat_penalty','max_tokens','tools','confirmrun','runtimeout','rmode','r_temperature','r_top_p','r_top_k','r_repeat_penalty','r_max_tokens','r_sys'];
 $('#mode').innerHTML=Object.keys(MODES).map(k=>`<option>${k}</option>`).join('');
 const saveSet=()=>LS('gc.set',{...Object.fromEntries(SET.map(i=>[i,$('#'+i).value])),mode:$('#mode').value});
 const st=LS('gc.set');
 if(st){SET.forEach(i=>{if(st[i]!=null)$('#'+i).value=st[i]});if(st.mode&&MODES[st.mode]!=null)$('#mode').value=st.mode}else{$('#mode').value='Code helper';$('#sys').value=MODES['Code helper']}
 $('#mode').onchange=()=>{$('#sys').value=MODES[$('#mode').value];saveSet()};
 $('#preset').onchange=e=>{const p=PRE[e.target.value];if(p)['temperature','top_p','top_k','repeat_penalty'].forEach((i,j)=>$('#'+i).value=p[j]);saveSet()};
-SET.forEach(i=>$('#'+i).addEventListener('change',saveSet));$('#sys').addEventListener('input',saveSet);
+SET.forEach(i=>$('#'+i).addEventListener('change',saveSet));$('#sys').addEventListener('input',saveSet);$('#r_sys').addEventListener('input',saveSet);$('#mem').addEventListener('input',saveSet);
 /* theme */
 let th=LS('gc.theme')||'auto';
-function applyTheme(){document.documentElement.dataset.theme=th;$$('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.th===th));$('#theme').innerHTML=ic(th==='dark'?'moon':th==='light'?'sun':'half',16)+'Theme: '+th}
+function applyTheme(){document.documentElement.dataset.theme=th;setTimeout(()=>window.remountViz&&remountViz(),0);$$('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.th===th));$('#theme').innerHTML=ic(th==='dark'?'moon':th==='light'?'sun':'half',16)+'Theme: '+th}
 $('#theme').onclick=()=>{th={auto:'light',light:'dark',dark:'auto'}[th];LS('gc.theme',th);applyTheme()};
 $('#seg').onclick=e=>{const b=e.target.closest('[data-th]');if(b){th=b.dataset.th;LS('gc.theme',th);applyTheme()}};
 applyTheme();
@@ -757,15 +1454,148 @@ $('#input').addEventListener('keydown',e=>{
 addEventListener('keydown',e=>{
   if(e.key==='Escape'){if(!pop.hidden)pop.hidden=true;else if(busy)ctl.abort();else app.classList.remove('lopen','ropen');return}
   if(!e.altKey)return;
-  const A={KeyN:newChat,KeyL:()=>$('#input').focus(),KeyR:()=>{const l=lastReply();l&&regen(l)},KeyC:()=>{const l=lastReply();l&&navigator.clipboard.writeText(l.content)},KeyE:exportMd,KeyS:togR,KeyB:togL,Slash:()=>localMsg(HELP)}[e.code];
+  const A={KeyN:newChat,KeyL:()=>$('#input').focus(),KeyR:()=>{const l=lastReply();l&&regen(l)},KeyC:()=>{const l=lastReply();l&&navigator.clipboard.writeText(l.content)},KeyE:exportMd,KeyS:togR,KeyB:togL,KeyT:()=>showTab('term'),Slash:()=>localMsg(HELP)}[e.code];
   if(A){e.preventDefault();A()}
 });
 $('#clear').onclick=newChat;$('#exp').onclick=exportMd;$('#help').onclick=()=>{localMsg(HELP);if(mob())app.classList.remove('lopen')};
 $('#f').onsubmit=e=>{e.preventDefault();busy?ctl.abort():send()};
 $('#go').addEventListener('click',e=>{if(busy){e.preventDefault();ctl.abort()}});
 $('#mf').oninput=()=>info&&showInfo(info);
-fetch('/api/info').then(r=>r.json()).then(showInfo).catch(()=>{setDl($('#info'),[['Status','server unreachable']]);$('#pill').className='pill bad';$('#pilltx').textContent='server unreachable'});
+refreshInfo=()=>fetch('/api/info').then(r=>r.json()).then(showInfo);
+refreshInfo().catch(()=>{setDl($('#info'),[['Status','server unreachable']]);$('#pill').className='pill bad';$('#pilltx').textContent='server unreachable'});
 const poll=()=>fetch('/api/system').then(r=>r.json()).then(s=>{if(s.rss){$('#rss').textContent=fmtB(s.rss);$('#cpu').textContent=s.cpu.toFixed(0)+'%'}}).catch(()=>{});
-poll();setInterval(poll,2000);
+poll();setInterval(poll,2000);refreshModels(true);setInterval(()=>{if(!document.hidden)refreshModels()},2500);
+
+/* ---------- models: manual load / unload / tweak, and the reasoning step ---------- */
+let MS=null,MOP=false,msig='';const MERR={},MOPEN={};
+const SLOT_INFO={coder:['Coder','Answers your messages and writes the code.'],reasoner:['Reasoner','Thinks the task through first. The coder is unloaded while it runs.'],vision:['Vision','Reads attached images. It loads only while an image is being read.']};
+async function post_(url,body){
+  const r=await fetch(url,{method:'POST',headers:HDR,body:JSON.stringify(body)});let d={};try{d=await r.json()}catch{}
+  if(!r.ok)throw new Error(d.detail||('server answered '+r.status));return d;
+}
+function paintPill(force){
+  if((busy||MOP)&&!force)return;
+  const p=$('#pill'),tx=$('#pilltx'),st=MS?.state||info?.model_state||'none',sl=MS?.slots;
+  if(st==='reasoner'){tx.textContent='Reasoner · '+(sl?.reasoner.name||'');p.className='pill ok';return}
+  if(st==='vision'){tx.textContent='Vision · '+(sl?.vision.name||'');p.className='pill swap';return}
+  if(st==='coder'){const md=info?.metadata||{},q=FT[md['general.file_type']]||md['general.file_type'];
+    tx.textContent=(md['general.name']||info?.file||sl?.coder.name||'coder')+(q?' · '+q:'');p.className='pill ok';return}
+  if(!MS&&!info)return;
+  tx.textContent=sl?.coder.path?'No model loaded':'No model selected';p.className='pill';
+}
+async function refreshModels(force){
+  let d;try{d=await(await fetch('/api/models')).json()}catch{return}
+  MS=d;
+  if(d.state==='coder'&&info&&(!info.loaded||info.file!==d.slots.coder.name)&&refreshInfo)refreshInfo().catch(()=>{});
+  const sig=JSON.stringify([d.state,d.busy,d.available.length,Object.values(d.slots).map(s=>[s.loaded,s.path,s.dirty,s.cfg])]);
+  if((force||sig!==msig)&&(force||!$('#slots').contains(document.activeElement))){msig=sig;renderSlots()}
+  paintPill();
+}
+const fSize=n=>n>=1e9?(n/1e9).toFixed(1)+' GB':(n/1e6).toFixed(0)+' MB';
+function slotCard(k){
+  const s=MS.slots[k],[title,sub]=SLOT_INFO[k],canManage=CAPS.can_manage!==false,wanted=new Set((MS.wanted||[]).map(x=>x.toLowerCase()));
+  let badge,cls='';
+  if(k==='vision'){badge=s.loaded?'In use':s.available?'On demand':'Not found';cls=s.loaded?'on':''}
+  else{badge=s.loaded?'Loaded':s.path?'Unloaded':'None chosen';cls=s.loaded?'on':''}
+  let pick='';
+  if(k!=='vision'){
+    const list=[...MS.available];if(s.path&&!list.some(m=>m.path.toLowerCase()===s.path.toLowerCase()))list.push({name:s.name,path:s.path,size:s.size});
+    if(k==='reasoner')list.sort((a,b)=>(wanted.has(b.name.toLowerCase())-wanted.has(a.name.toLowerCase()))||a.name.localeCompare(b.name));
+    pick=`<select data-pick aria-label="${title} model file">${s.path?'':'<option value="">Choose a model file…</option>'}`+
+      list.map(m=>`<option value="${esc(m.path)}"${m.path.toLowerCase()===(s.path||'').toLowerCase()?' selected':''}>${k==='reasoner'&&wanted.has(m.name.toLowerCase())?'★ ':''}${esc(m.name)}${m.size?' · '+fSize(m.size):''}</option>`).join('')+'</select>';
+  }
+  const note=k==='vision'?(s.available?`${esc(s.name)} + ${esc(s.mmproj)}`:esc(s.why||'')):
+    k==='reasoner'&&!s.path?esc(s.why||'No reasoning model chosen yet.'):'';
+  const c=s.cfg,T=(f,label,extra='')=>`<label class="f">${label}<input type="number" data-f="${f}" value="${c[f]??''}" ${extra}></label>`;
+  const btns=k==='vision'?'':`<div class="btns"><button type="button" data-act="load" class="primary">${s.loaded?'Switch / load':'Load'}</button>`+
+    `<button type="button" data-act="unload"${s.loaded?'':' disabled'}>Unload</button><button type="button" data-act="reload"${s.loaded?'':' disabled'}>Reload</button></div>`;
+  return `<div class="mc" data-slot="${k}"><div class="mc-h">${title}<small>${esc(s.loaded&&s.n_ctx_loaded?s.n_ctx_loaded.toLocaleString()+' ctx':'')}</small><span class="bdg ${cls}">${badge}</span></div>
+   <div class="mc-n">${sub}${note?'<br>'+note:''}</div>${canManage?pick+btns:''}
+   ${s.dirty?'<div class="warn">Saved settings differ from the loaded model. Reload to apply them.</div>':''}
+   ${MERR[k]?`<div class="err">${esc(MERR[k])}</div>`:''}
+   ${canManage?`<details${MOPEN[k]?' open':''}><summary>Tweak settings</summary>
+    ${T('n_ctx','Context size (tokens)','min="512" step="512"')}${T('n_gpu_layers','GPU layers (-1 = all)','min="-1"')}${T('n_threads','CPU threads (0 = auto)','min="0"')}${T('n_batch','Batch size (0 = default)','min="0" step="64"')}
+    <label class="f">Flash attention<select data-f="flash_attn"><option value="0"${c.flash_attn?'':' selected'}>Off</option><option value="1"${c.flash_attn?' selected':''}>On</option></select></label>
+    ${k==='vision'?'':`<label class="f t">Chat format<input type="text" data-f="chat_format" value="${esc(c.chat_format||'')}" placeholder="auto (from the GGUF)"></label>`}
+    <div class="btns"><button type="button" data-act="save">Save</button>${k==='vision'?'':'<button type="button" data-act="apply" class="primary">Save &amp; reload</button>'}</div>
+    ${k==='reasoner'?'<div class="mc-n">Reasoning sampling, token budget and instructions: Settings → Reasoning.</div>':''}</details>`:''}</div>`;
+}
+function renderSlots(){
+  if(!MS)return;
+  $('#slots').innerHTML=['coder','reasoner','vision'].map(slotCard).join('');
+  const n=MS.available.length;
+  $('#mdirs').textContent=(n?n+' model file'+(n>1?'s':'')+' found in ':'No .gguf files found in ')+MS.dirs.join(' · ')+'.  ★ = looked for first as the reasoner.';
+  $$('#slots details').forEach(d=>d.addEventListener('toggle',()=>{MOPEN[d.closest('.mc').dataset.slot]=d.open}));
+}
+const readCfg=card=>{const o={};card.querySelectorAll('[data-f]').forEach(i=>{const f=i.dataset.f;o[f]=f==='flash_attn'?i.value==='1':f==='chat_format'?i.value.trim():+i.value});return o};
+async function manage(k,label,fn){
+  if(MOP||busy){MERR[k]='Wait for the current job to finish (or press Stop) first.';renderSlots();return}
+  MOP=true;MERR[k]='';$('#pill').className='pill swap';$('#pilltx').textContent=label;
+  $$('#slots button').forEach(b=>b.disabled=true);
+  try{MS=await fn()}catch(e){MERR[k]=e.message}
+  MOP=false;await refreshModels(true);if(refreshInfo)refreshInfo().catch(()=>{});
+}
+$('#slots').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const card=b.closest('.mc'),k=card.dataset.slot,act=b.dataset.act,s=MS.slots[k],sel=card.querySelector('[data-pick]'),path=sel?.value||s.path,nm=(sel?.selectedOptions[0]?.textContent||s.name).replace(/^★ /,'').replace(/ · .*$/,'');
+  if(act==='load'){if(!path){MERR[k]='Choose a model file first.';renderSlots();return}
+    manage(k,'Loading '+nm+'…',()=>post_('/api/model/load',{slot:k,path}))}
+  else if(act==='unload')manage(k,'Unloading '+nm+'…',()=>post_('/api/model/unload',{slot:k}));
+  else if(act==='reload')manage(k,'Reloading '+nm+'…',()=>post_('/api/model/load',{slot:k,force:true}));
+  else if(act==='save')manage(k,'Saving settings…',()=>post_('/api/model/config',{slot:k,...readCfg(card)}));
+  else if(act==='apply')manage(k,'Reloading '+nm+'…',()=>post_('/api/model/config',{slot:k,...readCfg(card),reload:true}));
+});
+
+/* ---------- reasoning: reasoner thinks (coder unloaded), coder answers with its notes ---------- */
+let reasonOn=!!LS('gc.reason'),reasonOnce=false;
+function setReason(v){reasonOn=v;$('#reason').classList.toggle('on',v);$('#reason').setAttribute('aria-pressed',v);LS('gc.reason',v)}
+setReason(reasonOn);
+$('#reason').onclick=()=>{
+  const v=!reasonOn;
+  if(v&&MS&&!MS.slots.reasoner.path){showTab('model');note('Choose a reasoning model in the Model tab first.');return}
+  setReason(v);note(v?'Reason is on: the reasoning model thinks first, then the coder answers.':'',v);$('#input').focus();
+};
+const COMPLEX=/\b(why|how (do|can|should|would)|design|architect\w*|debug\w*|bug|error|fix|optimi[sz]e|refactor|implement\w*|trade-?offs?|compare|difference|best way|algorithm|plan)\b/i;
+function wantReason(text,planOn,once){
+  if(!reasonOn&&!once)return false;
+  if(once||$('#rmode').value==='always')return true;
+  return !!planOn||text.length>=160||text.includes('```')||COMPLEX.test(text);
+}
+function addNotes(payload,notes,cut){
+  const last=payload.messages[payload.messages.length-1];if(!last||last.role!=='user')return;
+  last.content+=`\n\n---\nPrivate planning notes from a separate reasoning model${cut?' (cut off at its token budget)':''}. Use what is correct, ignore what is not, and never mention or quote the notes:\n<notes>\n${notes.slice(0,8000)}\n</notes>`;
+}
+async function reasonStep(m,payload){
+  const pill=$('#pilltx'),ph=()=>m.el.querySelector('.foot .ph');
+  const say=l=>{if(m.stop1){m.stop1();m.stop1=null}const e=ph();if(e)e.textContent=l;pill.textContent=l;$('#pill').className='pill swap'};
+  const rest=()=>{paintPill(true);const e=ph();if(e&&!m.stop1)m.stop1=ticker(e,PHRASES,2600)};
+  let raw='',err=null,fin=null;
+  const clean=()=>{let c=raw.replace(/^\s+/,'');if(c.length<7&&'<think>'.startsWith(c))return'';c=c.replace(/^<think>\s*/,'');const e=c.indexOf('</think>');return(e>=0?c.slice(0,e):c).trim()};
+  const close=()=>{const n=clean();m.full=n?'<think>\n'+n+'\n</think>\n\n':''};
+  const body={messages:payload.messages.filter(x=>x.role!=='system'),
+    context:[$('#sys').value.trim(),$('#mem').value.trim()&&'Notes about the user:\n'+$('#mem').value.trim()].filter(Boolean).join('\n\n'),
+    temperature:+$('#r_temperature').value,top_p:+$('#r_top_p').value,top_k:+$('#r_top_k').value,repeat_penalty:+$('#r_repeat_penalty').value,
+    max_tokens:+$('#r_max_tokens').value,system:$('#r_sys').value.trim()};
+  try{
+    const r=await fetch('/api/reason',{method:'POST',headers:HDR,body:JSON.stringify(body),signal:ctl.signal});
+    if(!r.ok){let d='';try{d=(await r.json()).detail}catch{}throw new Error(d||('server answered '+r.status))}
+    const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
+    for(;;){const{done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});
+      let i;while((i=buf.indexOf('\n\n'))>=0){const line=buf.slice(0,i);buf=buf.slice(i+2);if(!line.startsWith('data: '))continue;
+        let ev;try{ev=JSON.parse(line.slice(6))}catch{continue}
+        if(ev.type==='stage')say(ev.label);
+        else if(ev.type==='token'){raw+=ev.text;const c=clean();if(c)m.full='<think>\n'+c}
+        else if(ev.type==='error')err=ev.message;
+        else if(ev.type==='done')fin=ev}}
+    if(!fin&&!err)err='the reasoning step ended early';
+  }catch(e){
+    if(e.name==='AbortError'){close();rest();throw e}
+    err=e.message;
+  }
+  close();rest();
+  const notes=clean();
+  if(err)note('Reasoning '+(notes?'was cut short: ':'skipped: ')+err);
+  return{notes,cut:fin?.finish_reason==='length'};
+}
 renderEmpty();hist_();setTitle();
 </script></body></html>
