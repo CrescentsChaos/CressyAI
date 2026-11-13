@@ -1,0 +1,6 @@
+# Optional: needed only for /imagine and /imgedit (Stable Diffusion .gguf).
+# Plain `pip install` builds the CPU version. For a GPU build, set the flag first, e.g. on Windows (CUDA):
+#   set CMAKE_ARGS=-DSD_CUDA=ON      then   pip install -r requirements-image.txt
+# (Vulkan: -DSD_VULKAN=ON, Metal: -DSD_METAL=ON). Older releases of the package call the CUDA flag -DSD_CUBLAS=ON.
+stable-diffusion-cpp-python
+pillow

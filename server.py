@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Local GGUF chat server.   python server.py --model path/to/model.gguf   (or start without --model and pick models in the app)"""
-import argparse, codecs, gc, json, math, os, platform, re, shutil, signal, subprocess, threading, time, uuid, webbrowser
+import argparse, base64, codecs, gc, importlib.util, json, math, os, platform, re, shutil, signal, subprocess, sys, tempfile, threading, time, uuid, webbrowser
+from collections import deque
 from pathlib import Path
 
 import uvicorn
@@ -34,6 +35,17 @@ ap.add_argument("--vision-mmproj", default=None, help="Qwen2.5-VL mmproj .gguf (
 ap.add_argument("--vision-n-ctx", type=int, default=16384, help="context window used while the vision model is loaded")
 ap.add_argument("--vision-max-tokens", type=int, default=4096, help="max tokens of extracted details per image")
 ap.add_argument("--no-vision", action="store_true", help="disable image attachments")
+ap.add_argument("--image-model", default=None,
+                help="Stable Diffusion .gguf for /imagine and /imgedit (default: stable-diffusion-xl-base-1.0-Q5_K_M.gguf in the models folder)")
+ap.add_argument("--image-vae", default=None, help="optional separate VAE (e.g. sdxl-vae-fp16-fix.safetensors) if images come out black")
+ap.add_argument("--image-clip-l", default=None, help="CLIP-L text encoder file, only for UNet-only SDXL .gguf files (default: auto-find clip_l* next to the model)")
+ap.add_argument("--image-clip-g", default=None, help="CLIP-G text encoder file, only for UNet-only SDXL .gguf files (default: auto-find clip_g*)")
+ap.add_argument("--image-dir", default=None, help="where generated images are saved (default: ./generated next to server.py)")
+ap.add_argument("--image-threads", type=int, default=None, help="CPU threads for image generation (default: auto)")
+ap.add_argument("--image-flash-attn", action="store_true", help="flash attention for the diffusion model (CUDA builds)")
+ap.add_argument("--image-low-vram", action="store_true", help="keep the text encoder and VAE on the CPU (slower, needs less VRAM)")
+ap.add_argument("--image-no-vae-tiling", action="store_true", help="decode the whole image at once (faster, needs more VRAM)")
+ap.add_argument("--no-image", action="store_true", help="disable image generation and editing")
 ap.add_argument("--host", default="127.0.0.1")
 ap.add_argument("--port", type=int, default=8000)
 ap.add_argument("--root", default=".", help="folder the app may read (default: current folder)")
@@ -46,6 +58,9 @@ args = ap.parse_args()
 
 MODELS_DIR_DEFAULT = r"E:\AI\Models"
 REASONER_PREFERRED = ["gemma-4-12b-it-Q4_K_M.gguf", "Qwen3-8B-Q6_K.gguf"]   # tried in this order
+IMAGE_PREFERRED = ["stable-diffusion-xl-base-1.0-Q5_K_M.gguf"]
+# files that belong to stable-diffusion.cpp, not llama.cpp: they must never be offered as coder / reasoner models
+IMG_NAME_RE = re.compile(r"stable[-_ ]?diffusion|sdxl|sd[-_]?xl|\bsd[-_]?3|\bsd[-_]?1|\bsd[-_]?2|flux", re.I)
 
 
 def model_dirs():
@@ -72,7 +87,8 @@ def scan_models():
             if k in seen or rp.suffix.lower() != ".gguf" or not rp.is_file():
                 return
             seen.add(k)
-            out.append({"name": rp.name, "path": str(rp), "size": rp.stat().st_size, "mmproj": "mmproj" in rp.name.lower()})
+            out.append({"name": rp.name, "path": str(rp), "size": rp.stat().st_size, "mmproj": "mmproj" in rp.name.lower(),
+                        "image": bool(IMG_NAME_RE.search(rp.name))})
         except OSError:
             pass
 
@@ -82,7 +98,7 @@ def scan_models():
                 add(f)
         except OSError:
             pass
-    for p in (args.model, args.reasoner, args.vision_model):
+    for p in (args.model, args.reasoner, args.vision_model, args.image_model):
         if p:
             add(p)
     return out
@@ -94,7 +110,7 @@ def find_reasoner():
     if args.reasoner:
         p = Path(args.reasoner).expanduser()
         return (str(p.resolve()), "") if p.is_file() else ("", f"reasoner not found: {p}")
-    byname = {m["name"].lower(): m for m in scan_models() if not m["mmproj"]}
+    byname = {m["name"].lower(): m for m in scan_models() if not m["mmproj"] and not m["image"]}
     for want in REASONER_PREFERRED:
         if want.lower() in byname:
             return byname[want.lower()]["path"], ""
@@ -114,7 +130,7 @@ def find_vision():
         cands = []
         for d in model_dirs():
             try:
-                cands += [f for f in d.glob("*.gguf") if "vl" in f.name.lower() and "mmproj" not in f.name.lower()]
+                cands += [f for f in d.glob("*.gguf") if "vl" in f.name.lower() and "mmproj" not in f.name.lower() and not IMG_NAME_RE.search(f.name)]
             except OSError:
                 pass
         cands.sort(key=lambda f: ("q4_k_m" not in f.name.lower(), f.name.lower()))
@@ -138,6 +154,67 @@ VL_MODEL, VL_MMPROJ, VL_WHY = find_vision()
 VL_OK = bool(VL_MODEL)
 
 R_MODEL, R_WHY = find_reasoner()
+
+
+def find_image():
+    if args.no_image:
+        return "", "disabled with --no-image"
+    if args.image_model:
+        p = Path(args.image_model).expanduser()
+        return (str(p.resolve()), "") if p.is_file() else ("", f"image model not found: {p}")
+    ms = [m for m in scan_models() if m["image"] and not m["mmproj"]]
+    byname = {m["name"].lower(): m for m in ms}
+    for want in IMAGE_PREFERRED:
+        if want.lower() in byname:
+            return byname[want.lower()]["path"], ""
+    if ms:
+        return ms[0]["path"], ""
+    return "", ("no Stable Diffusion .gguf found (looked for " + " or ".join(IMAGE_PREFERRED) + " in "
+                + ", ".join(str(d) for d in model_dirs()) + "; use --image-model)")
+
+
+IMG = {"path": "", "why": "", "proc": None, "cancel": False}
+IMG["path"], IMG["why"] = find_image()
+IMG_WORKER = Path(__file__).parent / "imagegen.py"
+IMG_DEP = ("" if importlib.util.find_spec("stable_diffusion_cpp") and importlib.util.find_spec("PIL") else
+           "stable-diffusion-cpp-python or Pillow is not installed. Run:  pip install -r requirements-image.txt")
+
+
+def find_companions(model_path):
+    """clip_l / clip_g / SDXL VAE files lying next to the model or in the models folders (used only for UNet-only checkpoints)."""
+    found = {"clip_l": args.image_clip_l or "", "clip_g": args.image_clip_g or "", "auto_vae": ""}
+    pats = {"clip_l": re.compile(r"(^|[^a-z])clip[-_ ]?l([^a-z]|$)", re.I), "clip_g": re.compile(r"(^|[^a-z])clip[-_ ]?g([^a-z]|$)", re.I),
+            "auto_vae": re.compile(r"vae", re.I)}
+    dirs = [Path(model_path).parent] + model_dirs()
+    for d in dirs:
+        try:
+            files = sorted(f for f in d.iterdir() if f.suffix.lower() in (".safetensors", ".gguf", ".sft", ".pt") and f.is_file())
+        except OSError:
+            continue
+        for key, rx in pats.items():
+            if found[key]:
+                continue
+            cands = [f for f in files if rx.search(f.name) and not IMG_NAME_RE.search(f.name)]
+            if key == "auto_vae":
+                cands.sort(key=lambda f: ("xl" not in f.name.lower(), f.name.lower()))
+            if cands:
+                found[key] = str(cands[0])
+    return found
+
+
+def image_ready():
+    """(ok, why-not). Checked on every call, because the Model tab can change the file and the folder can change too."""
+    if args.no_image:
+        return False, "disabled with --no-image"
+    if not IMG["path"]:
+        return False, IMG["why"] or "no Stable Diffusion model chosen"
+    if not Path(IMG["path"]).is_file():
+        return False, "image model file is gone: " + IMG["path"]
+    if not IMG_WORKER.is_file():
+        return False, "imagegen.py is missing next to server.py"
+    if IMG_DEP:
+        return False, IMG_DEP
+    return True, ""
 
 
 def base_cfg(path, n_ctx):
@@ -257,7 +334,8 @@ SLOT_UNLOAD = {"coder": unload_coder, "reasoner": unload_reasoner}
 
 
 def slot_loaded(slot):
-    return {"coder": llm is not None, "reasoner": rllm is not None, "vision": STATE["model"] == "vision"}[slot]
+    return {"coder": llm is not None, "reasoner": rllm is not None, "vision": STATE["model"] == "vision",
+            "image": STATE["model"] == "image"}[slot]
 
 
 def ntok(text):
@@ -660,6 +738,325 @@ async def vision(req: Request):
                              media_type="text/event-stream")
 
 
+# ---------------------------------------------------------------- images: Stable Diffusion in a separate worker process
+GEN_DIR = (Path(args.image_dir).expanduser() if args.image_dir else (HERE / "generated")).resolve()
+MARK = "@@CRESSY@@ "
+PROG_RE = re.compile(r"(\d+)\s*/\s*(\d+)\s*-\s*[\d.]+\s*(?:s/it|it/s)")   # sd.cpp's own progress line, used as a fallback
+GEN_NAME = re.compile(r"^[A-Za-z0-9_.-]{1,120}\.png$")
+SAMPLERS = ("euler_a", "euler", "dpm++2m", "dpm++2s_a", "heun", "dpm2", "lcm")
+SCHEDULERS = ("default", "karras", "discrete", "exponential")
+IMG_PROMPT_SYS = (
+    "You write prompts for Stable Diffusion XL. Turn the user's request into ONE prompt: comma-separated phrases covering "
+    "the subject, setting, style or medium, lighting, composition and quality (for example 'highly detailed, sharp focus'). "
+    "Keep it under 60 words and keep every detail the user asked for; never swap in a different subject. "
+    "If a current prompt and a requested change are given, output the full updated prompt: apply the change and keep "
+    "everything else. If the request says what to leave out (no text, no blur...), add a second line that starts with "
+    "NEGATIVE: and lists those things. Output only the prompt, with no explanation and no quotation marks."
+)
+
+
+def enhance_prompt(job):
+    """Let the coder (already in memory) turn a casual request into a good SDXL prompt. Raises if it cannot."""
+    if job["mode"] == "edit" and job.get("base_prompt"):
+        user = f"Current prompt:\n{job['base_prompt']}\n\nRequested change:\n{job['prompt']}"
+    elif job["mode"] == "edit":
+        user = ("The user is editing an existing picture and described the change below. Write the prompt for the picture "
+                f"as it should look after the change.\n\nRequested change:\n{job['prompt']}")
+    else:
+        user = f"Request:\n{job['prompt']}"
+    r = llm.create_chat_completion(messages=[{"role": "system", "content": IMG_PROMPT_SYS}, {"role": "user", "content": user}],
+                                   temperature=0.6, top_p=0.9, max_tokens=220, repeat_penalty=1.05)
+    text = r["choices"][0]["message"].get("content") or ""
+    text = re.sub(r"<think>[\s\S]*?</think>", "", text)
+    text = re.sub(r"<think>[\s\S]*$", "", text).strip().strip("`\"' \n")
+    parts = re.split(r"\n\s*NEGATIVE\s*:\s*", text, maxsplit=1, flags=re.I)
+    pos = re.sub(r"^(?:positive\s+)?prompt\s*:\s*", "", " ".join(parts[0].split()), flags=re.I).strip("\"' ")
+    neg = " ".join(parts[1].split()).strip("\"' ") if len(parts) > 1 else ""
+    if not 3 <= len(pos) <= 1200:
+        raise ValueError("the coder returned an empty or runaway prompt")
+    return pos, neg[:400]
+
+
+def log_hints(tail):
+    """The few log lines worth showing: real errors first, never the Python traceback noise that follows a failed load."""
+    noise = re.compile(r'^\s*(File "|\^+|Traceback|callback\(|self\.|return |raise |OSError|The above exception)')
+    lines = [l for l in tail if not noise.match(l)]
+    key = re.compile(r"error|fail|unknown|not found|missing|cannot|can't|unsupported|invalid|no such|out of memory|version", re.I)
+    hits = [l for l in lines if key.search(l)]
+    return (hits[:6] or lines[-6:]) or list(tail)[-3:]
+
+
+def image_fail(code, tail):
+    low = " ".join(tail).lower()
+    msg = f"The image engine stopped unexpectedly (exit code {code})."
+    if any(k in low for k in ("out of memory", "failed to allocate", "bad_alloc", "cuda error", "vk::")):
+        msg += " It looks like it ran out of memory: pick a smaller size in Settings → Images, or start the server with --image-low-vram."
+    if tail:
+        msg += " Last output: " + " | ".join(log_hints(tail)[:3])
+    return msg
+
+
+def image_gen(job, tmp):
+    """Optionally let the coder write the prompt -> unload every LLM -> run imagegen.py -> stream its progress -> reload the coder."""
+    err, cancelled, ok = None, False, False
+    state = {"done": False, "err": None, "prog": False, "seed": None}
+    tail = deque(maxlen=120)
+    t0 = time.perf_counter()
+
+    def handle(ln):
+        ln = ln.strip()
+        if not ln:
+            return None
+        if ln.startswith(MARK):
+            try:
+                ev = json.loads(ln[len(MARK):])
+            except ValueError:
+                return None
+            t = ev.get("type")
+            if t == "image":
+                ev["name"] = str(ev.pop("file"))
+                ev["url"] = "/generated/" + ev["name"]
+            elif t == "source":
+                ev["url"] = "/generated/" + str(ev["name"])
+            elif t == "progress":
+                state["prog"] = True
+            elif t == "done":
+                state["done"], state["seed"] = True, ev.get("seed")
+                return None
+            elif t == "error":
+                state["err"] = str(ev.get("message") or "the image engine failed")
+                return None
+            return ev
+        m = PROG_RE.search(ln)
+        if m and not state["prog"]:
+            return {"type": "progress", "step": int(m.group(1)), "steps": int(m.group(2)), "approx": True}
+        tail.append(ln[:300])
+        return None
+
+    with LOCK:
+        IMG["cancel"] = False
+        try:
+            if job["enhance"] and CFG["coder"]["path"]:
+                yield sse({"type": "stage", "stage": "prompt", "label": "Writing the prompt…"})
+                try:
+                    with SWAP:
+                        load_coder()
+                    pos, neg = enhance_prompt(job)
+                    job["prompt"] = pos
+                    if neg:   # merge, without repeating terms the user's own negative prompt already has
+                        seen, merged = set(), []
+                        for term in (job["negative"] + ", " + neg).split(","):
+                            term = term.strip()
+                            if term and term.lower() not in seen:
+                                seen.add(term.lower())
+                                merged.append(term)
+                        job["negative"] = ", ".join(merged)
+                except Exception as e:
+                    yield sse({"type": "note", "message": "Prompt helper skipped, using your words as they are: "
+                               + (str(e) or e.__class__.__name__)[:160]})
+            yield sse({"type": "prompt", "prompt": job["prompt"], "negative": job["negative"]})
+            if IMG["cancel"]:
+                cancelled = True
+            else:
+                yield sse({"type": "stage", "stage": "unload_coder", "label": "Unloading coder model…"})
+                with SWAP:
+                    unload_coder()
+                    unload_reasoner()
+                STATE["model"] = "image"
+                job.update(find_companions(IMG["path"]))
+                
+                job.update(model=IMG["path"], vae=args.image_vae or "", out_dir=str(GEN_DIR), threads=args.image_threads or 0,
+                           flash_attn=bool(args.image_flash_attn), low_vram=bool(args.image_low_vram),
+                           vae_tiling=not args.image_no_vae_tiling)
+                print("IMAGE COMPONENT CHECK:", flush=True)
+                for key in ("model", "clip_l", "clip_g", "vae"):
+                    path = job.get(key, "")
+                    print(
+                        f"{key}: {path!r} | exists: {Path(path).is_file() if path else False}",
+                        flush=True
+                    )
+                jobfile = Path(tmp) / "job.json"
+                jobfile.write_text(json.dumps(job), "utf-8")
+                kw = dict(stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=0, cwd=str(HERE),
+                          env={**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONIOENCODING": "utf-8"})
+                if os.name == "nt":
+                    kw["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP | getattr(subprocess, "CREATE_NO_WINDOW", 0)
+                else:
+                    kw["start_new_session"] = True
+                yield sse({"type": "stage", "stage": "load_image", "label": "Starting the image engine…"})
+                proc = subprocess.Popen([sys.executable, str(IMG_WORKER), str(jobfile)], **kw)
+                IMG["proc"] = proc
+                dec = codecs.getincrementaldecoder("utf-8")(errors="replace")
+                buf = ""
+                while True:
+                    chunk = proc.stdout.read(4096)   # raw pipe: returns whatever is available
+                    if not chunk:
+                        break
+                    buf += dec.decode(chunk)
+                    parts = re.split(r"[\r\n]+", buf)
+                    buf = parts.pop()
+                    for ln in parts:
+                        ev = handle(ln)
+                        if ev:
+                            yield sse(ev)
+                ev = handle(buf)
+                if ev:
+                    yield sse(ev)
+                code = proc.wait()
+                if IMG["cancel"]:
+                    cancelled = True
+                elif state["err"]:
+                    err = state["err"]
+                    if tail:   # the engine's own log lines usually say why (missing VAE / text encoder, out of memory...)
+                        err += "  Engine log: " + " | ".join(log_hints(tail))
+                elif not state["done"]:
+                    err = image_fail(code, tail)
+                ok = state["done"] and not err and not cancelled
+                if ok and CFG["coder"]["path"]:
+                    yield sse({"type": "stage", "stage": "load_coder", "label": "Loading coder model…"})
+                    with SWAP:
+                        load_coder()
+        except GeneratorExit:
+            raise
+        except Exception as e:
+            err = str(e) or e.__class__.__name__
+        finally:
+            p_, IMG["proc"] = IMG["proc"], None
+            if p_ is not None:
+                if p_.poll() is None:
+                    kill_tree(p_)
+                try:
+                    p_.wait(timeout=10)
+                    p_.stdout.close()
+                except Exception:
+                    pass
+            shutil.rmtree(tmp, ignore_errors=True)
+            if STATE["model"] == "image":
+                STATE["model"] = "none"
+            if CFG["coder"]["path"]:
+                try:
+                    with SWAP:
+                        load_coder()
+                except Exception as e:
+                    print("could not reload the coder model:", e)
+    if cancelled:
+        yield sse({"type": "cancelled"})
+    elif err:
+        yield sse({"type": "error", "message": err})
+    else:
+        yield sse({"type": "done", "seconds": round(time.perf_counter() - t0, 2), "seed": state["seed"]})
+
+
+def resolve_source(b, tmp):
+    src = b.get("source")
+    if not isinstance(src, dict):
+        raise HTTPException(400, "Editing needs a source image")
+    if isinstance(src.get("name"), str):
+        if not GEN_NAME.match(src["name"]):
+            raise HTTPException(400, "Bad image name")
+        p = (GEN_DIR / src["name"]).resolve()
+        if not p.is_file() or not p.is_relative_to(GEN_DIR):
+            raise HTTPException(404, "That image is no longer on disk")
+        return str(p)
+    d = src.get("data")
+    if not isinstance(d, str) or len(d) > 30_000_000 or not DATA_URL.match(d):
+        raise HTTPException(400, "the source must be a base64 data URL (png, jpeg, gif, bmp, webp)")
+    p = Path(tmp) / "source.img"
+    p.write_bytes(base64.b64decode(re.sub(r"\s+", "", d.split(",", 1)[1])))
+    return str(p)
+
+
+@app.post("/api/image")
+async def image_endpoint(req: Request):
+    need_ui(req)
+    ok, why = image_ready()
+    if not ok:
+        raise HTTPException(503, "Image generation is unavailable: " + why)
+    b = await req.json()
+    if not isinstance(b, dict):
+        raise HTTPException(400, "bad request")
+
+    def f(key, default, lo, hi, cast=float):
+        try:
+            return min(hi, max(lo, cast(b.get(key, default))))
+        except (TypeError, ValueError):
+            return default
+
+    mode = "edit" if b.get("mode") == "edit" else "gen"
+    prompt = str(b.get("prompt") or "").strip()[:2000]
+    if not prompt:
+        raise HTTPException(400, "Describe the image first")
+    job = dict(mode=mode, prompt=prompt, negative=str(b.get("negative") or "").strip()[:1000],
+               base_prompt=str(b.get("base_prompt") or "").strip()[:2000],
+               width=f("width", 1024, 256, 2048, int), height=f("height", 1024, 256, 2048, int),
+               steps=f("steps", 25, 1, 80, int), cfg=f("cfg", 7.0, 0.0, 30.0), strength=f("strength", 0.6, 0.05, 1.0),
+               count=f("count", 1, 1, 4, int), seed=f("seed", -1, -1, 2 ** 31 - 9, int),
+               sampler=b.get("sampler") if b.get("sampler") in SAMPLERS else "euler_a",
+               scheduler=b.get("scheduler") if b.get("scheduler") in SCHEDULERS else "default",
+               enhance=bool(b.get("enhance")))
+    tmp = tempfile.mkdtemp(prefix="cressy-img-")
+    try:
+        if mode == "edit":
+            job["source"] = resolve_source(b, tmp)
+    except Exception:
+        shutil.rmtree(tmp, ignore_errors=True)
+        raise
+    return StreamingResponse(image_gen(job, tmp), media_type="text/event-stream")
+
+
+@app.post("/api/image/cancel")
+async def image_cancel(req: Request):
+    need_ui(req)
+    IMG["cancel"] = True
+    p = IMG["proc"]
+    if p is not None and p.poll() is None:
+        kill_tree(p)
+        return {"ok": True}
+    return {"ok": False}
+
+
+@app.get("/generated/{name}")
+def generated(name: str):
+    p = (GEN_DIR / name).resolve()
+    if not GEN_NAME.match(name) or not p.is_file() or not p.is_relative_to(GEN_DIR):
+        raise HTTPException(404, "Not found")
+    return FileResponse(p, headers={"Cache-Control": "public, max-age=31536000, immutable"})
+
+
+@app.post("/api/image/save")
+async def image_save(req: Request):
+    need_ui(req)
+    if not CAN_WRITE:
+        raise HTTPException(403, "Writing files is disabled (--read-only, or a non-loopback host)")
+    b = await req.json()
+    name = str(b.get("name") or "") if isinstance(b, dict) else ""
+    src = (GEN_DIR / name).resolve()
+    if not GEN_NAME.match(name) or not src.is_file() or not src.is_relative_to(GEN_DIR):
+        raise HTTPException(404, "That image is no longer on disk")
+    folder = safe("generated-images")
+    folder.mkdir(exist_ok=True)
+    dst, n = folder / name, 1
+    while dst.exists():
+        dst = folder / f"{src.stem}-{n}{src.suffix}"
+        n += 1
+    shutil.copyfile(src, dst)
+    return {"path": rel_of(dst)}
+
+
+@app.post("/api/image/model")
+async def image_model(req: Request):
+    b = await model_body(req)
+    try:
+        rp = Path(str(b.get("path") or "")).expanduser().resolve()
+    except (OSError, ValueError):
+        raise HTTPException(400, "Bad model path")
+    for m in scan_models():
+        if m["image"] and not m["mmproj"] and Path(m["path"]) == rp:
+            IMG["path"], IMG["why"] = str(rp), ""
+            return status()
+    raise HTTPException(400, "That file is not a Stable Diffusion model in the models folder list")
+
+
 # ---------------------------------------------------------------- workspace: assets, writing files, terminal
 ASSETS = (HERE / "assets").resolve()
 CAN_EXEC = LOCAL or args.unsafe_remote_exec
@@ -682,6 +1079,8 @@ def asset(name: str):
 def caps():
     return {"terminal": CAN_RUN, "write": CAN_WRITE, "root": str(ROOT), "os": platform.system(),
             "vision": VL_OK, "vision_why": VL_WHY, "reasoner": bool(CFG["reasoner"]["path"]), "reasoner_why": R_WHY,
+            "image": image_ready()[0], "image_why": image_ready()[1],
+            "image_model": os.path.basename(IMG["path"]) if IMG["path"] else "",
             "can_manage": CAN_EXEC,
             "shell": os.environ.get("COMSPEC", "cmd") if os.name == "nt" else os.environ.get("SHELL", "/bin/sh")}
 
@@ -703,6 +1102,16 @@ def need_manage():
 
 
 def slot_status(slot):
+    if slot == "image":
+        ok, why = image_ready()
+        p = IMG["path"]
+        try:
+            size = os.path.getsize(p) if p else 0
+        except OSError:
+            size = 0
+        return {"slot": "image", "loaded": STATE["model"] == "image", "path": p, "name": os.path.basename(p) if p else "",
+                "size": size, "cfg": {}, "dirty": False, "available": ok, "why": why,
+                "vae": os.path.basename(args.image_vae) if args.image_vae else ""}
     c = CFG[slot]
     p = c["path"]
     try:
@@ -731,8 +1140,9 @@ def status():
     ms = scan_models()
     names = {m["name"].lower() for m in ms}
     return {"state": STATE["model"], "busy": LOCK.locked(),
-            "slots": {k: slot_status(k) for k in ("coder", "reasoner", "vision")},
-            "available": [m for m in ms if not m["mmproj"]],
+            "slots": {k: slot_status(k) for k in ("coder", "reasoner", "vision", "image")},
+            "available": [m for m in ms if not m["mmproj"] and not m["image"]],
+            "image_models": [m for m in ms if m["image"] and not m["mmproj"]],
             "preferred": [n for n in REASONER_PREFERRED if n.lower() in names],
             "wanted": REASONER_PREFERRED, "dirs": [str(d) for d in model_dirs()]}
 
@@ -748,9 +1158,9 @@ def allowed_model(path):
     except (OSError, ValueError):
         raise HTTPException(400, "Bad model path")
     for m in scan_models():
-        if not m["mmproj"] and Path(m["path"]) == rp:
+        if not m["mmproj"] and not m["image"] and Path(m["path"]) == rp:
             return str(rp)
-    raise HTTPException(400, "That file is not in the models folder list")
+    raise HTTPException(400, "That file is not in the models folder list (or it is an image model)")
 
 
 def num(v, lo, hi, label):
@@ -1134,6 +1544,9 @@ if __name__ == "__main__":
     print("Reasoner: " + (os.path.basename(CFG["reasoner"]["path"]) + "  (loaded only while reasoning; the coder is unloaded meanwhile)" if CFG["reasoner"]["path"] else f"off ({R_WHY})"))
     print("Vision: " + (f"{os.path.basename(VL_MODEL)} + {os.path.basename(VL_MMPROJ)} (loaded only while an image is read; the coder is unloaded meanwhile)"
                          if VL_OK else f"off ({VL_WHY})"))
+    ok_, why_ = image_ready()
+    print("Images: " + (f"{os.path.basename(IMG['path'])} (loaded only while an image is made; the coder is unloaded meanwhile)"
+                        if ok_ else f"off ({why_})"))
     print(f"Terminal: {'on' if CAN_RUN else 'off'}   Write files: {'on' if CAN_WRITE else 'off'}"
           + ("   !! non-loopback host with --unsafe-remote-exec: anyone who can reach this port can run commands !!"
              if (not LOCAL and args.unsafe_remote_exec) else ""))

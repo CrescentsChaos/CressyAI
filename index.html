@@ -285,6 +285,35 @@ img.hlogo{display:block;width:168px;height:auto;margin:0 auto;padding:14px 20px;
 label.chk{display:flex;gap:8px;align-items:center;color:var(--mut);font-size:13px;margin-top:8px}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:12px;padding:9px 14px;z-index:70;max-width:min(92vw,520px);font-size:13px;animation:pop .2s ease both}
 .toast.good{border-color:var(--ok)}.toast.bad{border-color:var(--danger)}
+
+/* images: generate + edit */
+.genmsg .body{display:none}
+.gen{margin:4px 0 8px;max-width:560px;width:100%}
+.gen-grid{display:grid;gap:10px}
+.gen-grid.n1{grid-template-columns:minmax(0,440px)}.gen-grid.n1 .gi img{max-height:62vh;object-fit:contain;background:var(--card2)}.gen-grid.n2,.gen-grid.n3,.gen-grid.n4{grid-template-columns:repeat(2,minmax(0,1fr))}
+.gi{position:relative;margin:0;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--card2);box-shadow:var(--shadow);animation:gin .35s ease both}
+.gi img{display:block;width:100%;height:auto;cursor:zoom-in}
+.gi.ph{display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;min-height:170px;padding:18px;color:var(--mut);font-size:12.5px;text-align:center;
+ background:linear-gradient(110deg,var(--card2) 30%,color-mix(in srgb,var(--acc) 15%,var(--card2)) 50%,var(--card2) 70%);background-size:220% 100%;animation:gsh 1.8s linear infinite}
+.gi.gone{display:grid;place-items:center;min-height:120px;padding:14px;color:var(--mut);font-size:12.5px;text-align:center}
+.gbar{width:72%;height:6px;border-radius:6px;background:color-mix(in srgb,var(--ink) 14%,transparent);overflow:hidden}
+.gbar i{display:block;height:100%;width:0;background:var(--grad);border-radius:6px;transition:width .25s}
+.gbar.ind i{width:38%;animation:gind 1.3s ease-in-out infinite}
+.gi-a{position:absolute;left:8px;right:8px;bottom:8px;display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;opacity:0;transform:translateY(4px);transition:opacity .18s,transform .18s}
+.gi:hover .gi-a,.gi:focus-within .gi-a{opacity:1;transform:none}
+@media(hover:none){.gi-a{opacity:1;transform:none}}
+.gi-a button{background:#000a;color:#fff;border:0;backdrop-filter:blur(8px);padding:5px 8px;font-size:12px;border-radius:8px}.gi-a button:hover{background:var(--acc);color:#fff}
+.gi-w{position:absolute;left:8px;top:8px;right:8px;background:#7a1f1fe6;color:#fff;font-size:12px;padding:6px 9px;border-radius:9px}
+.gen-src{display:flex;align-items:center;gap:7px;margin-top:8px;color:var(--mut);font-size:12px}.gen-src img{width:34px;height:34px;border-radius:8px;object-fit:cover;border:1px solid var(--line)}
+.gen-p{margin-top:8px;font-size:12px;color:var(--mut)}.gen-p summary{cursor:pointer;user-select:none}.gen-p summary:hover{color:var(--ink)}
+.gen-p pre{margin:6px 0 0;padding:10px 12px;background:var(--card2);border:1px solid var(--line);border-radius:12px;white-space:pre-wrap;word-break:break-word;max-height:240px;overflow:auto;font:12px/1.5 var(--mono);color:var(--ink)}
+.gen-err{margin-top:8px;padding:9px 12px;border-radius:12px;border:1px solid color-mix(in srgb,var(--danger) 55%,var(--line));color:var(--danger);font-size:13px;background:color-mix(in srgb,var(--danger) 8%,transparent)}
+.echip{display:inline-flex;align-items:center;gap:7px;margin:0 0 8px 2px;background:var(--card2);border:1px solid color-mix(in srgb,var(--acc) 50%,var(--line));border-radius:999px;padding:3px 4px 3px 4px;font-size:12px;animation:pop .2s ease both}
+.echip[hidden]{display:none}.echip img{width:24px;height:24px;border-radius:50%;object-fit:cover}.echip button{border:0;padding:2px;color:var(--mut);border-radius:50%}.echip button:hover{color:var(--danger)}
+.lb .mbody img{display:block;max-width:100%;max-height:72vh;margin:0 auto;border-radius:12px}
+@keyframes gin{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes gsh{to{background-position:-220% 0}}
+@keyframes gind{0%{transform:translateX(-110%)}100%{transform:translateX(280%)}}
 </style></head><body>
 <div class="bg"></div>
 <div class="app" id="app">
@@ -315,12 +344,14 @@ label.chk{display:flex;gap:8px;align-items:center;color:var(--mut);font-size:13p
   <div class="cwrap"><div class="cin">
    <div id="pop" class="pop" hidden></div>
    <form id="f" class="composer">
+    <div id="editchip" class="echip" hidden></div>
     <div id="tray" hidden></div>
     <textarea id="input" rows="1" placeholder="Ask anything…  /command · @file · Shift+Enter for newline" aria-label="Message"></textarea>
     <div class="crow">
      <button type="button" class="ib" id="attach" aria-label="Attach files" title="Attach files from your computer" data-ic="clip" data-s="18"></button>
      <button type="button" class="pbtn" id="reason" aria-pressed="false" title="Reason first: a separate reasoning model thinks the task through (the coder is unloaded meanwhile), then the coder answers using its notes"><i data-ic="spark" data-s="14"></i>Reason</button>
      <button type="button" class="pbtn" id="plan" aria-pressed="false" title="Plan mode: the model writes a plan first, you approve it, then it builds"><i data-ic="list" data-s="14"></i>Plan</button>
+     <button type="button" class="pbtn" id="imgmode" aria-pressed="false" title="Image mode (Alt+I): every message becomes an image prompt. Attach an image to edit it instead."><i data-ic="image" data-s="14"></i>Image</button>
      <select id="mode" class="msel" aria-label="Mode"></select>
      <span class="hint">Enter to send · ↑ recalls · Esc stops</span>
      <button id="go" type="submit" aria-label="Send"><span class="sd" data-ic="up" data-s="19"></span><span class="st" data-ic="stop" data-s="17"></span></button>
@@ -387,6 +418,18 @@ label.chk{display:flex;gap:8px;align-items:center;color:var(--mut);font-size:13p
     <label class="f">Repeat penalty<input type="number" id="r_repeat_penalty" value="1" step="0.05" min="1"></label>
     <label class="f">Token budget<input type="number" id="r_max_tokens" value="1500" min="64" max="8192" step="100"></label>
     <label class="f w"><textarea id="r_sys" placeholder="Optional: replace the built-in instructions the reasoning model gets. Leave empty for the default."></textarea></label>
+    <h3>Images</h3>
+    <label class="f">Size<select id="img_size"><option value="1024x1024">1024 × 1024</option><option value="832x1216">832 × 1216 portrait</option><option value="1216x832">1216 × 832 landscape</option><option value="768x768">768 × 768 faster</option><option value="640x640">640 × 640 fastest</option></select></label>
+    <label class="f">Steps<input type="number" id="img_steps" value="25" min="1" max="80"></label>
+    <label class="f">Guidance (CFG)<input type="number" id="img_cfg" value="7" step="0.5" min="0" max="30"></label>
+    <label class="f">Sampler<select id="img_sampler"><option value="euler_a">Euler a</option><option value="euler">Euler</option><option value="dpm++2m">DPM++ 2M</option><option value="dpm++2s_a">DPM++ 2S a</option><option value="heun">Heun</option><option value="dpm2">DPM2</option><option value="lcm">LCM</option></select></label>
+    <label class="f">Scheduler<select id="img_sched"><option value="default">Default</option><option value="karras">Karras</option><option value="discrete">Discrete</option><option value="exponential">Exponential</option></select></label>
+    <label class="f">Seed (-1 = random)<input type="number" id="img_seed" value="-1" min="-1"></label>
+    <label class="f">Images per request<input type="number" id="img_count" value="1" min="1" max="4"></label>
+    <label class="f">Edit strength<input type="number" id="img_strength" value="0.6" step="0.05" min="0.05" max="1"></label>
+    <label class="f">Coder writes the prompt<select id="img_enhance"><option value="1">On</option><option value="0">Off</option></select></label>
+    <label class="f w"><textarea id="img_neg" placeholder="Negative prompt: things to keep out of every image">blurry, low quality, deformed, extra fingers, watermark, text</textarea></label>
+    <div class="mc-n" style="margin-bottom:6px">Edit strength: low keeps the original, high repaints it. With <i>Coder writes the prompt</i> on, the coder turns your words into a Stable Diffusion prompt first (you can read it under each image).</div>
     <h3>Workspace</h3>
     <label class="f">Teach file / chart / command formats<select id="tools"><option value="1">On</option><option value="0">Off</option></select></label>
     <label class="f">Confirm model commands<select id="confirmrun"><option value="ask">Ask</option><option value="no">Never</option></select></label>
@@ -543,11 +586,13 @@ chev:'<path d="m6 9 6 6 6-6"/>',download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 
 sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
 moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',half:'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>',
 keys:'<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>'};
-Object.assign(P,{list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>'});
+Object.assign(P,{list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',
+expand:'<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>'});
 const ic=(n,s=16)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${P[n]}</svg>`;
 $$('[data-ic]').forEach(e=>e.innerHTML=ic(e.dataset.ic,+e.dataset.s||16));
 
-let refreshInfo=null,info=null,msgs=[],busy=false,ctl=null,hist=[],stick=true,att=[],cwd='';
+let refreshInfo=null,info=null,msgs=[],busy=false,ctl=null,hist=[],stick=true,att=[],cwd='',imgMode=false,editFrom=null;
 const chat=$('#chat'),msgsEl=$('#msgs'),app=$('#app');
 const LS=(k,v)=>{try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch{return null}};
 
@@ -649,6 +694,7 @@ function setBody(b,md,streaming){
   pres.forEach((code,i)=>{if(code.dataset.hl||(open&&i===pres.length-1))return;try{hljs.highlightElement(code)}catch{}code.dataset.hl='1'});
 }
 function foot(m){
+  if(m.gen)return m.gen.foot||'';
   if(m.files?.length)return'Attached: '+m.files.map(f=>f.name).join(', ');
   const s=m.stats;if(!s)return'';
   const p=[];if(s.completion_tokens!=null)p.push(s.completion_tokens+' tokens');
@@ -660,7 +706,7 @@ function foot(m){
 function startStatus(m){
   const f=m.el.querySelector('.foot');
   f.innerHTML='<span class="status"><span class="orb"></span><span class="ph shimmer"></span><span class="dots"><i></i><i></i><i></i></span><span class="clk"></span></span>';
-  m.st=f.firstChild;m.stop1=ticker(f.querySelector('.ph'),PHRASES,2600);
+  m.st=f.firstChild;m.stop1=ticker(f.querySelector('.ph'),m.gen?IMGP:PHRASES,2600);
   const t0=performance.now(),upd=()=>{
     m.st.querySelector('.clk').textContent=clock(((performance.now()-t0)/1000)|0);
     if(m.t0&&!m.thinkMs){const tt=m.el.querySelector('.think-time');if(tt)tt.textContent=clock(((performance.now()-m.t0)/1000)|0)}
@@ -690,6 +736,7 @@ function paint(m,live){
   const el=m.el,b=el.querySelector('.body'),f=el.querySelector('.foot');el.classList.toggle('streaming',!!live);
   if(m.role==='user'){if(b.textContent!==m.content)b.textContent=m.content;const t=foot(m);if(f.textContent!==t)f.textContent=t;paintImgs(m);return}
   const s=split(m.content,live);
+  if(m.gen)paintGen(m);
   paintThink(m,s,live);
   setBody(b,s.ans,live);
   if(live){if(!m.st)startStatus(m)}
@@ -773,6 +820,7 @@ function setBusy(b){busy=b;const g=$('#go');g.classList.toggle('stop',b);g.setAt
    boundaries) so text flows steadily instead of arriving in bursts; markdown is re-rendered at most ~22x/s. */
 async function send(raw,opts={}){
   let text=$('#input').value.trim();const typed=text;if((!text&&!att.some(a=>a.thumb))||busy)return;
+  const gi=imgIntent(text);if(gi)return sendImage(gi);
   if(!text)text='What is in this image? Summarize it and tell me what we could do with it.';SENT.push(text);si=0;
   if(raw!==true){text=await expand(text);if(text==null)return}
   $('#input').value='';grow();pop.hidden=true;
@@ -785,7 +833,7 @@ async function send(raw,opts={}){
   if(u.files.some(f=>typeof f.image==='string'&&f.image.length>1&&!f.desc)&&!await analyze(u,m,typed,doReason))return;
   const mem=$('#mem').value.trim(),seen=msgs.some(x=>x.files?.some(f=>f.desc)),
     sys=[$('#sys').value.trim(),toolsPrompt(),seen&&IMG_SYS,planOn&&PLAN_PROMPT,mem&&'Standing notes about the user (always respect them):\n'+mem].filter(Boolean).join('\n\n');
-  const payload={messages:[...(sys?[{role:'system',content:sys}]:[]),...msgs.slice(0,-1).map(x=>({role:x.role,content:x.role==='user'?withFiles(x.content,x.files||[]):(split(x.content).ans||x.content)}))],...params()};
+  const payload={messages:[...(sys?[{role:'system',content:sys}]:[]),...msgs.slice(0,-1).map(x=>({role:x.role,content:x.role==='user'?withFiles(x.content,x.files||[]):asst(x)}))],...params()};
   const t0=performance.now();let tf=0,n=0,last=t0,acc=0,lastR=0,dirty=false,fin=false,aborted=false,raf=0,done;
   const drained=new Promise(r=>done=r);
   const loop=ts=>{
@@ -823,6 +871,7 @@ async function send(raw,opts={}){
   m.content=m.full;m.live=false;paint(m,false);setBusy(false);save();refreshModels();
   if(m.stats?.finish_reason==='length'){const b=document.createElement('button');b.type='button';b.innerHTML=ic('right',14)+'<span>Continue</span>';b.onclick=()=>{b.remove();$('#input').value='/continue';send()};m.el.querySelector('.acts').append(b)}
 }
+const asst=x=>x.gen?`[Generated ${x.gen.images?.length||0} image(s) with Stable Diffusion from this prompt: ${x.gen.prompt}]`:(split(x.content).ans||x.content);
 const IMG_SYS='The user can attach images. A separate vision model reads each image first; its extracted description appears in the message under "Image:". Treat that description as what the picture contains and work from it. Never say you cannot see images; if a detail is missing from the description, say so.';
 /* image step: coder out -> Qwen2.5-VL reads the image(s) -> VL out -> coder back in (all done by the server) */
 async function analyze(u,m,typed,reasonNext){
@@ -889,7 +938,7 @@ const IMG_RE=/^image\/(png|jpe?g|gif|webp|bmp)$/,IMG_MAX=1280,MAX_IMGS=4;
 const readURL=f=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=()=>no(r.error);r.readAsDataURL(f)});
 const loadImg=src=>new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(new Error('could not read this image'));i.src=src});
 async function addImage(f){
-  if(!CAPS.vision){note('Images need the Qwen2.5-VL models: '+(CAPS.vision_why||'not found'));return}
+  if(!CAPS.vision&&!CAPS.image){note('Images need the Qwen2.5-VL models or a Stable Diffusion model: '+(CAPS.vision_why||'not found'));return}
   if(att.filter(a=>a.thumb).length>=MAX_IMGS){note('Up to '+MAX_IMGS+' images per message');return}
   try{
     const raw=await readURL(f),img=await loadImg(raw),w=img.naturalWidth,h=img.naturalHeight,k=Math.min(1,IMG_MAX/Math.max(w,h));
@@ -996,7 +1045,11 @@ newfile:['d','Create the file(s) described below. Use one file: block per file w
 edit:['d','Change the attached file(s) as requested below. Use edit: blocks with SEARCH/REPLACE sections, not a full rewrite'],
 run:['d','Give me the terminal command(s), in one bash block, to do this']});
 SUGG.push(['Plan a feature','/plan','Get a step-by-step plan first, then approve it'],['Make a chart','/chart','Bar, line, pie and more from your data'],['Create a file','/newfile','Generate files you can save or download'],['Edit a file','/edit','Attach a file, describe the change, review the diff']);
-let HELP=`**Slash commands** (paste code after the command, attach files, or use the last code block in the chat)\n\n`+Object.entries(CMDS).map(([k,[t,d]])=>`- \`/${k}\` ${t==='c'?'code':'description'} — ${d}`).join('\n')+`\n\n\`/commit\` with nothing else uses your **staged** git diff; \`/review\` uses your **working** diff.\n\n**@file** — type \`@path/to/file.py\` to attach a file (Tab completes).\n\n**Files panel:** click a folder to enter it, **Back** (button, Backspace or Alt+←) to return, Alt+→ forward, breadcrumbs to jump up.\n\n**Images:** attach, drop or paste a PNG / JPG / WebP / GIF. Qwen2.5-VL reads it first (the coder is unloaded meanwhile), is unloaded again, then the coder comes back and answers using what was extracted. Open *Image details* under your message to see it.\n\n**Reasoning:** the *Reason* button (or \`/think\`) makes a separate reasoning model (gemma-4-12b-it / Qwen3-8B from your models folder) think the task through first while the coder stays unloaded; then the coder loads and answers using its notes. Load, unload and tweak every model in the *Model* tab.\n\n**Shortcuts:** Enter send · Shift+Enter newline · Esc stop / close popup · ↑ recall previous message · Alt+N new chat · Alt+L focus input · Alt+R retry last reply · Alt+C copy last reply · Alt+E export chat · Alt+S tools panel · Alt+B chat list · Alt+/ this help`;
+Object.assign(CMDS,{imagine:['d','Generate an image with Stable Diffusion XL from your description (aliases: /img, /draw)'],
+imgedit:['d','Edit the attached image, or the last generated one, as you describe (alias: /retouch)']});
+SUGG.push(['Generate an image','/imagine','Stable Diffusion XL on your machine'],['Edit an image','/imgedit','Change the last or an attached picture']);
+let HELP=`**Slash commands** (paste code after the command, attach files, or use the last code block in the chat)\n\n`+Object.entries(CMDS).map(([k,[t,d]])=>`- \`/${k}\` ${t==='c'?'code':'description'} — ${d}`).join('\n')+`\n\n\`/commit\` with nothing else uses your **staged** git diff; \`/review\` uses your **working** diff.\n\n**@file** — type \`@path/to/file.py\` to attach a file (Tab completes).\n\n**Files panel:** click a folder to enter it, **Back** (button, Backspace or Alt+←) to return, Alt+→ forward, breadcrumbs to jump up.\n\n**Images:** attach, drop or paste a PNG / JPG / WebP / GIF. Qwen2.5-VL reads it first (the coder is unloaded meanwhile), is unloaded again, then the coder comes back and answers using what was extracted. Open *Image details* under your message to see it.\n\n**Reasoning:** the *Reason* button (or \`/think\`) makes a separate reasoning model (gemma-4-12b-it / Qwen3-8B from your models folder) think the task through first while the coder stays unloaded; then the coder loads and answers using its notes. Load, unload and tweak every model in the *Model* tab.\n\n**Shortcuts:** Enter send · Shift+Enter newline · Esc stop / close popup · ↑ recall previous message · Alt+N new chat · Alt+L focus input · Alt+R retry last reply · Alt+C copy last reply · Alt+E export chat · Alt+S tools panel · Alt+B chat list · Alt+/ this help · Alt+I image mode · Alt+G new seed for the last image · Alt+V edit the last image`;
+HELP+=`\n\n**Images (Stable Diffusion XL):** \`/imagine a lighthouse at dawn, oil painting\` makes an image; \`/imgedit make it night\` edits the attached image, or the last one generated. The *Image* button (Alt+I) turns every message into an image prompt, and an attached picture is then edited instead. Under each image: enlarge, download, edit, vary, re-roll (new seed) and save to the project. The coder writes the Stable Diffusion prompt for you (turn that off in Settings → Images); it is unloaded while the image is made and comes back afterwards. Editing is img2img: describe how the picture should look afterwards, and raise or lower *Edit strength* to change more or less.`;
 function preview(lang,code){
   let html=code;
   if(/^(js|javascript)$/.test(lang))html='<body style="font:14px monospace;padding:12px"><pre id=o style="white-space:pre-wrap"></pre><script>const o=document.getElementById("o"),p=(...a)=>o.textContent+=a.map(x=>typeof x==="object"?JSON.stringify(x):x).join(" ")+"\\n";console.log=p;onerror=m=>p("Error: "+m);try{'+code+'\n}catch(e){p("Error: "+e.message)}<\/script>';
@@ -1018,7 +1071,7 @@ async function compact(){
   if(busy||msgs.length<2){note('Nothing to compact yet');return}
   setBusy(true);ctl=new AbortController();note('Summarizing this chat…',true);
   try{
-    const hist=msgs.map(x=>({role:x.role,content:x.role==='user'?withFiles(x.content,x.files||[]):(split(x.content).ans||x.content)}));
+    const hist=msgs.map(x=>({role:x.role,content:x.role==='user'?withFiles(x.content,x.files||[]):asst(x)}));
     const sum=await complete([{role:'system',content:'You compress conversations. Keep every decision, fact, name, file name, code detail and open task. Be brief.'},...hist,{role:'user',content:'Summarize everything above as compact bullet notes so the conversation can continue from them alone.'}],600);
     const a='Understood. I have the summary and will continue from there.';
     msgs=[{role:'user',content:'Summary of our conversation so far:\n\n'+sum,full:sum},{role:'assistant',content:a,full:a}];
@@ -1078,7 +1131,7 @@ const showTab=n=>{tab(n);if(mob()){app.classList.remove('lopen');app.classList.a
 
 /* ---------- workspace state: files the model produced this chat ---------- */
 let WS=new Map();   // path -> {orig:string|null, cur, saved, crlf}
-const resetWS=()=>{WS=new Map();paintChanges()};
+const resetWS=()=>{WS=new Map();paintChanges();editFrom=null;if(window.paintEditChip)paintEditChip()};
 function recordWS(path,before,after,saved,crlf){
   const e=WS.get(path);WS.set(path,{orig:e?e.orig:before,cur:after,saved:!!saved,crlf:e?e.crlf:!!crlf});paintChanges();
 }
@@ -1179,7 +1232,7 @@ function paintCaps(){
   $('#termnote').textContent=CAPS.terminal?'Every command starts fresh in '+CAPS.root+' ('+(CAPS.os||'shell')+'). It runs with your user permissions.':'The terminal is turned off for this server (started with --no-terminal, or on a non-loopback host).';
   paintTerm();paintChanges();
 }
-fetch('/api/caps').then(r=>r.json()).then(c=>{CAPS=c;paintCaps()}).catch(()=>paintCaps());
+fetch('/api/caps').then(r=>r.json()).then(c=>{CAPS=c;paintCaps();paintImgBtn()}).catch(()=>paintCaps());
 async function runCommand(cmd,sink){
   if(!CAPS.terminal){toast('The terminal is disabled on this server','bad');return null}
   if(term.running){toast('A command is already running. Stop it first.','bad');return null}
@@ -1341,7 +1394,7 @@ function save(){
   if(!msgs.length)return;
   if(!cid)cid=Date.now().toString(36);
   const old=chats().find(c=>c.id===cid),rest=chats().filter(c=>c.id!==cid);
-  rest.unshift({id:cid,pin:old?.pin,title:titleOf().slice(0,48),msgs:msgs.map(({role,content,files,stats,thinkMs,plan,planDone})=>({role,content,stats,thinkMs,plan,planDone,files:(files||[]).map(x=>({name:x.name,tokens:x.tokens,text:'',image:x.image?1:undefined,thumb:x.thumb,desc:x.desc}))}))});
+  rest.unshift({id:cid,pin:old?.pin,title:titleOf().slice(0,48),msgs:msgs.map(({role,content,files,stats,thinkMs,plan,planDone,gen})=>({role,content,stats,thinkMs,plan,planDone,gen,files:(files||[]).map(x=>({name:x.name,tokens:x.tokens,text:'',image:x.image?1:undefined,thumb:x.thumb,desc:x.desc}))}))});
   LS('gc.chats',rest.slice(0,50));hist_();
 }
 function load(id){
@@ -1376,7 +1429,7 @@ function acts(m){
   mk('trash','Delete',()=>{if(busy)return;const i=msgs.indexOf(m);if(i>=0)msgs.splice(i,1);m.el.remove();if(!msgs.length)renderEmpty();setTitle();save()});
 }
 function regen(m){
-  if(busy)return;if(msgs[msgs.length-1]!==m){note('Only the last reply can be retried');return}
+  if(busy)return;if(m.gen)return imgRetry(m);if(msgs[msgs.length-1]!==m){note('Only the last reply can be retried');return}
   msgs.pop();m.el.remove();const u=msgs.pop();u.el.remove();att=u.files||[];renderTray();$('#input').value=u.content;planOnce=!!m.plan;send(true);
 }
 function edit(m){
@@ -1387,7 +1440,7 @@ function edit(m){
 const lastReply=()=>[...msgs].reverse().find(m=>m.role==='assistant');
 function exportMd(){dl_('chat.md',msgs.map(m=>`## ${m.role==='user'?'You':'Model'}\n\n${m.content}\n`).join('\n'))}
 /* ---------- settings ---------- */
-const SET=['mem','sys','temperature','top_p','top_k','repeat_penalty','max_tokens','tools','confirmrun','runtimeout','rmode','r_temperature','r_top_p','r_top_k','r_repeat_penalty','r_max_tokens','r_sys'];
+const SET=['mem','sys','temperature','top_p','top_k','repeat_penalty','max_tokens','tools','confirmrun','runtimeout','rmode','r_temperature','r_top_p','r_top_k','r_repeat_penalty','r_max_tokens','r_sys','img_size','img_steps','img_cfg','img_sampler','img_sched','img_seed','img_count','img_strength','img_enhance','img_neg'];
 $('#mode').innerHTML=Object.keys(MODES).map(k=>`<option>${k}</option>`).join('');
 const saveSet=()=>LS('gc.set',{...Object.fromEntries(SET.map(i=>[i,$('#'+i).value])),mode:$('#mode').value});
 const st=LS('gc.set');
@@ -1454,7 +1507,7 @@ $('#input').addEventListener('keydown',e=>{
 addEventListener('keydown',e=>{
   if(e.key==='Escape'){if(!pop.hidden)pop.hidden=true;else if(busy)ctl.abort();else app.classList.remove('lopen','ropen');return}
   if(!e.altKey)return;
-  const A={KeyN:newChat,KeyL:()=>$('#input').focus(),KeyR:()=>{const l=lastReply();l&&regen(l)},KeyC:()=>{const l=lastReply();l&&navigator.clipboard.writeText(l.content)},KeyE:exportMd,KeyS:togR,KeyB:togL,KeyT:()=>showTab('term'),Slash:()=>localMsg(HELP)}[e.code];
+  const A={KeyN:newChat,KeyL:()=>$('#input').focus(),KeyR:()=>{const l=lastReply();l&&regen(l)},KeyC:()=>{const l=lastReply();l&&navigator.clipboard.writeText(l.content)},KeyE:exportMd,KeyS:togR,KeyB:togL,KeyT:()=>showTab('term'),Slash:()=>localMsg(HELP),KeyI:()=>setImgMode(!imgMode),KeyG:()=>imgRerollLast(),KeyV:()=>imgEditLast()}[e.code];
   if(A){e.preventDefault();A()}
 });
 $('#clear').onclick=newChat;$('#exp').onclick=exportMd;$('#help').onclick=()=>{localMsg(HELP);if(mob())app.classList.remove('lopen')};
@@ -1468,7 +1521,8 @@ poll();setInterval(poll,2000);refreshModels(true);setInterval(()=>{if(!document.
 
 /* ---------- models: manual load / unload / tweak, and the reasoning step ---------- */
 let MS=null,MOP=false,msig='';const MERR={},MOPEN={};
-const SLOT_INFO={coder:['Coder','Answers your messages and writes the code.'],reasoner:['Reasoner','Thinks the task through first. The coder is unloaded while it runs.'],vision:['Vision','Reads attached images. It loads only while an image is being read.']};
+const SLOT_INFO={coder:['Coder','Answers your messages and writes the code.'],reasoner:['Reasoner','Thinks the task through first. The coder is unloaded while it runs.'],vision:['Vision','Reads attached images. It loads only while an image is being read.'],
+  image:['Image','Makes and edits pictures (Stable Diffusion). It loads only while an image is being made; the coder is unloaded meanwhile.']};
 async function post_(url,body){
   const r=await fetch(url,{method:'POST',headers:HDR,body:JSON.stringify(body)});let d={};try{d=await r.json()}catch{}
   if(!r.ok)throw new Error(d.detail||('server answered '+r.status));return d;
@@ -1478,6 +1532,7 @@ function paintPill(force){
   const p=$('#pill'),tx=$('#pilltx'),st=MS?.state||info?.model_state||'none',sl=MS?.slots;
   if(st==='reasoner'){tx.textContent='Reasoner · '+(sl?.reasoner.name||'');p.className='pill ok';return}
   if(st==='vision'){tx.textContent='Vision · '+(sl?.vision.name||'');p.className='pill swap';return}
+  if(st==='image'){tx.textContent='Image · '+(sl?.image.name||'');p.className='pill swap';return}
   if(st==='coder'){const md=info?.metadata||{},q=FT[md['general.file_type']]||md['general.file_type'];
     tx.textContent=(md['general.name']||info?.file||sl?.coder.name||'coder')+(q?' · '+q:'');p.className='pill ok';return}
   if(!MS&&!info)return;
@@ -1487,12 +1542,13 @@ async function refreshModels(force){
   let d;try{d=await(await fetch('/api/models')).json()}catch{return}
   MS=d;
   if(d.state==='coder'&&info&&(!info.loaded||info.file!==d.slots.coder.name)&&refreshInfo)refreshInfo().catch(()=>{});
-  const sig=JSON.stringify([d.state,d.busy,d.available.length,Object.values(d.slots).map(s=>[s.loaded,s.path,s.dirty,s.cfg])]);
+  const sig=JSON.stringify([d.state,d.busy,d.available.length,Object.values(d.slots).map(s=>[s.loaded,s.path,s.dirty,s.cfg,s.available]),(d.image_models||[]).length]);
   if((force||sig!==msig)&&(force||!$('#slots').contains(document.activeElement))){msig=sig;renderSlots()}
   paintPill();
 }
 const fSize=n=>n>=1e9?(n/1e9).toFixed(1)+' GB':(n/1e6).toFixed(0)+' MB';
 function slotCard(k){
+  if(k==='image')return imageCard();
   const s=MS.slots[k],[title,sub]=SLOT_INFO[k],canManage=CAPS.can_manage!==false,wanted=new Set((MS.wanted||[]).map(x=>x.toLowerCase()));
   let badge,cls='';
   if(k==='vision'){badge=s.loaded?'In use':s.available?'On demand':'Not found';cls=s.loaded?'on':''}
@@ -1522,7 +1578,7 @@ function slotCard(k){
 }
 function renderSlots(){
   if(!MS)return;
-  $('#slots').innerHTML=['coder','reasoner','vision'].map(slotCard).join('');
+  $('#slots').innerHTML=['coder','reasoner','vision','image'].map(slotCard).join('');
   const n=MS.available.length;
   $('#mdirs').textContent=(n?n+' model file'+(n>1?'s':'')+' found in ':'No .gguf files found in ')+MS.dirs.join(' · ')+'.  ★ = looked for first as the reasoner.';
   $$('#slots details').forEach(d=>d.addEventListener('toggle',()=>{MOPEN[d.closest('.mc').dataset.slot]=d.open}));
@@ -1545,6 +1601,203 @@ $('#slots').addEventListener('click',e=>{
   else if(act==='save')manage(k,'Saving settings…',()=>post_('/api/model/config',{slot:k,...readCfg(card)}));
   else if(act==='apply')manage(k,'Reloading '+nm+'…',()=>post_('/api/model/config',{slot:k,...readCfg(card),reload:true}));
 });
+
+function imageCard(){
+  const s=MS.slots.image,[title,sub]=SLOT_INFO.image,canManage=CAPS.can_manage!==false;
+  const badge=s.loaded?'In use':s.available?'On demand':'Not ready',cls=s.loaded?'on':'';
+  const list=[...(MS.image_models||[])];if(s.path&&!list.some(m=>m.path.toLowerCase()===s.path.toLowerCase()))list.push({name:s.name,path:s.path,size:s.size});
+  const pick=canManage&&list.length?'<select data-pick-img aria-label="Image model file">'+list.map(m=>`<option value="${esc(m.path)}"${m.path.toLowerCase()===(s.path||'').toLowerCase()?' selected':''}>${esc(m.name)}${m.size?' · '+fSize(m.size):''}</option>`).join('')+'</select>':'';
+  return `<div class="mc" data-slot="image"><div class="mc-h">${title}<span class="bdg ${cls}">${badge}</span></div>
+   <div class="mc-n">${sub}${s.available?'':'<br>'+esc(s.why||'')}${s.vae?'<br>VAE: '+esc(s.vae):''}</div>${pick}
+   ${MERR.image?`<div class="err">${esc(MERR.image)}</div>`:''}<div class="mc-n">Size, steps, sampler and edit strength: Settings → Images.</div></div>`;
+}
+$('#slots').addEventListener('change',e=>{const sel=e.target.closest('[data-pick-img]');if(!sel)return;
+  manage('image','Choosing '+(sel.selectedOptions[0]?.textContent||'image model').replace(/ · .*$/,'')+'…',()=>post_('/api/image/model',{path:sel.value}))});
+
+/* ================= images: Stable Diffusion generate + edit =================
+   Server side: the coder writes the prompt, every LLM is unloaded, imagegen.py runs in its own process, the coder comes back. */
+const IMGP=['Mixing pigments','Denoising','Dreaming in latents','Squinting at noise','Sketching pixels','Pushing pixels around','Developing the negative','Dabbing highlights','Blending colours','Painting happy little accidents','Sharpening details','Persuading noise to be a picture'];
+function imgSettings(){
+  const g=id=>$('#'+id).value,[w,h]=g('img_size').split('x').map(Number),sd=g('img_seed').trim();
+  return{width:w||1024,height:h||1024,steps:+g('img_steps')||25,cfg:g('img_cfg')===''?7:+g('img_cfg'),sampler:g('img_sampler'),scheduler:g('img_sched'),
+    seed:sd===''||isNaN(+sd)?-1:Math.trunc(+sd),count:Math.max(1,Math.min(4,Math.trunc(+g('img_count'))||1)),strength:+g('img_strength')||.6,
+    enhance:g('img_enhance')==='1',negative:g('img_neg').trim()};
+}
+/* "/imagine ...", "/imgedit ...", or any plain message while Image mode is on */
+function imgIntent(text){
+  const mt=text.match(/^\/(imagine|img|draw|imgedit|retouch)\b\s*([\s\S]*)$/i);
+  if(mt)return{kind:/^(imgedit|retouch)$/i.test(mt[1])?'edit':'gen',prompt:mt[2].trim()};
+  if(!imgMode||text.startsWith('/'))return null;
+  return{kind:att.some(a=>a.thumb)?'edit':'gen',prompt:text};
+}
+const lastGenImage=()=>{for(let i=msgs.length-1;i>=0;i--){const g=msgs[i].gen;if(g?.images?.length){const im=g.images[0];return{name:im.name,url:im.url,prompt:g.prompt,seed:im.seed}}}return null};
+function paintEditChip(){
+  const c=$('#editchip');c.hidden=!editFrom;c.innerHTML='';if(!editFrom)return;
+  const im=document.createElement('img');im.alt='';im.src=editFrom.url;const t=document.createElement('span');t.textContent='Editing this image · describe the change';
+  const x=document.createElement('button');x.type='button';x.innerHTML=ic('x',13);x.setAttribute('aria-label','Stop editing this image');x.onclick=()=>{editFrom=null;paintEditChip()};
+  c.append(im,t,x);
+}
+function setImgMode(v){
+  if(v&&!CAPS.image){toast('Image generation is unavailable: '+(CAPS.image_why||'not set up'),'bad');return}
+  imgMode=v;$('#imgmode').classList.toggle('on',v);$('#imgmode').setAttribute('aria-pressed',v);
+  $('#input').placeholder=v?'Image mode: describe the picture to make…  attach an image to edit it instead':DEFPH;
+  if(!v&&planMode)setPlan(true);$('#input').focus();
+}
+$('#imgmode').onclick=()=>setImgMode(!imgMode);
+function paintImgBtn(){const b=$('#imgmode');b.style.opacity=CAPS.image?'':'.5';if(!CAPS.image)b.title='Image generation is unavailable: '+(CAPS.image_why||'not set up')}
+async function readSSE(resp,on){
+  const rd=resp.body.getReader(),dec=new TextDecoder();let buf='';
+  for(;;){const{done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});
+    let i;while((i=buf.indexOf('\n\n'))>=0){const line=buf.slice(0,i);buf=buf.slice(i+2);if(!line.startsWith('data: '))continue;let ev;try{ev=JSON.parse(line.slice(6))}catch{continue}on(ev)}}
+}
+async function sendImage({kind,prompt}){
+  if(busy)return;
+  if(!CAPS.image){toast('Image generation is unavailable: '+(CAPS.image_why||'not set up'),'bad');return}
+  if(!prompt){toast(kind==='edit'?'Describe the change, e.g. /imgedit make it night':'Describe the image, e.g. /imagine a lighthouse at dawn','bad');return}
+  let source=null,base='',files=[];
+  if(kind==='edit'){
+    const a=att.find(x=>x.thumb&&typeof x.image==='string'&&x.image.length>1);
+    if(a){source={data:a.image};files=[a]}
+    else{const g=editFrom||lastGenImage();if(!g){toast('Nothing to edit yet. Generate an image first, or attach one.','bad');return}source={name:g.name};base=g.prompt||''}
+  }
+  const typed=$('#input').value.trim();
+  $('#input').value='';grow();pop.hidden=true;SENT.push(typed);si=0;
+  if(files.length)att=att.filter(x=>!files.includes(x));renderTray();
+  editFrom=null;paintEditChip();
+  await startImage({kind,prompt,source,base_prompt:base},{userText:typed,files});
+}
+async function startImage(req,opt={}){
+  if(busy)return;
+  const r={...imgSettings(),...Object.fromEntries(Object.entries(req).filter(([,v])=>v!==undefined&&v!==null))};
+  const u={role:'user',content:opt.userText,full:opt.userText,files:opt.files||[]};
+  const g={kind:r.kind,prompt:r.prompt,negative:r.negative||'',images:[],source:r.source?.name?{name:r.source.name,url:'/generated/'+r.source.name}:null,
+    params:{width:r.width,height:r.height,steps:r.steps,cfg:r.cfg,sampler:r.sampler,strength:r.kind==='edit'?r.strength:undefined,count:r.count}};
+  const m={role:'assistant',content:'',full:'',stats:null,live:true,gen:g};
+  msgs.push(u,m);addMsg(u);addMsg(m);setTitle();setBusy(true);ctl=new AbortController();toBottom();
+  ctl.signal.addEventListener('abort',()=>{jpost('/api/image/cancel',{}).catch(()=>{})});
+  const gp=m.gp={label:'Starting…',image:0,step:0,steps:0},pill=$('#pilltx');
+  const ph=()=>m.el.querySelector('.foot .ph');
+  const say=l=>{gp.label=l;if(m.stop1){m.stop1();m.stop1=null}const e=ph();if(e)e.textContent=l;pill.textContent=l;$('#pill').className='pill swap';repaint()};
+  const resume=()=>{gp.label='Painting…';pill.textContent='Painting…';$('#pill').className='pill swap';const e=ph();if(e&&!m.stop1)m.stop1=ticker(e,IMGP,2600);repaint()};
+  let pend=false;const repaint=()=>{if(!pend){pend=true;requestAnimationFrame(()=>{pend=false;paintGen(m)})}};
+  let err=null,cancelled=false,fin=null;
+  try{
+    const body={mode:r.kind,prompt:r.prompt,negative:r.negative,base_prompt:r.base_prompt||'',width:r.width,height:r.height,steps:r.steps,cfg:r.cfg,
+      sampler:r.sampler,scheduler:r.scheduler,seed:r.seed,count:r.count,strength:r.strength,enhance:r.enhance,source:r.source||null};
+    const resp=await fetch('/api/image',{method:'POST',headers:HDR,body:JSON.stringify(body),signal:ctl.signal});
+    if(!resp.ok){let d='';try{d=(await resp.json()).detail}catch{}throw new Error(d||('server answered '+resp.status))}
+    await readSSE(resp,ev=>{
+      if(ev.type==='stage')ev.stage==='paint'?resume():say(ev.label);
+      else if(ev.type==='note')toast(ev.message);
+      else if(ev.type==='prompt'){g.prompt=ev.prompt;g.negative=ev.negative||'';m.content=g.prompt;repaint()}
+      else if(ev.type==='source'){g.source={name:ev.name,url:ev.url};repaint()}
+      else if(ev.type==='progress'){if(ev.image!=null)gp.image=ev.image;gp.step=ev.step;gp.steps=ev.steps;repaint()}
+      else if(ev.type==='image'){g.images.push({name:ev.name,url:ev.url,seed:ev.seed,w:ev.width,h:ev.height,black:!!ev.black});gp.step=0;gp.steps=0;repaint()}
+      else if(ev.type==='error')err=ev.message;
+      else if(ev.type==='cancelled')cancelled=true;
+      else if(ev.type==='done')fin=ev;
+    });
+    if(!fin&&!err&&!cancelled)err='The image step ended early.';
+  }catch(e){if(e.name==='AbortError')cancelled=true;else err=e.message}
+  if(err)g.err=err;else if(cancelled&&!g.images.length)g.err='Stopped.';
+  const bits=[];if(g.images.length)bits.push((CAPS.image_model||'Stable Diffusion').replace(/\.gguf$/i,''));
+  if(fin)bits.push(fin.seconds+' s');if(cancelled&&g.images.length)bits.push('stopped');
+  g.foot=bits.join('  ·  ');m.content=g.images.length?g.prompt:(g.err||'');m.stats=null;m.live=false;
+  $('#pill').className='pill ok';paint(m,false);setBusy(false);save();refreshModels(true);
+}
+function imgRetry(m){   // the Retry button on a generated message: same prompt, new seed, replaces the last reply
+  const g=m.gen,i=msgs.indexOf(m);if(busy||i<0)return;
+  if(msgs[msgs.length-1]!==m){note('Only the last reply can be retried');return}
+  const u=msgs[i-1];msgs.pop();m.el.remove();if(u?.role==='user'){msgs.pop();u.el.remove()}
+  startImage(rerollReq(g),{userText:u?.content||('/imagine '+g.prompt),files:u?.files||[]});
+}
+const rerollReq=g=>({kind:g.kind,prompt:g.prompt,negative:g.negative,source:g.source?{name:g.source.name}:null,base_prompt:'',seed:-1,enhance:false,count:1,
+  width:g.params.width,height:g.params.height,steps:g.params.steps,cfg:g.params.cfg,sampler:g.params.sampler,strength:g.params.strength});
+function imgReroll(m){if(busy||!m.gen?.images?.length)return;startImage(rerollReq(m.gen),{userText:'Re-roll: '+m.gen.prompt})}
+function imgVary(m,i){
+  const g=m.gen,im=g.images[i];if(busy||!im)return;
+  startImage({kind:'edit',prompt:g.prompt,negative:g.negative,source:{name:im.name},base_prompt:'',strength:.4,seed:-1,enhance:false,count:1,width:im.w,height:im.h,
+    steps:g.params.steps,cfg:g.params.cfg,sampler:g.params.sampler},{userText:'Variation: '+g.prompt});
+}
+function imgEditFrom(m,i){
+  const g=m.gen,im=g.images[i];if(!im)return;
+  editFrom={name:im.name,url:im.url,prompt:g.prompt,seed:im.seed};paintEditChip();
+  const t=$('#input');if(!/^\/(imgedit|retouch)\b/i.test(t.value)){t.value='/imgedit '+t.value.replace(/^\/\w+\s*/,'');grow()}
+  t.focus();t.setSelectionRange(t.value.length,t.value.length);
+}
+const imgDownload=im=>{const a=document.createElement('a');a.href=im.url;a.download=im.name;document.body.append(a);a.click();a.remove()};
+async function imgSave(im){
+  try{const d=await post_('/api/image/save',{name:im.name});toast('Saved to '+d.path,'good');if(typeof ls==='function')ls(cwd,'replace')}catch(e){toast('Could not save: '+e.message,'bad')}
+}
+function imgRerollLast(){const m=[...msgs].reverse().find(x=>x.gen?.images?.length);if(!m){toast('No generated image yet','bad');return}imgReroll(m)}
+function imgEditLast(){const g=lastGenImage();if(!g){toast('No generated image yet','bad');return}
+  const m=[...msgs].reverse().find(x=>x.gen?.images?.length);imgEditFrom(m,0)}
+function imgView(m,i){
+  const g=m.gen;let k=i;const M=modal('Image');M.el.classList.add('lb');
+  const img=document.createElement('img');M.body.append(img);
+  const show=n=>{k=(n+g.images.length)%g.images.length;const im=g.images[k];img.src=im.url;img.alt=g.prompt;
+    M.sub.textContent=`${im.w}×${im.h} · seed ${im.seed}`+(g.images.length>1?` · ${k+1}/${g.images.length}`:'')};
+  M.btn('Download',()=>imgDownload(g.images[k]));M.btn('Edit this',()=>{M.close();imgEditFrom(m,k)});
+  if(g.images.length>1){M.btn('‹ Previous',()=>show(k-1));M.btn('Next ›',()=>show(k+1))}
+  const key=e=>{if(g.images.length>1&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();show(k+(e.key==='ArrowLeft'?-1:1))}};
+  addEventListener('keydown',key);M.onclose=()=>removeEventListener('keydown',key);show(i);
+}
+function giActs(m,i){
+  const im=m.gen.images[i],d=document.createElement('div');d.className='gi-a';
+  const mk=(icon,label,fn)=>{const b=document.createElement('button');b.type='button';b.title=label;b.setAttribute('aria-label',label);b.innerHTML=ic(icon,13)+'<span>'+label+'</span>';b.onclick=e=>{e.stopPropagation();fn()};d.append(b)};
+  mk('expand','Enlarge',()=>imgView(m,i));mk('download','Download',()=>imgDownload(im));mk('pencil','Edit',()=>imgEditFrom(m,i));
+  mk('spark','Vary',()=>imgVary(m,i));mk('refresh','Re-roll',()=>imgReroll(m));
+  if(CAPS.write)mk('folder','Save',()=>imgSave(im));
+  return d;
+}
+/* one card per message: a placeholder per expected image (with a live progress bar) that is swapped for the picture when it arrives */
+function paintGen(m){
+  const g=m.gen,p=g.params||{},col=m.el.querySelector('.col'),total=Math.max(1,m.live?(p.count||1):g.images.length);
+  m.el.classList.add('genmsg');
+  let box=m.gbox;
+  if(!box||!box.isConnected){
+    box=m.gbox=document.createElement('div');box.className='gen';
+    box.innerHTML='<div class="gen-grid"></div><div class="gen-src" hidden></div><div class="gen-err" hidden></div><details class="gen-p" hidden><summary></summary><pre></pre></details>';
+    col.insertBefore(box,col.querySelector('.body'));box._figs=[];
+  }
+  const grid=box.querySelector('.gen-grid');grid.className='gen-grid n'+Math.min(4,total);
+  for(let i=0;i<total;i++){
+    const im=g.images[i],state=im?'img':(m.live?'ph':'none');let f=box._figs[i];
+    if(state==='none'){if(f){f.remove();box._figs[i]=null}continue}
+    if(!f||f.dataset.st!==state||(im&&f.dataset.u!==im.url)){
+      const nf=document.createElement('figure');nf.dataset.st=state;
+      if(im){
+        nf.className='gi';nf.dataset.u=im.url;nf.style.aspectRatio=im.w+'/'+im.h;
+        const img=new Image();img.alt=g.prompt;img.src=im.url;img.onclick=()=>imgView(m,i);
+        img.onerror=()=>{nf.className='gi gone';nf.textContent='This image file is no longer on disk.'};
+        nf.append(img);
+        if(im.black){const w=document.createElement('div');w.className='gi-w';w.textContent='The image is completely black. The SDXL VAE can overflow in half precision: start the server with --image-vae pointing at sdxl-vae-fp16-fix.safetensors.';nf.append(w)}
+        nf.append(giActs(m,i));
+      }else{
+        nf.className='gi ph';nf.style.aspectRatio=(p.width||1)+'/'+(p.height||1);
+        nf.innerHTML='<div class="gbar ind"><i></i></div><span class="glab"></span>';
+      }
+      if(f)f.replaceWith(nf);else{const next=box._figs.slice(i+1).find(Boolean);next?grid.insertBefore(nf,next):grid.append(nf)}
+      box._figs[i]=nf;f=nf;
+    }
+    if(state==='ph'){
+      const gp=m.gp||{},cur=i===(gp.image||0),bar=f.querySelector('.gbar'),lab=f.querySelector('.glab');
+      const pct=cur&&gp.steps?Math.min(100,Math.round(gp.step/gp.steps*100)):0;
+      bar.classList.toggle('ind',!pct);bar.firstChild.style.width=pct?pct+'%':'';
+      const t=cur?(gp.steps?`Step ${gp.step} of ${gp.steps}`+(total>1?` · image ${i+1} of ${total}`:''):(gp.label||'Working…')):(i>(gp.image||0)?'Waiting for its turn':'');
+      if(lab.textContent!==t)lab.textContent=t;
+    }
+  }
+  while(box._figs.length>total)box._figs.pop()?.remove();
+  const src=box.querySelector('.gen-src');src.hidden=!g.source;
+  if(g.source&&src.dataset.u!==g.source.url){src.dataset.u=g.source.url;src.innerHTML='';const si_=new Image();si_.alt='';si_.src=g.source.url;si_.onerror=()=>si_.remove();const t=document.createElement('span');t.textContent='Edited from this image';src.append(si_,t)}
+  const er=box.querySelector('.gen-err');er.hidden=!g.err;if(er.textContent!==(g.err||''))er.textContent=g.err||'';
+  const d=box.querySelector('.gen-p');d.hidden=!g.prompt;
+  if(g.prompt){const im0=g.images[0],bits=[];if(im0)bits.push('seed '+im0.seed+(g.images.length>1?'+':''),im0.w+'×'+im0.h);
+    bits.push(p.steps+' steps',p.sampler);if(g.kind==='edit')bits.push('strength '+p.strength);
+    const sm=d.querySelector('summary'),sv='Prompt  ·  '+bits.join(' · ');if(sm.textContent!==sv)sm.textContent=sv;
+    const pr=d.querySelector('pre'),pv=g.prompt+(g.negative?'\n\nNegative: '+g.negative:'');if(pr.textContent!==pv)pr.textContent=pv}
+}
 
 /* ---------- reasoning: reasoner thinks (coder unloaded), coder answers with its notes ---------- */
 let reasonOn=!!LS('gc.reason'),reasonOnce=false;
