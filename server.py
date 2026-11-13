@@ -43,6 +43,7 @@ ap.add_argument("--image-vae", default=None, help="optional separate VAE (e.g. s
 ap.add_argument("--image-clip-l", default=None, help="CLIP-L text encoder file, only for UNet-only SDXL .gguf files (default: auto-find clip_l* next to the model)")
 ap.add_argument("--image-clip-g", default=None, help="CLIP-G text encoder file, only for UNet-only SDXL .gguf files (default: auto-find clip_g*)")
 ap.add_argument("--image-dir", default=None, help="where generated images are saved (default: ./generated next to server.py)")
+ap.add_argument("--data-dir", default=None, help="where conversation history is stored, one JSON file per chat (default: ./data next to server.py)")
 ap.add_argument("--image-threads", type=int, default=None, help="CPU threads for image generation (default: auto)")
 ap.add_argument("--image-flash-attn", action="store_true", help="flash attention for the diffusion model (CUDA builds)")
 ap.add_argument("--image-low-vram", action="store_true", help="keep the text encoder and VAE on the CPU (slower, needs less VRAM)")
@@ -1098,6 +1099,140 @@ def need_ui(req):
         raise HTTPException(403, "Missing X-Cressy header")
 
 
+# ---------------------------------------------------------------- chats: persistent conversation history
+DATA_DIR = Path(args.data_dir).expanduser().resolve() if args.data_dir else HERE / "data"
+CHAT_DIR = DATA_DIR / "chats"
+CHAT_ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+MAX_CHAT_BYTES = 40_000_000
+CHAT_LOCK = threading.Lock()
+
+
+def chat_path(cid):
+    if not isinstance(cid, str) or not CHAT_ID.fullmatch(cid):
+        raise HTTPException(400, "Bad chat id")
+    return CHAT_DIR / (cid + ".json")
+
+
+def clean_chat(cid, b):
+    """Check the shape of a chat from the browser; the file name is the id."""
+    if not isinstance(b, dict) or not isinstance(b.get("msgs"), list):
+        raise HTTPException(400, "A chat needs a msgs list")
+    if len(b["msgs"]) > 5000:
+        raise HTTPException(400, "Too many messages in one chat")
+    msgs = [m for m in b["msgs"] if isinstance(m, dict) and m.get("role") in ("user", "assistant") and isinstance(m.get("content"), str)]
+    return {"id": cid, "title": str(b.get("title") or "New chat")[:200], "pin": bool(b.get("pin")), "msgs": msgs,
+            "updated": int(time.time() * 1000)}
+
+
+def write_chat(chat):
+    data = json.dumps(chat, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    if len(data) > MAX_CHAT_BYTES:
+        raise HTTPException(413, "This chat is too large to store")
+    p = chat_path(chat["id"])
+    tmp = p.with_name("." + p.name + "." + uuid.uuid4().hex[:8] + ".tmp")
+    with CHAT_LOCK:
+        try:
+            CHAT_DIR.mkdir(parents=True, exist_ok=True)
+            tmp.write_bytes(data)
+            os.replace(tmp, p)        # a crash mid-write can never leave a half-written chat behind
+        except OSError as e:
+            raise HTTPException(500, f"Could not save the chat to {CHAT_DIR}: {e}")
+        finally:
+            try:
+                tmp.unlink()
+            except OSError:
+                pass
+
+
+def read_chats():
+    out = []
+    try:
+        files = list(CHAT_DIR.glob("*.json"))
+    except OSError:
+        return out
+    for p in files:
+        if not CHAT_ID.fullmatch(p.stem):
+            continue
+        try:
+            c = json.loads(p.read_text("utf-8"))
+        except (OSError, ValueError):
+            print("skipping unreadable chat file:", p.name)
+            continue
+        if isinstance(c, dict) and isinstance(c.get("msgs"), list):
+            c["id"] = p.stem
+            out.append(c)
+    out.sort(key=lambda c: c.get("updated") or 0, reverse=True)
+    return out
+
+
+def chat_guard(req):
+    need_ui(req)    # a custom header also on reads: other websites cannot fetch your history
+    try:
+        if int(req.headers.get("content-length") or 0) > MAX_CHAT_BYTES * 2:
+            raise HTTPException(413, "Request too large")
+    except ValueError:
+        pass
+
+
+@app.get("/api/chats")
+async def chats_list(req: Request):
+    chat_guard(req)
+    return {"chats": await run_in_threadpool(read_chats), "dir": str(CHAT_DIR)}
+
+
+@app.post("/api/chats/import")
+async def chats_import(req: Request):
+    """Add chats that are not stored yet (moving old browser-only chats here, restoring a backup)."""
+    chat_guard(req)
+    b = await req.json()
+    items = b.get("chats") if isinstance(b, dict) else None
+    if not isinstance(items, list) or len(items) > 2000:
+        raise HTTPException(400, "chats must be a list")
+
+    def work():
+        n = 0
+        for c in items:
+            cid = c.get("id") if isinstance(c, dict) else None
+            if not isinstance(cid, str) or not CHAT_ID.fullmatch(cid) or chat_path(cid).exists():
+                continue
+            try:
+                chat = clean_chat(cid, c)
+            except HTTPException:
+                continue
+            if isinstance(c.get("updated"), (int, float)):
+                chat["updated"] = int(c["updated"])
+            write_chat(chat)
+            n += 1
+        return n
+    return {"imported": await run_in_threadpool(work)}
+
+
+@app.put("/api/chats/{cid}")
+async def chat_save(cid: str, req: Request):
+    chat_guard(req)
+    chat_path(cid)
+    chat = clean_chat(cid, await req.json())
+    await run_in_threadpool(write_chat, chat)
+    return {"ok": True, "updated": chat["updated"]}
+
+
+@app.delete("/api/chats/{cid}")
+async def chat_delete(cid: str, req: Request):
+    chat_guard(req)
+    p = chat_path(cid)
+
+    def work():
+        with CHAT_LOCK:
+            try:
+                p.unlink()
+            except FileNotFoundError:
+                pass
+            except OSError as e:
+                raise HTTPException(500, f"Could not delete the chat: {e}")
+    await run_in_threadpool(work)
+    return {"ok": True}
+
+
 # ---------------------------------------------------------------- web: SearXNG search + page reader
 WEB_ON = not args.no_web
 SEARX = websearch.norm_base(args.searxng_url)
@@ -1622,6 +1757,7 @@ if __name__ == "__main__":
     print(f"Open http://{args.host}:{args.port}   (project folder: {ROOT})")
     print("Coder: " + (os.path.basename(CFG["coder"]["path"]) + ("" if llm is not None else "  (not loaded yet)") if CFG["coder"]["path"] else "none selected (pick one in the Model tab)"))
     print("Reasoner: " + (os.path.basename(CFG["reasoner"]["path"]) + "  (loaded only while reasoning; the coder is unloaded meanwhile)" if CFG["reasoner"]["path"] else f"off ({R_WHY})"))
+    print(f"Chats: saved in {CHAT_DIR}  ({len(read_chats())} stored)")
     print("Vision: " + (f"{os.path.basename(VL_MODEL)} + {os.path.basename(VL_MMPROJ)} (loaded only while an image is read; the coder is unloaded meanwhile)"
                          if VL_OK else f"off ({VL_WHY})"))
     ok_, why_ = image_ready()

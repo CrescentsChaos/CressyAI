@@ -40,6 +40,7 @@ Then open http://127.0.0.1:8000 (`--open` does it for you).
 | `--image-vae` | none | optional separate VAE (use `sdxl-vae-fp16-fix.safetensors` if images come out black) |
 | `--image-clip-l` / `--image-clip-g` | auto | text encoder files, only needed when the `.gguf` holds just the UNet (auto-found as `clip_l*` / `clip_g*` in the models folder) |
 | `--image-dir` | `./generated` | where generated images are saved |
+| `--data-dir` | `./data` | where conversation history is stored (`<data-dir>/chats/<id>.json`, one file per chat) |
 | `--image-low-vram` | off | keep the text encoder and VAE on the CPU (slower, needs less VRAM) |
 | `--image-flash-attn` | off | flash attention for the diffusion model (CUDA builds) |
 | `--image-no-vae-tiling` | off | decode the whole image at once (faster, needs more VRAM) |
@@ -49,6 +50,16 @@ Then open http://127.0.0.1:8000 (`--open` does it for you).
 | `--no-web` | off | turn off web search and the page reader |
 | `--web-allow-private` | off | let the page reader open links on your own network (blocked by default) |
 | `--unsafe-remote-exec` | off | allow terminal and file writes on a non-loopback `--host` (**dangerous**) |
+
+## Conversation history (stored on the server)
+Every chat is saved as its own JSON file in `data/chats/` (change the folder with `--data-dir`), so history survives clearing the browser, switching browsers, and opening the app from another device on your network. Nothing is capped at the old 50-chat browser limit.
+
+- Saved after every reply, rename-free: the title is the first message. Pin, delete and *Restore backup* are written through as well.
+- Writes are atomic (temp file, then rename), so a crash or power cut can't leave a half-written chat.
+- **First start after updating:** chats that were only in your browser are moved to the server automatically (once, then removed from the browser). If the server is unreachable they stay put and move on the next load.
+- Switching back to the tab picks up chats saved elsewhere. If a save fails, you get a note and the chat stays in the tab; the next save retries.
+- Back up or move your history by copying the `data` folder, or use *Back up all chats*. The folder holds your conversations in plain text, so keep it out of git and off shared drives.
+- Settings and Memory are still kept in the browser.
 
 ## Reasoning model (think first, then code)
 Press **Reason** next to the paperclip (or start a message with `/think`). Only one model is ever in memory:

@@ -1502,15 +1502,47 @@ HELP+='\n\n**Workspace** — the model can create and edit files (review the dif
 paintChanges();
 
 /* ---------- chats ---------- */
-const chats=()=>LS('gc.chats')||[];
+/* history lives on the server (data/chats/*.json); CH is the in-memory copy every function below reads */
+let CH=[],chatQ=Promise.resolve(),chatPend=0,chatOK=true;
+const chats=()=>CH;
+async function chatApi(method,url,body){
+  const r=await fetch(url,{method,headers:HDR,body:body===undefined?undefined:JSON.stringify(body)});let d={};try{d=await r.json()}catch{}
+  if(!r.ok)throw new Error(d.detail||('server answered '+r.status));return d;
+}
+function chatSync(fn){   // one request at a time, in order, so a quick save never overtakes an earlier one
+  chatPend++;
+  chatQ=chatQ.then(fn).then(()=>{chatOK=true},e=>{if(chatOK){chatOK=false;note("Couldn't save this chat to the server ("+e.message+"). It stays in this tab and the next save retries.")}}).finally(()=>{chatPend--});
+  return chatQ;
+}
+const putChat=c=>chatSync(()=>chatApi('PUT','/api/chats/'+encodeURIComponent(c.id),c));
+const delChat=id=>chatSync(()=>chatApi('DELETE','/api/chats/'+encodeURIComponent(id)));
+async function initChats(){
+  try{
+    const d=await chatApi('GET','/api/chats'),mine=new Set(CH.map(c=>c.id));
+    CH=[...CH,...(d.chats||[]).filter(c=>!mine.has(c.id))];
+    const old=LS('gc.chats');   // chats saved in this browser before history moved to the server
+    if(Array.isArray(old)&&old.length){
+      const have=new Set(CH.map(c=>c.id)),add=old.filter(c=>c&&c.id&&Array.isArray(c.msgs)&&!have.has(c.id));
+      if(add.length){await chatApi('POST','/api/chats/import',{chats:add});CH=[...CH,...add]}
+      try{localStorage.removeItem('gc.chats')}catch{}
+      if(add.length)note(add.length+' saved chat'+(add.length>1?'s':'')+' moved to the server',true);
+    }
+  }catch(e){note('Could not load saved chats from the server: '+e.message)}
+  hist_();
+}
+addEventListener('focus',()=>{   // pick up chats saved from another tab or device
+  if(busy||chatPend)return;
+  chatApi('GET','/api/chats').then(d=>{if(busy||chatPend)return;const open=CH.find(c=>c.id===cid);
+    CH=d.chats||[];if(open&&!CH.some(c=>c.id===open.id))CH.unshift(open);hist_()}).catch(()=>{});
+});
 const titleOf=()=>{const f=msgs.find(m=>m.role==='user');return(f?.content||'').replace(/\s+/g,' ').slice(0,60)||'New chat'};
 const setTitle=()=>{$('#ttl').textContent=titleOf()};
 function save(){
   if(!msgs.length)return;
   if(!cid)cid=Date.now().toString(36);
   const old=chats().find(c=>c.id===cid),rest=chats().filter(c=>c.id!==cid);
-  rest.unshift({id:cid,pin:old?.pin,title:titleOf().slice(0,48),msgs:msgs.map(({role,content,files,stats,thinkMs,plan,planDone,gen,web})=>({role,content,stats,thinkMs,plan,planDone,gen,web:web&&!web.busy?web:undefined,files:(files||[]).map(x=>({name:x.name,tokens:x.tokens,text:'',image:x.image?1:undefined,thumb:x.thumb,desc:x.desc}))}))});
-  LS('gc.chats',rest.slice(0,50));hist_();
+  const rec={id:cid,pin:old?.pin,updated:Date.now(),title:titleOf().slice(0,48),msgs:msgs.map(({role,content,files,stats,thinkMs,plan,planDone,gen,web})=>({role,content,stats,thinkMs,plan,planDone,gen,web:web&&!web.busy?web:undefined,files:(files||[]).map(x=>({name:x.name,tokens:x.tokens,text:'',image:x.image?1:undefined,thumb:x.thumb,desc:x.desc}))}))};
+  CH=[rec,...rest];hist_();putChat(rec);
 }
 function load(id){
   const c=chats().find(x=>x.id===id);if(!c)return;if(busy)ctl.abort();
@@ -1525,16 +1557,16 @@ function hist_(){
   cs.forEach(c=>{const r=document.createElement('div');r.className='hi'+(c.id===cid?' on':'');
     const n=document.createElement('button');n.type='button';n.className='t';n.textContent=c.title;n.title=c.title;n.onclick=()=>load(c.id);
     const p=document.createElement('button');p.type='button';p.className='pn'+(c.pin?' on':'');p.innerHTML=ic('spark',13);p.title=c.pin?'Unpin':'Pin to top';p.setAttribute('aria-label',p.title);
-    p.onclick=()=>{LS('gc.chats',all.map(y=>y.id===c.id?{...y,pin:!y.pin}:y));hist_()};
+    p.onclick=()=>{CH=all.map(y=>y.id===c.id?{...y,pin:!y.pin}:y);putChat(CH.find(y=>y.id===c.id));hist_()};
     const x=document.createElement('button');x.type='button';x.className='x';x.innerHTML=ic('trash',14);x.setAttribute('aria-label','Delete chat');
-    x.onclick=()=>{if(!confirm('Delete this chat?'))return;LS('gc.chats',chats().filter(y=>y.id!==c.id));if(c.id===cid){cid=null;resetWS();msgs=[];renderEmpty();setTitle()}hist_()};
+    x.onclick=()=>{if(!confirm('Delete this chat?'))return;CH=CH.filter(y=>y.id!==c.id);delChat(c.id);if(c.id===cid){cid=null;resetWS();msgs=[];renderEmpty();setTitle()}hist_()};
     r.append(n,p,x);b.append(r)})
 }
 $('#hq').oninput=hist_;
 $('#bk').onclick=()=>dl_('cressyai-chats.json',JSON.stringify({app:'cressyai',chats:chats(),memory:$('#mem').value},null,1));
 $('#rs').onclick=()=>$('#rsf').click();
 $('#rsf').onchange=async e=>{try{const d=JSON.parse(await e.target.files[0].text()),have=new Set(chats().map(c=>c.id));
-  const add=(d.chats||[]).filter(c=>c&&c.id&&Array.isArray(c.msgs)&&!have.has(c.id));LS('gc.chats',[...chats(),...add].slice(0,100));
+  const add=(d.chats||[]).filter(c=>c&&c.id&&Array.isArray(c.msgs)&&!have.has(c.id));CH=[...CH,...add];if(add.length)chatSync(()=>chatApi('POST','/api/chats/import',{chats:add}));
   if(d.memory&&!$('#mem').value.trim()){$('#mem').value=d.memory;saveSet()}hist_();note(add.length+' chats restored',true)}catch{note('That file is not a valid backup')}e.target.value=''};
 /* ---------- message actions ---------- */
 function acts(m){
@@ -1660,6 +1692,7 @@ function paintPill(force){
 }
 async function refreshModels(force){
   let d;try{d=await(await fetch('/api/models')).json()}catch{return}
+  if(!d||!d.slots)return;
   MS=d;
   if(d.state==='coder'&&info&&(!info.loaded||info.file!==d.slots.coder.name)&&refreshInfo)refreshInfo().catch(()=>{});
   const sig=JSON.stringify([d.state,d.busy,d.available.length,Object.values(d.slots).map(s=>[s.loaded,s.path,s.dirty,s.cfg,s.available]),(d.image_models||[]).length]);
@@ -2160,5 +2193,5 @@ Object.assign(CMDS,{web:['d','Look this up on the web (SearXNG) and answer with 
 SUGG.push(['Search the web','/web','Pull live results through your SearXNG']);
 HERO[HERO.indexOf('Edit a file')]='Search the web';
 HELP+='\n\n**Web search** — turn on **Web** next to the paperclip. Questions that need fresh info (news, prices, versions, "latest…") are searched through your SearXNG and answered from the sources, with clickable [1] [2] chips; paste a link and it is read. `/web your question` forces a search for one message. Search words leave your machine through your SearXNG; the model itself stays local. Set it up under *Settings → Web search*.\n\n**Text & style** — *Settings → Text & style* changes response style (balanced / rich / plain), font, size, line spacing, reading width and accent colour. Replies can use callouts (`> [!TIP]`), sortable tables with *Copy table* / *Download CSV*, task lists, `==highlight==`, LaTeX math (`$x^2$`, `$$...$$`) and a *Wrap* button on code blocks.';
-renderEmpty();hist_();setTitle();
+renderEmpty();hist_();setTitle();initChats();
 </script></body></html>
