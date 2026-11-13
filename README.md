@@ -1,0 +1,161 @@
+<img src="assets/logo.png" width="200" alt="Logo">
+
+**New UI:** three-pane layout (chats · conversation · Files/Model/Settings tabs), light/dark/auto theme, steady word-by-word streaming with a blinking cursor, a collapsible *Thinking* card for reasoning models, rotating loading texts (Cooking…, Brewing…, Simmering…), and a file browser with **Back / Forward / breadcrumbs** (Backspace or Alt+← goes back).
+
+A private chat UI for a local **GGUF** model. The model always runs on your machine; the optional **Web** button looks things up through your own SearXNG (see *Web search*).
+
+## Run it
+```bash
+python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+python server.py --model /path/to/model.gguf --root ~/my-project --open
+```
+Or use `./run.sh model.gguf [project-folder]` (macOS/Linux) / `run.bat model.gguf [project-folder]` (Windows).
+Then open http://127.0.0.1:8000 (`--open` does it for you).
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--model` | none | path to the coder `.gguf`; leave it out to start empty and load from the *Model* tab |
+| `--models-dir` | `E:\AI\Models` | folder(s) scanned for `.gguf` files (repeatable); the coder's own folder is always scanned too |
+| `--no-autoload` | off | start with nothing in memory even if `--model` is given |
+| `--reasoner` | auto | reasoning `.gguf`; auto-picks `gemma-4-12b-it-Q4_K_M.gguf`, else `Qwen3-8B-Q6_K.gguf`, from the models folder |
+| `--reasoner-n-ctx` | 8192 | context while the reasoner is loaded |
+| `--no-reasoner` | off | don't look for a reasoner on start (you can still choose one in the app) |
+| `--root` | `.` | the only folder the app can read (use your project) |
+| `--n-ctx` | 4096 | context window; raise to 8192+ for big files |
+| `--n-gpu-layers` | 0 | `-1` offloads everything to the GPU |
+| `--threads` | auto | CPU threads |
+| `--chat-format` | from GGUF | override if the model has no chat template |
+| `--host` / `--port` | 127.0.0.1 / 8000 | keep loopback unless you know why |
+| `--open` | off | open the browser on start |
+| `--no-terminal` | off | disable the Terminal tab and the *Run* buttons |
+| `--read-only` | off | never write into `--root` (downloads still work) |
+| `--vision-model` | auto | Qwen2.5-VL `.gguf`; auto-found in `E:\AI\Models` or next to `--model` |
+| `--vision-mmproj` | auto | its `mmproj` `.gguf`; auto-found next to the vision model |
+| `--vision-n-ctx` | 8192 | context while the vision model is loaded |
+| `--vision-max-tokens` | 1024 | max tokens of extracted details per image |
+| `--no-vision` | off | disable image attachments |
+| `--searxng-url` | `http://127.0.0.1:8080` | SearXNG address for the Web button (or set `SEARXNG_URL`) |
+| `--no-web` | off | turn off web search and the page reader |
+| `--web-allow-private` | off | let the page reader open links on your own network (blocked by default) |
+| `--unsafe-remote-exec` | off | allow terminal and file writes on a non-loopback `--host` (**dangerous**) |
+
+## Reasoning model (think first, then code)
+Press **Reason** next to the paperclip (or start a message with `/think`). Only one model is ever in memory:
+
+1. **Coder unloaded** and the **reasoner loaded** (`gemma-4-12b-it-Q4_K_M.gguf` if found, otherwise `Qwen3-8B-Q6_K.gguf`, both looked up in `E:\AI\Models`).
+2. The reasoner works the task through; you watch it live in the collapsible *Thinking* card.
+3. **Reasoner unloaded**, **coder reloaded**, and the coder writes the answer using those notes (they're added to that one request only, never shown as your message).
+
+If the message has an image, the order is vision → reasoner → coder, and the coder is only loaded once, at the end. **Stop** at any point puts the coder back. If the reasoner can't load, the coder just answers normally and a note tells you why.
+*Settings → Reasoning* has *Every message* vs *Only complex ones* (long messages, code, plan mode, or words like why/fix/design/refactor), the reasoner's temperature / top-p / top-k / repeat penalty, its **token budget**, and an optional replacement for the built-in reasoning instructions. The reasoner's own `<think>` tags are handled; models without them (Gemma) are simply told to reason first.
+
+## Manual model control (Model tab → Models)
+Each of **Coder**, **Reasoner** and **Vision** has a card:
+- **Load / Switch** (pick any `.gguf` from the scanned folders, only files from those folders are accepted), **Unload**, **Reload**. Loading one unloads whatever else is in memory.
+- **Tweak settings**: context size, GPU layers, CPU threads, batch size, flash attention, chat format. *Save* stores them for the next load; *Save & reload* applies them now. A card warns when the loaded model is running older settings.
+- Buttons refuse politely while a reply is generating. Chatting with the coder unloaded loads it automatically.
+- Starting the server with no `--model` is fine: nothing is loaded until you press **Load**.
+
+## Images (Qwen2.5-VL, loaded only when needed)
+Attach, drop or paste a PNG / JPG / WebP / GIF (up to 4 per message). Only one model is in memory at a time:
+
+1. **Coder unloaded** the moment you send a message that has an image.
+2. **Qwen2.5-VL** (`...-Q4_K_M.gguf` + `...-mmproj-f16.gguf`) is loaded and reads the image: it transcribes text/code/errors and describes layout and details, guided by what you typed.
+3. **Both vision files are unloaded** as soon as the extraction is done.
+4. **Coder reloaded**, and it answers your message using the extracted details, so follow-ups like "write the fix" or "turn this into a table" just work.
+
+The status line and the model pill show which step is running; **Stop** cancels and puts your message back in the box. The extracted text appears under your message (*Image details*) and stays in the chat, so later turns do not re-read the image. Needs a `llama-cpp-python` recent enough to include `Qwen25VLChatHandler` (`pip install -U llama-cpp-python`, same CUDA/Metal build as before). Large images are shrunk to 1280 px in the browser first.
+
+## Workspace: files, terminal, plans, charts
+The model is taught (via a short system prompt, switch it off under *Settings → Workspace*) to answer in formats the app turns into actions. Small models need `Precise` sampling and one task per message.
+
+| Feature | How it works |
+|---|---|
+| **Create files** | A ` ```file:src/app.py ` block gets *Save…* and *Download* buttons. *Save…* shows a review dialog (new file, or a diff if it overwrites), then writes inside `--root`. |
+| **Edit files** | An ` ```edit:path ` block holds `<<<<<<< SEARCH` / `=======` / `>>>>>>> REPLACE` sections. *Review edit* applies them to the current file (project, earlier edits this chat, or an attachment), shows the diff, then *Save to project* or *Download*. Ambiguous or missing matches are reported instead of guessed; CRLF line endings are preserved. Attach the file first (`@path`) so the model can see it. |
+| **Changes tab** | Everything you saved or downloaded this session, with *Diff*, *Download*, *Save*, **Download all (.zip)** and *Save all*. |
+| **Terminal** | Right-panel tab (Alt+T) streams a command's output live, with Stop, history (↑/↓) and a time limit (Settings). `bash` blocks in a reply get a **Run** button that asks first, shows the output under the block, and **Send output to chat** lets the model read the result. Each command starts fresh in `--root` (no state carried between commands). |
+| **Plan mode** | Toggle *Plan* next to the paperclip, or use `/plan <goal>`. The model writes Goal / Approach / Files / Steps / Risks and nothing else. The plan card lets you tick steps, **Build** one step, **Build everything**, or **Revise**. Approving turns plan mode off. Progress is saved with the chat. |
+| **Charts & diagrams** | A ` ```chart ` block (JSON: `type`, `title`, `labels`, `datasets`) becomes a chart: bar, line, area, pie, doughnut, radar, polarArea, scatter; *Save PNG* included. A ` ```mermaid ` block becomes a diagram (*Save SVG*). Try `/chart`, `/diagram`. Invalid specs show a clear error instead of breaking the message. |
+| **Other commands** | `/newfile`, `/edit`, `/run` ask for the matching format. |
+
+Charts, the zip download and diagrams load Chart.js, JSZip and Mermaid from cdnjs the first time they are used (like the existing markdown/highlight libraries), so that needs internet once.
+
+## Web search (SearXNG)
+Lets the model answer from live results. [SearXNG](https://github.com/searxng/searxng) is a self-hosted meta search engine; CressyAI asks it for results, opens the top pages, and hands the text to the model as numbered sources. The model itself never touches the network.
+
+**Set it up (once)**
+1. Install Docker, then in this folder run `docker compose up -d` (or `./searxng.sh` / `searxng.bat`). It listens on `127.0.0.1:8080` only. `searxng/settings.yml` already enables the JSON format and turns the limiter off; if you use your own SearXNG, add `json` under `search: formats:`.
+2. Start CressyAI as usual (use `--searxng-url http://host:port` if it is elsewhere). *Settings → Web search → Test connection* tells you what is wrong if it fails.
+
+**Use it**
+- Press **Web** next to the paperclip. In the default *When it needs it* mode, questions about news, prices, versions, "latest…", today, weather and similar are searched; the rest are answered normally. *Every message* searches always.
+- `/web your question` (or `/search`) forces a search for one message, even with Web off, and uses your words as the query.
+- Paste a link and it is read (up to 3 links) instead of searched.
+- A collapsible card above the reply lists the sources (marked *read* when the page text was used); `[1]` `[2]` in the answer become clickable chips. **Retry** repeats the lookup.
+- *Settings → Web search*: results (4-10), pages to read (0-4), text budget, freshness, category (web/news/IT/science). The budget is capped by the context window, so small `--n-ctx` values stay safe.
+- If search fails, the card shows why and the model is told it has no fresh data, so it should not pretend to have searched.
+
+**Privacy:** your search words go to SearXNG and on to the engines it queries; page text never leaves your machine except as the page request itself. The footer says so while Web is on. The page reader refuses private/local addresses and non-web links, re-checks every redirect, and skips PDFs and binaries.
+
+## Text & style
+*Settings → Text & style*: response style (**Balanced / Rich / Plain**, which tells the model how to format), font, size, line spacing, reading width, accent colour, and LaTeX on/off. Replies can show:
+- callouts: a quote starting `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]` (also `> **Warning:** …`)
+- tables with click-to-sort headers, zebra rows, *Copy table* (pastes into Sheets/Excel) and *Download CSV*
+- task lists, `==highlight==`, `<kbd>`, source chips
+- math: `$x^2$`, `$$\\int…$$`, `\\( \\)`, `\\[ \\]` (KaTeX loads from cdnjs on first use; currency like $5 or $10 is left alone)
+- a **Wrap** button on code blocks
+
+## What you can do
+**Slash commands** – paste code after the command, attach a file, or run it bare to use the last code block in the chat.
+
+| Command | Does |
+|---|---|
+| `/explain` `/fix` `/review` `/refactor` | understand, debug, review, clean up code |
+| `/test` `/doc` `/bigo` | unit tests, docstrings, complexity analysis |
+| `/commit` | Conventional Commit message from your **staged** diff |
+| `/review` (bare) | reviews your **working** diff |
+| `/regex` `/sql` `/shell` `/name` `/eli5` | describe what you need in words |
+| `/convert` | `/convert Go` + newline + code |
+| `/help` | list commands and shortcuts |
+
+**@file mentions** – type `@src/app.py` to attach it (Tab autocompletes from the project).
+**Git buttons** (Files panel) – attach working diff, staged diff or last commit.
+**Search in files** – substring search across the project, click *Add* to attach a hit.
+**Modes** – Code helper, Code reviewer, Debugger, Tutor (set the system prompt) and sampling presets Precise / Balanced / Creative.
+**Chats** – auto-saved in your browser (last 50), reopen from the *Chats* list, export as Markdown.
+**Message actions** – Copy, Retry (last reply), Edit (rewinds the chat to that message), Delete.
+**Code blocks** – *Copy* and *Save* (downloads with the right extension).
+**Context guard** – when a chat outgrows the context window the oldest turns are dropped automatically; the reply footer shows how many.
+**Settings** are remembered between sessions. Also: drag-and-drop files, live tokens/sec, context bar, RAM/CPU, GGUF metadata.
+
+## Shortcuts
+Enter send · Shift+Enter newline · Esc stop/close popup · ↑/↓ recall earlier messages · Tab accept suggestion ·
+Alt+N new chat · Alt+L focus input · Alt+R retry · Alt+C copy last reply · Alt+E export · Alt+S side panel · Alt+T terminal · Alt+/ help
+
+## Tips
+- Small models forget fast: use *Precise*, give one task per message, attach only the files that matter.
+- Slow? Use a smaller or more quantized model (Q4_K_M), or `--n-gpu-layers -1`.
+- Out of context? Raise `--n-ctx` (uses more RAM).
+
+## Safety notes
+- **Terminal and file writing run with your user permissions.** They only work when the server is bound to loopback (the default), require a custom header and a same-site `Origin` (so other websites cannot call them), and *Run* on a model-suggested command asks first. You are still running commands a language model wrote: read them. Use `--no-terminal` / `--read-only` to turn either off.
+- Writes are confined to `--root`, refuse `.git/`, binary files and symlinks that leave the folder, and are atomic. Keep the project under git so you can undo.
+- The server only reads inside `--root` and rejects non-loopback `Host` headers. Don't set `--root` to `~` or `/`, and don't expose it with `--host 0.0.0.0` on an untrusted network.
+- Files like `.env` are readable if they're inside `--root`; keep secrets out of the folder or don't attach them.
+- Attachments are not restored when you reopen a saved chat (their names are kept, content is not).
+
+## Troubleshooting
+- `llama-cpp-python` fails to build: install a C/C++ toolchain (Xcode CLT / build-essential / VS Build Tools) or use a prebuilt wheel.
+- Garbled replies: pass `--chat-format` (e.g. `chatml`, `llama-3`).
+- "Binary or unreadable file": only text files can be attached.
+- Port busy: `--port 8001`.
+
+**New in this version**
+- **Preview / Run** buttons on `html`, `svg` and `js` code blocks open a sandboxed live preview (Claude-style artifacts, fully offline).
+- **Memory** (Settings tab) plus `/remember <fact>`: standing notes sent with every chat.
+- **`/compact`** summarizes the chat to free context; a hint appears when the window is 85% full. **Continue** button when a reply hits the token limit.
+- **13 new task commands**: `/summarize` `/tldr` `/rewrite` `/proofread` `/translate` `/email` `/outline` `/plan` `/brainstorm` `/proscons` `/table` `/quiz` `/steps`, and new modes: Writer, Analyst, Study buddy, Brainstorm, Translator.
+- **Chats**: search (titles and message text), pin to top, back up / restore all chats as JSON.
+- **Speed flags**: `--n-batch 512` and `--flash-attn` for faster prompt processing.
