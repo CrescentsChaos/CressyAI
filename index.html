@@ -5,6 +5,7 @@
 <link rel="icon" type="image/png" href="/assets/logo-mark.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
@@ -314,6 +315,61 @@ label.chk{display:flex;gap:8px;align-items:center;color:var(--mut);font-size:13p
 @keyframes gin{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes gsh{to{background-position:-220% 0}}
 @keyframes gind{0%{transform:translateX(-110%)}100%{transform:translateX(280%)}}
+/* ===== reading look (set in Settings, Text & style) ===== */
+.body{font-family:var(--ff,inherit);font-size:var(--fs,15px);line-height:var(--lh,1.7)}
+#msgs{width:min(var(--cw,820px),calc(100% - 32px))}
+.cin{width:min(var(--cw,820px),100%)}
+.body h2{padding-bottom:.3em;border-bottom:1px solid var(--line)}
+.body h4{font-size:.95em;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:1.2em 0 .4em}
+.body strong{font-weight:650}
+.body ul ul,.body ol ul{margin:.3em 0}
+.body mark{background:linear-gradient(transparent 52%,color-mix(in srgb,#fbbf24 55%,transparent) 52%);color:inherit;padding:0 .12em;border-radius:3px}
+.body kbd{font:500 .82em var(--mono);padding:.1em .45em;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;background:var(--card2)}
+.body pre.wrap code{white-space:pre-wrap;overflow-wrap:anywhere}
+/* callouts: > [!NOTE] / [!TIP] / [!IMPORTANT] / [!WARNING] / [!CAUTION] */
+.body blockquote.callout{--c:var(--acc);border-left:4px solid var(--c);background:color-mix(in srgb,var(--c) 9%,transparent);color:var(--ink);padding:.7em 1em;border-radius:0 12px 12px 0}
+.callout .co-t{display:flex;align-items:center;gap:8px;font-weight:700;font-size:.92em;color:var(--c);margin-bottom:.2em}
+.callout>p{margin:.35em 0}.callout>p:last-child{margin-bottom:0}.callout>strong:first-child,.callout>p:first-child>strong:first-child{color:var(--c)}
+.body blockquote.callout.note{--c:#38bdf8}.body blockquote.callout.tip{--c:var(--ok)}.body blockquote.callout.important{--c:#c084fc}.body blockquote.callout.warning{--c:#f59e0b}.body blockquote.callout.caution{--c:var(--danger)}
+/* tables: sortable headers, zebra rows, copy / CSV */
+.tblw{margin:.9em 0}.tblw .ts{overflow-x:auto;border:1px solid var(--line);border-radius:10px}.body .tblw table{display:table;width:100%;margin:0;border:0;border-radius:0;overflow:visible}
+.tblw .tt{display:flex;gap:4px;justify-content:flex-end;margin-top:4px;opacity:0;transition:opacity .15s}
+.tblw:hover .tt,.tblw:focus-within .tt{opacity:1}@media(hover:none){.tblw .tt{opacity:.8}}
+.tt button{border:0;padding:2px 8px;font-size:12px;color:var(--mut);border-radius:7px}.tt button:hover{color:var(--ink)}
+.body table th{cursor:pointer;user-select:none;white-space:nowrap}
+.body table th[data-sort=asc]::after{content:" \25B2";font-size:.7em;color:var(--acc)}.body table th[data-sort=desc]::after{content:" \25BC";font-size:.7em;color:var(--acc)}
+.body table tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--card2) 45%,transparent)}
+.body table tbody tr:hover td{background:color-mix(in srgb,var(--acc) 8%,transparent)}
+/* task lists */
+.body li:has(>input[type=checkbox]),.body li:has(>p>input[type=checkbox]){list-style:none;margin-left:-1.3em}
+.body input[type=checkbox]{appearance:none;-webkit-appearance:none;width:1.05em;height:1.05em;border:1.5px solid var(--mut);border-radius:5px;vertical-align:-.15em;margin:0 .55em 0 0;display:inline-grid;place-content:center}
+.body input[type=checkbox]:checked{background:var(--acc);border-color:var(--acc)}
+.body input[type=checkbox]:checked::after{content:"";width:.28em;height:.55em;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-6%,-8%)}
+/* math */
+.math{font-family:var(--mono);font-size:.9em;color:var(--mut)}.math[data-r="1"]{font-family:inherit;font-size:1em;color:inherit}
+.math[data-d="1"]{display:block;margin:.8em 0;text-align:center;overflow-x:auto;overflow-y:hidden}
+/* web search card + citation chips */
+.web{margin:0 0 12px;border:1px solid var(--line);border-radius:14px;background:color-mix(in srgb,var(--card) 75%,transparent);overflow:hidden;transition:border-color .3s,box-shadow .3s}
+.web[hidden]{display:none}
+.web.live{border-color:color-mix(in srgb,var(--acc2) 55%,var(--line));box-shadow:0 0 0 4px color-mix(in srgb,var(--acc2) 10%,transparent)}
+.web-h{display:flex;align-items:center;gap:10px;width:100%;border:0;border-radius:0;padding:10px 14px;text-align:left;color:var(--mut);font-weight:500;font-size:13px}
+.web-h:hover{background:none;color:var(--ink)}.web-h .gl{color:var(--acc2);display:inline-flex}
+.web-h .wq{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.web-h .chev{margin-left:auto;display:inline-flex;transition:transform .2s}.web.open .web-h .chev{transform:rotate(180deg)}
+.web-w{display:grid;grid-template-rows:0fr;transition:grid-template-rows .25s}.web.open .web-w{grid-template-rows:1fr}.web-w>div{overflow:hidden;min-height:0}
+.web-l{list-style:none;margin:0;padding:2px 12px 12px;display:grid;gap:8px}
+.src{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:11px;background:var(--card);color:inherit;text-decoration:none}
+a.src:hover{border-color:var(--acc)}
+.src .n{width:22px;height:22px;border-radius:7px;background:color-mix(in srgb,var(--acc) 16%,transparent);color:var(--acc);font:600 12px Inter,sans-serif;display:grid;place-items:center}
+.src .t{font-weight:600;font-size:13px;line-height:1.35;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.src .d{font-size:11.5px;color:var(--mut);margin-top:1px}.src .s{font-size:12.5px;color:var(--mut);margin-top:4px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.src .rd{display:inline-block;margin-left:6px;padding:0 6px;border-radius:999px;font-size:10.5px;background:color-mix(in srgb,var(--acc2) 18%,transparent);color:var(--acc2)}
+.src .rd.bad{background:color-mix(in srgb,var(--danger) 16%,transparent);color:var(--danger)}
+.web-err{padding:0 14px 12px;color:var(--danger);font-size:12.5px;overflow-wrap:anywhere}.web-err[hidden]{display:none}
+a.cite{display:inline-block;min-width:1.35em;padding:0 .3em;margin:0 .08em;border-radius:6px;font:600 .72em/1.55 Inter,sans-serif;text-align:center;text-decoration:none;vertical-align:.28em;color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,transparent)}
+a.cite:hover{background:var(--acc);color:#fff}
+/* settings extras */
+label.f.x{grid-template-columns:1fr 150px}.wst{font:500 11px Inter,sans-serif;margin-left:8px;color:var(--mut)}.wst.ok{color:var(--ok)}.wst.bad{color:var(--danger)}
 </style></head><body>
 <div class="bg"></div>
 <div class="app" id="app">
@@ -352,6 +408,7 @@ label.chk{display:flex;gap:8px;align-items:center;color:var(--mut);font-size:13p
      <button type="button" class="pbtn" id="reason" aria-pressed="false" title="Reason first: a separate reasoning model thinks the task through (the coder is unloaded meanwhile), then the coder answers using its notes"><i data-ic="spark" data-s="14"></i>Reason</button>
      <button type="button" class="pbtn" id="plan" aria-pressed="false" title="Plan mode: the model writes a plan first, you approve it, then it builds"><i data-ic="list" data-s="14"></i>Plan</button>
      <button type="button" class="pbtn" id="imgmode" aria-pressed="false" title="Image mode (Alt+I): every message becomes an image prompt. Attach an image to edit it instead."><i data-ic="image" data-s="14"></i>Image</button>
+     <button type="button" class="pbtn" id="web" aria-pressed="false" title="Web: look things up live through your SearXNG and answer from the sources (use /web your question to force it for one message)"><i data-ic="globe" data-s="14"></i>Web</button>
      <select id="mode" class="msel" aria-label="Mode"></select>
      <span class="hint">Enter to send · ↑ recalls · Esc stops</span>
      <button id="go" type="submit" aria-label="Send"><span class="sd" data-ic="up" data-s="19"></span><span class="st" data-ic="stop" data-s="17"></span></button>
@@ -434,6 +491,22 @@ label.chk{display:flex;gap:8px;align-items:center;color:var(--mut);font-size:13p
     <label class="f">Teach file / chart / command formats<select id="tools"><option value="1">On</option><option value="0">Off</option></select></label>
     <label class="f">Confirm model commands<select id="confirmrun"><option value="ask">Ask</option><option value="no">Never</option></select></label>
     <label class="f">Command time limit<select id="runtimeout"><option value="30">30 s</option><option value="60" selected>60 s</option><option value="120">2 min</option><option value="300">5 min</option></select></label>
+    <h3>Web search<span class="wst" id="wst"></span></h3>
+    <label class="f x">When Web is on<select id="wmode"><option value="auto">When it needs it</option><option value="always">Every message</option></select></label>
+    <label class="f x">Results<select id="wn"><option value="4">4</option><option value="6" selected>6</option><option value="8">8</option><option value="10">10</option></select></label>
+    <label class="f x">Pages to read<select id="wread"><option value="0">None (snippets only)</option><option value="1">Top 1</option><option value="2" selected>Top 2</option><option value="3">Top 3</option><option value="4">Top 4</option></select></label>
+    <label class="f x">Text from pages<select id="wbudget"><option value="4000">Small</option><option value="8000" selected>Medium</option><option value="14000">Large</option></select></label>
+    <label class="f x">Freshness<select id="wtime"><option value="">Any time</option><option value="day">Past day</option><option value="week">Past week</option><option value="month">Past month</option><option value="year">Past year</option></select></label>
+    <label class="f x">Search in<select id="wcat"><option value="general">Web</option><option value="news">News</option><option value="it">IT / code</option><option value="science">Science</option></select></label>
+    <div class="btns"><button type="button" id="wtest">Test connection</button></div><div class="mc-n" id="wnote"></div>
+    <h3>Text &amp; style</h3>
+    <label class="f x">Response style<select id="fstyle"><option value="balanced">Balanced</option><option value="rich">Rich (headings, tables, callouts)</option><option value="plain">Plain text</option></select></label>
+    <label class="f x">Math (LaTeX)<select id="fmath"><option value="1">On</option><option value="0">Off</option></select></label>
+    <label class="f x">Font<select id="ffont"><option value="inter">Inter</option><option value="serif">Serif</option><option value="sora">Sora</option><option value="system">System</option><option value="mono">Monospace</option></select></label>
+    <label class="f x">Text size<select id="fsize"><option value="13">13 px</option><option value="14">14 px</option><option value="15" selected>15 px</option><option value="16">16 px</option><option value="17">17 px</option><option value="18">18 px</option></select></label>
+    <label class="f x">Line spacing<select id="flh"><option value="1.45">Tight</option><option value="1.7" selected>Normal</option><option value="1.9">Relaxed</option></select></label>
+    <label class="f x">Reading width<select id="fwidth"><option value="680">Narrow</option><option value="820" selected>Comfortable</option><option value="1040">Wide</option></select></label>
+    <label class="f x">Accent colour<select id="faccent"><option value="violet">Violet</option><option value="blue">Blue</option><option value="teal">Teal</option><option value="green">Green</option><option value="rose">Rose</option><option value="amber">Amber</option></select></label>
     <h3>Memory</h3><label class="f w"><textarea id="mem" placeholder="Things to always remember: your name, role, tech stack, tone you like. Add more with /remember …"></textarea></label>
     <h3>System prompt</h3><label class="f w"><textarea id="sys" placeholder="Optional. Picking a mode in the composer fills this in."></textarea></label>
    </section>
@@ -593,6 +666,14 @@ const ic=(n,s=16)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="no
 $$('[data-ic]').forEach(e=>e.innerHTML=ic(e.dataset.ic,+e.dataset.s||16));
 
 let refreshInfo=null,info=null,msgs=[],busy=false,ctl=null,hist=[],stick=true,att=[],cwd='',imgMode=false,editFrom=null;
+globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+alert:'<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>',
+wrap:'<path d="M3 6h18M3 12h15a3 3 0 0 1 0 6h-5M3 18h4"/><path d="m15 15-2 3 2 3"/>'});
+const ic=(n,s=16)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${P[n]}</svg>`;
+$$('[data-ic]').forEach(e=>e.innerHTML=ic(e.dataset.ic,+e.dataset.s||16));
+
+let refreshInfo=null,info=null,msgs=[],busy=false,ctl=null,hist=[],stick=true,att=[],cwd='';
 const chat=$('#chat'),msgsEl=$('#msgs'),app=$('#app');
 const LS=(k,v)=>{try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch{return null}};
 
@@ -618,6 +699,24 @@ function split(c,live){
 }
 function render(t){
   try{return DOMPurify.sanitize(marked.parse(t,{gfm:true,breaks:false}))}catch{return '<p style="white-space:pre-wrap">'+esc(t)+'</p>'}
+function stashMath(t,list){   // pull LaTeX out before markdown sees it (underscores and stars would be eaten)
+  const fe=[...t.matchAll(/^ {0,3}(```|~~~)/gm)],cut=fe.length%2?fe[fe.length-1].index:t.length,tail=t.slice(cut);
+  const tok=(raw,x,d)=>{list.push({raw,tex:x.trim(),d});return 'zzmath'+(list.length-1)+'zz'};
+  const parts=t.slice(0,cut).split(/(```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]+`)/);
+  for(let i=0;i<parts.length;i+=2)parts[i]=parts[i]
+    .replace(/\$\$([\s\S]+?)\$\$/g,(m,x)=>tok(m,x,1))
+    .replace(/\\\[([\s\S]+?)\\\]/g,(m,x)=>tok(m,x,1))
+    .replace(/\\\(([\s\S]+?)\\\)/g,(m,x)=>tok(m,x,0))
+    .replace(/(?<![\\$\w])\$(?![\s$])([^$\n]+?)(?<![\s\\])\$(?![\d\w$])/g,(m,x)=>(/[\\^_{}=+*\/<>-]|[a-zA-Z]/.test(x)&&!/^[\d.,]+$/.test(x))?tok(m,x,0):m);
+  return parts.join('')+tail;
+}
+function render(t){
+  try{
+    const list=[],src=$('#fmath')?.value==='0'?t:stashMath(t,list);
+    let h=DOMPurify.sanitize(marked.parse(src,{gfm:true,breaks:false}));
+    if(list.length)h=h.split(/(<pre[\s\S]*?<\/pre>|<code[\s\S]*?<\/code>)/).map((seg,i)=>seg.replace(/zzmath(\d+)zz/g,(m,k)=>{const e=list[+k];return !e?m:i%2?esc(e.raw):'<span class="math" data-d="'+e.d+'" data-tex="'+esc(e.tex)+'">'+esc(e.tex)+'</span>'})).join('');
+    return h;
+  }catch{return '<p style="white-space:pre-wrap">'+esc(t)+'</p>'}
 }
 /* ---------- flicker-free markdown: build off-screen, touch only what changed ---------- */
 function healMd(t){
@@ -641,6 +740,7 @@ function bar(pre,code){
     if(/\.(html?|svg)$/i.test(k.path))g.prepend(mk('right','Preview',()=>preview(/svg$/i.test(k.path)?'svg':'html',raw())));
   }else if(k.kind==='edit')g.append(mk('pencil','Review edit',()=>actFile(pre,'save'),'Show the diff, then save or download the edited file'));
   else{
+    g.append(mk('wrap','Wrap',()=>pre.classList.toggle('wrap'),'Toggle line wrapping'));
     g.append(mk('download','Save',()=>dl_('snippet.'+(EXT[lang]||'txt'),raw()),'Download as a file'));
     if(/^(html|svg|js|javascript)$/.test(lang))g.prepend(mk('right',/^js|^javascript/.test(lang)?'Run':'Preview',()=>preview(lang,raw())));
     if(k.kind==='term')g.prepend(mk('right','Run',()=>runFromBlock(pre),'Run in the project folder'));
@@ -670,6 +770,7 @@ function morph(dst,src){
     if(!x){dst.append(y);continue}
     if(!sameNode(x,y)){x.replaceWith(y);continue}
     if(x.nodeType!==1){if(x.data!==y.data)x.data=y.data;continue}
+    if(x.classList.contains('math')||y.classList.contains('math')){if(x.classList.contains('math')&&y.classList.contains('math')){if(x.dataset.tex!==y.dataset.tex||x.dataset.d!==y.dataset.d)x.replaceWith(y)}else x.replaceWith(y);continue}
     if(x.classList.contains('viz')!==y.classList.contains('viz')){x._chart?.destroy?.();x.replaceWith(y);continue}
     if(x.classList.contains('viz')){if(x.dataset.raw!==y.dataset.raw){x._chart?.destroy?.();x.replaceWith(y)}continue}
     if(x.tagName==='PRE'){syncPre(x,y);continue}
@@ -682,6 +783,7 @@ function addCaret(tpl){   // blinking cursor at the end of the last paragraph / 
   if(t){const c=document.createElement('span');c.className='caret';t.append(c)}
 }
 function setBody(b,md,streaming){
+function setBody(b,md,streaming,m){
   const open=streaming&&((md.match(/^ {0,3}(```|~~~)/gm)||[]).length%2===1);
   const tpl=document.createElement('div');tpl.innerHTML=render(streaming?healMd(md):md);
   const all=[...tpl.querySelectorAll('pre')];all.forEach((pre,i)=>{const code=pre.querySelector('code');if(!code)return;code.dataset.raw=code.textContent;
@@ -690,6 +792,9 @@ function setBody(b,md,streaming){
     bar(pre,code)});
   if(streaming&&!open&&md)addCaret(tpl);
   morph(b,tpl);mountViz(b);
+  callouts(tpl);tables(tpl);inlineMarks(tpl,m?.web?.results);
+  if(streaming&&!open&&md)addCaret(tpl);
+  morph(b,tpl);mountViz(b);mountMath(b);
   const pres=[...b.querySelectorAll('pre code')];
   pres.forEach((code,i)=>{if(code.dataset.hl||(open&&i===pres.length-1))return;try{hljs.highlightElement(code)}catch{}code.dataset.hl='1'});
 }
@@ -707,6 +812,7 @@ function startStatus(m){
   const f=m.el.querySelector('.foot');
   f.innerHTML='<span class="status"><span class="orb"></span><span class="ph shimmer"></span><span class="dots"><i></i><i></i><i></i></span><span class="clk"></span></span>';
   m.st=f.firstChild;m.stop1=ticker(f.querySelector('.ph'),m.gen?IMGP:PHRASES,2600);
+  m.st=f.firstChild;m.stop1=ticker(f.querySelector('.ph'),PHRASES,2600);
   const t0=performance.now(),upd=()=>{
     m.st.querySelector('.clk').textContent=clock(((performance.now()-t0)/1000)|0);
     if(m.t0&&!m.thinkMs){const tt=m.el.querySelector('.think-time');if(tt)tt.textContent=clock(((performance.now()-m.t0)/1000)|0)}
@@ -739,6 +845,8 @@ function paint(m,live){
   if(m.gen)paintGen(m);
   paintThink(m,s,live);
   setBody(b,s.ans,live);
+  paintThink(m,s,live);paintWeb(m);
+  setBody(b,s.ans,live,m);
   if(live){if(!m.st)startStatus(m)}
   else{endStatus(m);const t=foot(m);if(f.textContent!==t)f.textContent=t;paintPlan(m)}
 }
@@ -767,6 +875,14 @@ function addMsg(m){
   d.innerHTML=(a?'<div class="av"><img src="/assets/logo-mark.png" alt=""></div>':'')+'<div class="col">'+(a?THINKHTML:'')+'<div class="body"></div><div class="plan" hidden></div><div class="foot"></div><div class="acts"></div></div>';
   msgsEl.append(d);m.el=d;
   if(a)d.querySelector('.think-h').onclick=()=>{m.touched=true;d.querySelector('.think').classList.toggle('open')};
+const WEBHTML=`<div class="web" hidden><button type="button" class="web-h"><span class="gl">${ic('globe',15)}</span><span class="wq"></span><span class="chev">${ic('chev',15)}</span></button><div class="web-w"><div><ol class="web-l"></ol><div class="web-err" hidden></div></div></div></div>`;
+function addMsg(m){
+  $('#empty')?.remove();
+  const d=document.createElement('div'),a=m.role==='assistant';d.className='msg '+m.role;
+  d.innerHTML=(a?'<div class="av"><img src="/assets/logo-mark.png" alt=""></div>':'')+'<div class="col">'+(a?THINKHTML+WEBHTML:'')+'<div class="body"></div><div class="plan" hidden></div><div class="foot"></div><div class="acts"></div></div>';
+  msgsEl.append(d);m.el=d;
+  if(a)d.querySelector('.think-h').onclick=()=>{m.touched=true;d.querySelector('.think').classList.toggle('open')};
+  if(a)d.querySelector('.web-h').onclick=()=>{m._wt=true;d.querySelector('.web').classList.toggle('open')};
   paint(m,!!m.live);acts(m);
 }
 /* ---------- scrolling ---------- */
@@ -834,6 +950,12 @@ async function send(raw,opts={}){
   const mem=$('#mem').value.trim(),seen=msgs.some(x=>x.files?.some(f=>f.desc)),
     sys=[$('#sys').value.trim(),toolsPrompt(),seen&&IMG_SYS,planOn&&PLAN_PROMPT,mem&&'Standing notes about the user (always respect them):\n'+mem].filter(Boolean).join('\n\n');
   const payload={messages:[...(sys?[{role:'system',content:sys}]:[]),...msgs.slice(0,-1).map(x=>({role:x.role,content:x.role==='user'?withFiles(x.content,x.files||[]):asst(x)}))],...params()};
+  const webReq=wantWeb(text,webOnce);webOnce=null;
+  const doReason=!/^Continue exactly where you stopped/.test(text)&&wantReason(text,planOn,rOnce);
+  if(u.files.some(f=>typeof f.image==='string'&&f.image.length>1&&!f.desc)&&!await analyze(u,m,typed,doReason))return;
+  const mem=$('#mem').value.trim(),seen=msgs.some(x=>x.files?.some(f=>f.desc)),
+    sys=[$('#sys').value.trim(),toolsPrompt(),formatPrompt(),todayLine(),seen&&IMG_SYS,planOn&&PLAN_PROMPT,mem&&'Standing notes about the user (always respect them):\n'+mem].filter(Boolean).join('\n\n');
+  const payload={messages:[...(sys?[{role:'system',content:sys}]:[]),...msgs.slice(0,-1).map(x=>({role:x.role,content:x.role==='user'?withFiles(x.content,x.files||[]):(split(x.content).ans||x.content)}))],...params()};
   const t0=performance.now();let tf=0,n=0,last=t0,acc=0,lastR=0,dirty=false,fin=false,aborted=false,raf=0,done;
   const drained=new Promise(r=>done=r);
   const loop=ts=>{
@@ -858,6 +980,7 @@ async function send(raw,opts={}){
       $('#ttft').textContent=ev.ttft?.toFixed(2)??'–';$('#ptok').textContent=ev.prompt_tokens??'–';$('#ctok').textContent=ev.completion_tokens;ctx(ev.ctx_used||0)}
   };
   try{
+    if(webReq){const wr=await webStep(m,text,webReq);if(wr)addWeb(payload,wr)}
     if(doReason){const rr=await reasonStep(m,payload);if(rr.notes)addNotes(payload,rr.notes,rr.cut)}
     const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:ctl.signal});
     if(!r.ok)m.full+='\n\n> **Error:** '+(await r.text()).slice(0,200);
@@ -939,6 +1062,7 @@ const readURL=f=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(
 const loadImg=src=>new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(new Error('could not read this image'));i.src=src});
 async function addImage(f){
   if(!CAPS.vision&&!CAPS.image){note('Images need the Qwen2.5-VL models or a Stable Diffusion model: '+(CAPS.vision_why||'not found'));return}
+  if(!CAPS.vision){note('Images need the Qwen2.5-VL models: '+(CAPS.vision_why||'not found'));return}
   if(att.filter(a=>a.thumb).length>=MAX_IMGS){note('Up to '+MAX_IMGS+' images per message');return}
   try{
     const raw=await readURL(f),img=await loadImg(raw),w=img.naturalWidth,h=img.naturalHeight,k=Math.min(1,IMG_MAX/Math.max(w,h));
@@ -1050,6 +1174,7 @@ imgedit:['d','Edit the attached image, or the last generated one, as you describ
 SUGG.push(['Generate an image','/imagine','Stable Diffusion XL on your machine'],['Edit an image','/imgedit','Change the last or an attached picture']);
 let HELP=`**Slash commands** (paste code after the command, attach files, or use the last code block in the chat)\n\n`+Object.entries(CMDS).map(([k,[t,d]])=>`- \`/${k}\` ${t==='c'?'code':'description'} — ${d}`).join('\n')+`\n\n\`/commit\` with nothing else uses your **staged** git diff; \`/review\` uses your **working** diff.\n\n**@file** — type \`@path/to/file.py\` to attach a file (Tab completes).\n\n**Files panel:** click a folder to enter it, **Back** (button, Backspace or Alt+←) to return, Alt+→ forward, breadcrumbs to jump up.\n\n**Images:** attach, drop or paste a PNG / JPG / WebP / GIF. Qwen2.5-VL reads it first (the coder is unloaded meanwhile), is unloaded again, then the coder comes back and answers using what was extracted. Open *Image details* under your message to see it.\n\n**Reasoning:** the *Reason* button (or \`/think\`) makes a separate reasoning model (gemma-4-12b-it / Qwen3-8B from your models folder) think the task through first while the coder stays unloaded; then the coder loads and answers using its notes. Load, unload and tweak every model in the *Model* tab.\n\n**Shortcuts:** Enter send · Shift+Enter newline · Esc stop / close popup · ↑ recall previous message · Alt+N new chat · Alt+L focus input · Alt+R retry last reply · Alt+C copy last reply · Alt+E export chat · Alt+S tools panel · Alt+B chat list · Alt+/ this help · Alt+I image mode · Alt+G new seed for the last image · Alt+V edit the last image`;
 HELP+=`\n\n**Images (Stable Diffusion XL):** \`/imagine a lighthouse at dawn, oil painting\` makes an image; \`/imgedit make it night\` edits the attached image, or the last one generated. The *Image* button (Alt+I) turns every message into an image prompt, and an attached picture is then edited instead. Under each image: enlarge, download, edit, vary, re-roll (new seed) and save to the project. The coder writes the Stable Diffusion prompt for you (turn that off in Settings → Images); it is unloaded while the image is made and comes back afterwards. Editing is img2img: describe how the picture should look afterwards, and raise or lower *Edit strength* to change more or less.`;
+let HELP=`**Slash commands** (paste code after the command, attach files, or use the last code block in the chat)\n\n`+Object.entries(CMDS).map(([k,[t,d]])=>`- \`/${k}\` ${t==='c'?'code':'description'} — ${d}`).join('\n')+`\n\n\`/commit\` with nothing else uses your **staged** git diff; \`/review\` uses your **working** diff.\n\n**@file** — type \`@path/to/file.py\` to attach a file (Tab completes).\n\n**Files panel:** click a folder to enter it, **Back** (button, Backspace or Alt+←) to return, Alt+→ forward, breadcrumbs to jump up.\n\n**Images:** attach, drop or paste a PNG / JPG / WebP / GIF. Qwen2.5-VL reads it first (the coder is unloaded meanwhile), is unloaded again, then the coder comes back and answers using what was extracted. Open *Image details* under your message to see it.\n\n**Reasoning:** the *Reason* button (or \`/think\`) makes a separate reasoning model (gemma-4-12b-it / Qwen3-8B from your models folder) think the task through first while the coder stays unloaded; then the coder loads and answers using its notes. Load, unload and tweak every model in the *Model* tab.\n\n**Shortcuts:** Enter send · Shift+Enter newline · Esc stop / close popup · ↑ recall previous message · Alt+N new chat · Alt+L focus input · Alt+R retry last reply · Alt+C copy last reply · Alt+E export chat · Alt+S tools panel · Alt+B chat list · Alt+/ this help`;
 function preview(lang,code){
   let html=code;
   if(/^(js|javascript)$/.test(lang))html='<body style="font:14px monospace;padding:12px"><pre id=o style="white-space:pre-wrap"></pre><script>const o=document.getElementById("o"),p=(...a)=>o.textContent+=a.map(x=>typeof x==="object"?JSON.stringify(x):x).join(" ")+"\\n";console.log=p;onerror=m=>p("Error: "+m);try{'+code+'\n}catch(e){p("Error: "+e.message)}<\/script>';
@@ -1072,6 +1197,7 @@ async function compact(){
   setBusy(true);ctl=new AbortController();note('Summarizing this chat…',true);
   try{
     const hist=msgs.map(x=>({role:x.role,content:x.role==='user'?withFiles(x.content,x.files||[]):asst(x)}));
+    const hist=msgs.map(x=>({role:x.role,content:x.role==='user'?withFiles(x.content,x.files||[]):(split(x.content).ans||x.content)}));
     const sum=await complete([{role:'system',content:'You compress conversations. Keep every decision, fact, name, file name, code detail and open task. Be brief.'},...hist,{role:'user',content:'Summarize everything above as compact bullet notes so the conversation can continue from them alone.'}],600);
     const a='Understood. I have the summary and will continue from there.';
     msgs=[{role:'user',content:'Summary of our conversation so far:\n\n'+sum,full:sum},{role:'assistant',content:a,full:a}];
@@ -1091,6 +1217,7 @@ async function expand(t){
   if(mt&&mt[1]==='remember'){const f=mt[2].trim();if(!f){note('Write a fact after /remember');return null}
     const m=$('#mem');m.value=(m.value.trim()?m.value.trim()+'\n':'')+'- '+f;saveSet();$('#input').value='';grow();localMsg('Saved to **Memory**: '+f);return null}
   if(mt&&mt[1]==='help'){$('#input').value='';grow();localMsg(HELP);return null}
+  if(mt&&(mt[1]==='web'||mt[1]==='search')){const q=mt[2].trim();if(!q){note('Write what to look up after /'+mt[1]);return null}webOnce=q;return q}
   if(mt&&CMDS[mt[1]]){
     const[k,tpl]=CMDS[mt[1]];let rest=mt[2].trim();
     if(k==='d'){if(!rest&&!att.length){note('Add text after /'+mt[1]+' or attach a file');return null}return rest?tpl+':\n'+rest:tpl+' (see the attached file(s)).'}
@@ -1114,6 +1241,7 @@ const fenced=t=>{const f='`'.repeat((t.match(/`+/g)||[]).reduce((m,s)=>Math.max(
 function toast(msg,kind){const t=document.createElement('div');t.className='toast '+(kind||'');t.setAttribute('role','status');t.textContent=msg;document.body.append(t);setTimeout(()=>t.remove(),kind==='bad'?6000:3500)}
 /* lazy-loaded libraries (cdnjs, pinned) */
 const LIB={chart:'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js',zip:'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',mermaid:'https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js'},libs={};
+const LIB={chart:'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js',zip:'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',mermaid:'https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js',katex:'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js'},libs={};
 const lib=k=>libs[k]||(libs[k]=new Promise((res,rej)=>{const s=document.createElement('script');s.src=LIB[k];s.onload=res;s.onerror=()=>{delete libs[k];s.remove();rej(new Error('Could not load the '+k+' library from cdnjs.cloudflare.com. Check your internet connection.'))};document.head.append(s)}));
 /* small modal */
 function modal(title){
@@ -1132,6 +1260,7 @@ const showTab=n=>{tab(n);if(mob()){app.classList.remove('lopen');app.classList.a
 /* ---------- workspace state: files the model produced this chat ---------- */
 let WS=new Map();   // path -> {orig:string|null, cur, saved, crlf}
 const resetWS=()=>{WS=new Map();paintChanges();editFrom=null;if(window.paintEditChip)paintEditChip()};
+const resetWS=()=>{WS=new Map();paintChanges()};
 function recordWS(path,before,after,saved,crlf){
   const e=WS.get(path);WS.set(path,{orig:e?e.orig:before,cur:after,saved:!!saved,crlf:e?e.crlf:!!crlf});paintChanges();
 }
@@ -1233,6 +1362,7 @@ function paintCaps(){
   paintTerm();paintChanges();
 }
 fetch('/api/caps').then(r=>r.json()).then(c=>{CAPS=c;paintCaps();paintImgBtn()}).catch(()=>paintCaps());
+fetch('/api/caps').then(r=>r.json()).then(c=>{CAPS=c;paintCaps()}).catch(()=>paintCaps());
 async function runCommand(cmd,sink){
   if(!CAPS.terminal){toast('The terminal is disabled on this server','bad');return null}
   if(term.running){toast('A command is already running. Stop it first.','bad');return null}
@@ -1395,6 +1525,7 @@ function save(){
   if(!cid)cid=Date.now().toString(36);
   const old=chats().find(c=>c.id===cid),rest=chats().filter(c=>c.id!==cid);
   rest.unshift({id:cid,pin:old?.pin,title:titleOf().slice(0,48),msgs:msgs.map(({role,content,files,stats,thinkMs,plan,planDone,gen})=>({role,content,stats,thinkMs,plan,planDone,gen,files:(files||[]).map(x=>({name:x.name,tokens:x.tokens,text:'',image:x.image?1:undefined,thumb:x.thumb,desc:x.desc}))}))});
+  rest.unshift({id:cid,pin:old?.pin,title:titleOf().slice(0,48),msgs:msgs.map(({role,content,files,stats,thinkMs,plan,planDone,web})=>({role,content,stats,thinkMs,plan,planDone,web:web&&!web.busy?web:undefined,files:(files||[]).map(x=>({name:x.name,tokens:x.tokens,text:'',image:x.image?1:undefined,thumb:x.thumb,desc:x.desc}))}))});
   LS('gc.chats',rest.slice(0,50));hist_();
 }
 function load(id){
@@ -1431,6 +1562,8 @@ function acts(m){
 function regen(m){
   if(busy)return;if(m.gen)return imgRetry(m);if(msgs[msgs.length-1]!==m){note('Only the last reply can be retried');return}
   msgs.pop();m.el.remove();const u=msgs.pop();u.el.remove();att=u.files||[];renderTray();$('#input').value=u.content;planOnce=!!m.plan;send(true);
+  if(busy)return;if(msgs[msgs.length-1]!==m){note('Only the last reply can be retried');return}
+  msgs.pop();m.el.remove();const u=msgs.pop();u.el.remove();att=u.files||[];renderTray();$('#input').value=u.content;planOnce=!!m.plan;if(m.web?.urls?.length)webOnce={urls:m.web.urls};else if(m.web?.query)webOnce=m.web.query;send(true);
 }
 function edit(m){
   const i=msgs.indexOf(m);if(busy||i<0)return;
@@ -1441,6 +1574,7 @@ const lastReply=()=>[...msgs].reverse().find(m=>m.role==='assistant');
 function exportMd(){dl_('chat.md',msgs.map(m=>`## ${m.role==='user'?'You':'Model'}\n\n${m.content}\n`).join('\n'))}
 /* ---------- settings ---------- */
 const SET=['mem','sys','temperature','top_p','top_k','repeat_penalty','max_tokens','tools','confirmrun','runtimeout','rmode','r_temperature','r_top_p','r_top_k','r_repeat_penalty','r_max_tokens','r_sys','img_size','img_steps','img_cfg','img_sampler','img_sched','img_seed','img_count','img_strength','img_enhance','img_neg'];
+const SET=['mem','sys','temperature','top_p','top_k','repeat_penalty','max_tokens','tools','confirmrun','runtimeout','rmode','r_temperature','r_top_p','r_top_k','r_repeat_penalty','r_max_tokens','r_sys','wmode','wn','wread','wbudget','wtime','wcat','fstyle','fmath','ffont','fsize','flh','fwidth','faccent'];
 $('#mode').innerHTML=Object.keys(MODES).map(k=>`<option>${k}</option>`).join('');
 const saveSet=()=>LS('gc.set',{...Object.fromEntries(SET.map(i=>[i,$('#'+i).value])),mode:$('#mode').value});
 const st=LS('gc.set');
@@ -1451,6 +1585,7 @@ SET.forEach(i=>$('#'+i).addEventListener('change',saveSet));$('#sys').addEventLi
 /* theme */
 let th=LS('gc.theme')||'auto';
 function applyTheme(){document.documentElement.dataset.theme=th;setTimeout(()=>window.remountViz&&remountViz(),0);$$('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.th===th));$('#theme').innerHTML=ic(th==='dark'?'moon':th==='light'?'sun':'half',16)+'Theme: '+th}
+function applyTheme(){document.documentElement.dataset.theme=th;try{applyLook()}catch{}setTimeout(()=>window.remountViz&&remountViz(),0);$$('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.th===th));$('#theme').innerHTML=ic(th==='dark'?'moon':th==='light'?'sun':'half',16)+'Theme: '+th}
 $('#theme').onclick=()=>{th={auto:'light',light:'dark',dark:'auto'}[th];LS('gc.theme',th);applyTheme()};
 $('#seg').onclick=e=>{const b=e.target.closest('[data-th]');if(b){th=b.dataset.th;LS('gc.theme',th);applyTheme()}};
 applyTheme();
@@ -1508,6 +1643,7 @@ addEventListener('keydown',e=>{
   if(e.key==='Escape'){if(!pop.hidden)pop.hidden=true;else if(busy)ctl.abort();else app.classList.remove('lopen','ropen');return}
   if(!e.altKey)return;
   const A={KeyN:newChat,KeyL:()=>$('#input').focus(),KeyR:()=>{const l=lastReply();l&&regen(l)},KeyC:()=>{const l=lastReply();l&&navigator.clipboard.writeText(l.content)},KeyE:exportMd,KeyS:togR,KeyB:togL,KeyT:()=>showTab('term'),Slash:()=>localMsg(HELP),KeyI:()=>setImgMode(!imgMode),KeyG:()=>imgRerollLast(),KeyV:()=>imgEditLast()}[e.code];
+  const A={KeyN:newChat,KeyL:()=>$('#input').focus(),KeyR:()=>{const l=lastReply();l&&regen(l)},KeyC:()=>{const l=lastReply();l&&navigator.clipboard.writeText(l.content)},KeyE:exportMd,KeyS:togR,KeyB:togL,KeyT:()=>showTab('term'),Slash:()=>localMsg(HELP)}[e.code];
   if(A){e.preventDefault();A()}
 });
 $('#clear').onclick=newChat;$('#exp').onclick=exportMd;$('#help').onclick=()=>{localMsg(HELP);if(mob())app.classList.remove('lopen')};
@@ -1523,6 +1659,7 @@ poll();setInterval(poll,2000);refreshModels(true);setInterval(()=>{if(!document.
 let MS=null,MOP=false,msig='';const MERR={},MOPEN={};
 const SLOT_INFO={coder:['Coder','Answers your messages and writes the code.'],reasoner:['Reasoner','Thinks the task through first. The coder is unloaded while it runs.'],vision:['Vision','Reads attached images. It loads only while an image is being read.'],
   image:['Image','Makes and edits pictures (Stable Diffusion). It loads only while an image is being made; the coder is unloaded meanwhile.']};
+const SLOT_INFO={coder:['Coder','Answers your messages and writes the code.'],reasoner:['Reasoner','Thinks the task through first. The coder is unloaded while it runs.'],vision:['Vision','Reads attached images. It loads only while an image is being read.']};
 async function post_(url,body){
   const r=await fetch(url,{method:'POST',headers:HDR,body:JSON.stringify(body)});let d={};try{d=await r.json()}catch{}
   if(!r.ok)throw new Error(d.detail||('server answered '+r.status));return d;
@@ -1543,6 +1680,7 @@ async function refreshModels(force){
   MS=d;
   if(d.state==='coder'&&info&&(!info.loaded||info.file!==d.slots.coder.name)&&refreshInfo)refreshInfo().catch(()=>{});
   const sig=JSON.stringify([d.state,d.busy,d.available.length,Object.values(d.slots).map(s=>[s.loaded,s.path,s.dirty,s.cfg,s.available]),(d.image_models||[]).length]);
+  const sig=JSON.stringify([d.state,d.busy,d.available.length,Object.values(d.slots).map(s=>[s.loaded,s.path,s.dirty,s.cfg])]);
   if((force||sig!==msig)&&(force||!$('#slots').contains(document.activeElement))){msig=sig;renderSlots()}
   paintPill();
 }
@@ -1579,6 +1717,7 @@ function slotCard(k){
 function renderSlots(){
   if(!MS)return;
   $('#slots').innerHTML=['coder','reasoner','vision','image'].map(slotCard).join('');
+  $('#slots').innerHTML=['coder','reasoner','vision'].map(slotCard).join('');
   const n=MS.available.length;
   $('#mdirs').textContent=(n?n+' model file'+(n>1?'s':'')+' found in ':'No .gguf files found in ')+MS.dirs.join(' · ')+'.  ★ = looked for first as the reasoner.';
   $$('#slots details').forEach(d=>d.addEventListener('toggle',()=>{MOPEN[d.closest('.mc').dataset.slot]=d.open}));
@@ -1850,5 +1989,195 @@ async function reasonStep(m,payload){
   if(err)note('Reasoning '+(notes?'was cut short: ':'skipped: ')+err);
   return{notes,cut:fin?.finish_reason==='length'};
 }
+
+/* ================= web search (SearXNG) ================= */
+let webOn=!!LS('gc.web'),webOnce=null;
+const hostOf=u=>{try{return new URL(u).hostname.replace(/^www\./,'')}catch{return''}};
+const okUrl=u=>/^https?:\/\//i.test(u||'');
+const FRESH=/\b(latest|newest|recent(?:ly)?|current(?:ly)?|today|tonight|yesterday|tomorrow|this (?:week|month|year|morning|weekend)|right now|news|headlines?|breaking|prices?|cost of|how much (?:is|does|are)|release[sd]?|version|updates?|updated|changelog|who (?:is|are|won|wins)|what happened|scores?|weather|forecast|stocks?|exchange rate|trending|rumou?rs?|announced?|20(?:2[4-9]|3\d))\b/i;
+function pickUrls(t){const seen=new Set();return[...t.replace(/```[\s\S]*?```/g,' ').matchAll(/https?:\/\/[^\s<>"')\]]+/g)].map(x=>x[0].replace(/[.,;:!?]+$/,'')).filter(u=>!seen.has(u)&&seen.add(u)).slice(0,3)}
+function makeQuery(text){
+  const clean=x=>x.replace(/```[\s\S]*?```/g,' ').replace(/https?:\/\/\S+/g,' ').replace(/(?:^|\s)@[\w.\/-]+/g,' ').replace(/\s+/g,' ').trim();
+  let q=clean(text);
+  for(let i=0;i<3;i++)q=q.replace(/^(?:hey|hi|hello|ok|okay|so|and|also|please|pls|can you|could you|would you|will you|tell me|i want to know|i need to know|do you know|search(?: the web)?(?: for)?|look up|find(?: out)?|what is|what's|whats)\b[\s,:-]*/i,'');
+  q=q.replace(/[?!.\s]+$/,'');
+  if(q.split(' ').filter(Boolean).length<=3){   // short follow-up: borrow the topic from the previous question
+    const prev=[...msgs].slice(0,-2).reverse().find(x=>x.role==='user');
+    if(prev)q=(clean(prev.content).slice(0,120).replace(/[?!.\s]+$/,'')+' '+q).trim();
+  }
+  return q.slice(0,200)||clean(text).slice(0,200);
+}
+function wantWeb(text,once){
+  if(once)return typeof once==='string'?{q:once}:once;
+  if(!webOn||/^Continue exactly where you stopped/.test(text))return null;
+  const urls=pickUrls(text);if(urls.length)return{urls};
+  const mode=$('#wmode').value;
+  if(mode==='always'||(mode==='auto'&&!text.includes('```')&&FRESH.test(text)))return{q:makeQuery(text)};
+  return null;
+}
+const webCats=text=>{const c=$('#wcat').value;return c==='general'&&/\b(news|headlines?|breaking)\b/i.test(text)?'news,general':c};
+function webBlock({q,urls,results,answer,budget}){
+  const read=results.filter(r=>r.text),per=Math.max(600,Math.floor(budget/Math.max(1,read.length))),d=new Date().toISOString().slice(0,10);
+  const head=urls?`The user shared ${results.length>1?'these links':'a link'}; the page text is below (fetched ${d}). Base your answer on it and cite with [1], [2] right after the claim a source supports. If a page could not be read, say so.`
+    :`Live web results for "${q}" (fetched ${d}). Use them for anything that may have changed since your training. Cite with [1], [2] right after the claim a source supports, cite nothing else, and if the results do not answer the question, say so instead of guessing.`;
+  const body=results.map((r,i)=>{
+    let t=`[${i+1}] ${r.title} (${r.domain||hostOf(r.url)}${r.published?', '+r.published:''})`;
+    if(r.snippet&&!urls)t+='\n'+r.snippet.slice(0,300);
+    if(r.text)t+='\nPage text:\n'+r.text.slice(0,per);else if(r.read_error)t+='\n(Could not read this page: '+r.read_error+')';
+    return t}).join('\n\n');
+  return head+(answer?'\nQuick answer from the search engine: '+answer:'')+'\n\n'+body;
+}
+async function webStep(m,text,req){
+  const set=v=>{m.web=v;paintWeb(m)},urls=req.urls,q=urls?'':(req.q||makeQuery(text)),shown=urls?urls.join('  '):q;
+  const ph=()=>m.el.querySelector('.foot .ph');
+  const say=l=>{if(m.stop1){m.stop1();m.stop1=null}const e=ph();if(e)e.textContent=l};
+  const rest=()=>{const e=ph();if(e&&!m.stop1)m.stop1=ticker(e,PHRASES,2600)};
+  set({busy:true,query:shown,urls,results:[]});say(urls?'Reading the link…':'Searching the web…');
+  try{
+    let d,results;
+    const call=async(path,body)=>{const r=await fetch(path,{method:'POST',headers:HDR,body:JSON.stringify(body),signal:ctl.signal});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.detail||('the server answered '+r.status));return j};
+    if(urls){d=await call('/api/web/read',{urls});results=d.pages.map((p,i)=>({title:p.title||hostOf(p.url||urls[i])||urls[i],url:p.url||urls[i],domain:hostOf(p.url||urls[i]),snippet:'',text:p.ok?p.text:'',read_error:p.ok?'':p.error}))}
+    else{d=await call('/api/web/search',{query:q,n:+$('#wn').value||6,read:+$('#wread').value,time_range:$('#wtime').value,categories:webCats(text)});results=d.results}
+    const budget=Math.min(+$('#wbudget').value||8000,Math.floor((info?.n_ctx||8192)*1.0));
+    const kept=results.map(x=>({title:x.title,url:x.url,domain:x.domain||hostOf(x.url),snippet:(x.snippet||'').slice(0,220),published:x.published||'',read:!!x.text,err:x.read_error||''}));
+    const reads=kept.filter(x=>x.read).length;
+    if(!results.length){set({query:shown,urls,results:[],error:'No results came back for that search.'});return{block:`(A live web search for "${q}" returned nothing. You have no fresh data, so say that plainly if the question needs it.)`}}
+    set({query:shown,urls,results:kept,read:reads,seconds:d.seconds||0});
+    return{block:webBlock({q,urls,results,answer:d.answer,budget})};
+  }catch(e){
+    if(e.name==='AbortError'){set({...(m.web||{}),busy:false,error:'Stopped.'});throw e}
+    set({query:shown,urls,results:[],error:e.message});
+    return{block:`(A live web search was requested but failed: ${e.message} You have no fresh data. If the question needs it, say so; never pretend you searched.)`};
+  }finally{rest()}
+}
+function addWeb(payload,w){
+  const last=payload.messages[payload.messages.length-1];if(!last||last.role!=='user'||!w.block)return;
+  last.content+='\n\n---\n'+w.block;
+}
+function paintWeb(m){
+  const c=m.el?.querySelector('.web');if(!c)return;const w=m.web;
+  if(!w){c.hidden=true;m._ws='';return}
+  const sig=JSON.stringify([w.busy,w.error,w.query,w.results?.length,w.read]);if(sig===m._ws)return;m._ws=sig;
+  c.hidden=false;c.classList.toggle('live',!!w.busy);
+  const n=w.results?.length||0,q=c.querySelector('.wq'),pre=w.urls?'Reading ':'Searching the web for “';
+  q.textContent=w.busy?(w.urls?'Reading the link…':pre+w.query+'”…'):w.error==='Stopped.'?'Search stopped':(w.error&&!n)?'Web search failed':w.urls?'Read '+(w.read||0)+' of '+n+' link'+(n===1?'':'s'):'Searched “'+w.query+'” · '+n+' source'+(n===1?'':'s')+(w.read?' · read '+w.read:'');
+  q.title=q.textContent;q.classList.toggle('shimmer',!!w.busy);
+  const l=c.querySelector('.web-l');l.innerHTML='';
+  (w.results||[]).forEach((r,i)=>{
+    const li=document.createElement('li'),a=document.createElement(okUrl(r.url)?'a':'div'),nn=document.createElement('span'),b=document.createElement('div'),t=document.createElement('div'),d=document.createElement('div');
+    a.className='src';if(a.tagName==='A'){a.href=r.url;a.target='_blank';a.rel='noopener noreferrer'}
+    nn.className='n';nn.textContent=i+1;t.className='t';t.textContent=r.title||r.url;d.className='d';d.textContent=[r.domain,r.published].filter(Boolean).join(' · ');
+    if(r.read||r.err){const k=document.createElement('span');k.className='rd'+(r.err?' bad':'');k.textContent=r.read?'read':'not read';if(r.err)k.title=r.err;d.append(k)}
+    b.append(t,d);if(r.snippet){const sn=document.createElement('div');sn.className='s';sn.textContent=r.snippet;b.append(sn)}
+    a.append(nn,b);li.append(a);l.append(li)});
+  const e=c.querySelector('.web-err'),bad=w.error&&w.error!=='Stopped.';e.hidden=!bad;e.textContent=bad?w.error:'';
+  if(bad&&!m._wt)c.classList.add('open');
+}
+const todayLine=()=>'Today is '+new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+'.';
+async function webStatus(force){try{const r=await fetch('/api/web/status'+(force?'?force=1':''));return await r.json()}catch{return{enabled:false,ok:false,why:'The server did not answer.',url:''}}}
+function paintWebSt(s){const e=$('#wst');e.textContent=!s.enabled?'● off':s.ok?'● connected':'● not reachable';e.className='wst '+(s.ok?'ok':'bad');$('#wnote').textContent=s.ok?'SearXNG at '+s.url+' is answering.':(s.why||'')}
+function fineText(){$('.fine').textContent=webOn?'The model runs on your machine. Web is on: your search words go out through your SearXNG.':'Runs 100% on your machine. Nothing leaves it.'}
+function setWeb(v){webOn=v;$('#web').classList.toggle('on',v);$('#web').setAttribute('aria-pressed',v);LS('gc.web',v);fineText()}
+$('#web').onclick=async()=>{
+  const v=!webOn;
+  if(v){note('Checking SearXNG…',true);const s=await webStatus(true);note();paintWebSt(s);
+    if(!s.ok){toast(s.why||'Web search is not available.','bad');showTab('set');return}}
+  setWeb(v);note(v?'Web is on: fresh-info questions are searched live. Use /web to force it.':'',v);$('#input').focus();
+};
+$('#wtest').onclick=async()=>{$('#wnote').textContent='Testing…';paintWebSt(await webStatus(true))};
+$$('.tabs button').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.tab==='set')webStatus(false).then(paintWebSt)}));
+setWeb(webOn);
+if(webOn)webStatus(false).then(s=>{if(!s.ok){setWeb(false);note('Web turned off: '+(s.why||'SearXNG is not reachable.'))}});
+
+/* ================= text & style ================= */
+function formatPrompt(){
+  const st=$('#fstyle').value,math=$('#fmath').value!=='0';
+  if(st==='plain')return'Write plain conversational prose: no headings, tables, bold text or decorations unless the user asks for them. Put code only in fenced blocks.';
+  const base='Format for easy reading: short paragraphs; bullet or numbered lists for parallel items or steps; **bold** only for key terms; fenced code blocks with a language tag; no filler openers or closers.'+(math?' Write math as LaTeX, $inline$ or $$display$$.':'');
+  if(st!=='rich')return base;
+  return base+' When it helps (not every time): ## headings for long answers; a markdown table to compare options; callouts written as a blockquote whose first line is [!NOTE], [!TIP], [!IMPORTANT], [!WARNING] or [!CAUTION]; task lists "- [ ] item" for checklists; ==highlight== around the one key takeaway; a one-line **TL;DR** at the top of long answers.';
+}
+function applyLook(){
+  const FONTS={inter:'',serif:'"Source Serif 4",Georgia,"Times New Roman",serif',sora:'Sora,Inter,sans-serif',system:'system-ui,-apple-system,"Segoe UI",sans-serif',mono:'var(--mono)'};
+  const ACC={blue:['#60a5fa','#2563eb','#2563eb','#0ea5e9'],teal:['#2dd4bf','#0d9488','#0d9488','#0ea5e9'],green:['#4ade80','#16a34a','#16a34a','#0d9488'],rose:['#fb7185','#e11d48','#e11d48','#f97316'],amber:['#fbbf24','#d97706','#d97706','#ef4444']};
+  const r=document.documentElement.style,v=id=>$('#'+id).value,put=(k,x)=>x?r.setProperty(k,x):r.removeProperty(k);
+  put('--ff',FONTS[v('ffont')]);put('--fs',v('fsize')==='15'?'':v('fsize')+'px');put('--lh',v('flh')==='1.7'?'':v('flh'));put('--cw',v('fwidth')==='820'?'':v('fwidth')+'px');
+  const a=ACC[v('faccent')];
+  if(a){const c=isDark()?a[0]:a[1];put('--acc',c);put('--user','linear-gradient(135deg,'+a[2]+','+a[3]+')');put('--grad','linear-gradient(135deg,'+c+','+a[3]+')')}
+  else['--acc','--user','--grad'].forEach(k=>r.removeProperty(k));
+}
+applyLook();
+['ffont','fsize','flh','fwidth','faccent'].forEach(i=>$('#'+i).addEventListener('change',applyLook));
+const repaintAll=()=>msgs.forEach(m=>{if(m.el&&m.role==='assistant'&&!m.live)paint(m,false)});
+$('#fmath').addEventListener('change',repaintAll);
+
+const CO={note:['Note','info'],tip:['Tip','spark'],important:['Important','info'],warning:['Warning','alert'],caution:['Caution','alert']};
+const CO_ALIAS={info:'note',hint:'tip','pro tip':'tip','heads up':'warning',danger:'caution',note:'note',tip:'tip',warning:'warning',important:'important',caution:'caution'};
+function callouts(tpl){
+  tpl.querySelectorAll('blockquote').forEach(bq=>{
+    const p=bq.firstElementChild;if(!p||p.tagName!=='P')return;
+    const n=document.createTreeWalker(p,NodeFilter.SHOW_TEXT).nextNode(),m=n&&n.data.match(/^\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\][ \t]*\n?/i);
+    if(m){const k=m[1].toLowerCase();n.data=n.data.slice(m[0].length);if(!p.textContent.trim()&&!p.children.length)p.remove();
+      const t=document.createElement('div');t.className='co-t';t.innerHTML=ic(CO[k][1],16)+'<span>'+CO[k][0]+'</span>';bq.prepend(t);bq.className='callout '+k;return}
+    const sg=p.firstChild;   // "> **Note:** ..." written by models that do not know the [!NOTE] form
+    if(sg&&sg.nodeType===1&&sg.tagName==='STRONG'){const k=CO_ALIAS[sg.textContent.trim().replace(/:$/,'').toLowerCase()];if(k)bq.className='callout '+k}
+  });
+}
+function tables(tpl){
+  tpl.querySelectorAll('table').forEach(t=>{
+    if(t.parentElement.classList.contains('tblw'))return;
+    const w=document.createElement('div'),bar=document.createElement('div');w.className='tblw';bar.className='tt';
+    bar.innerHTML='<button type="button" data-ta="copy">Copy table</button><button type="button" data-ta="csv">Download CSV</button>';
+    const sc=document.createElement('div');sc.className='ts';t.replaceWith(w);sc.append(t);w.append(sc,bar);
+  });
+}
+const csvCell=x=>/[",\n]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x;
+function sortTable(th){
+  const t=th.closest('table'),body=t.tBodies[0];if(!body)return;
+  const i=th.cellIndex,asc=th.dataset.sort!=='asc',val=r=>(r.cells[i]?.textContent||'').trim();
+  const num=x=>/^[\s$€£+-]*\d[\d.,]*\s*[%kKmMbB]?\s*$/.test(x)?parseFloat(x.replace(/[^\d.+-]/g,'')):null;
+  const rows=[...body.rows].map(r=>({r,v:val(r)})),numeric=rows.every(o=>o.v===''||num(o.v)!==null);
+  rows.sort((a,b)=>numeric?(num(a.v)??-Infinity)-(num(b.v)??-Infinity):a.v.localeCompare(b.v,undefined,{numeric:true,sensitivity:'base'}));
+  if(!asc)rows.reverse();rows.forEach(o=>body.append(o.r));
+  t.querySelectorAll('th').forEach(h=>h.removeAttribute('data-sort'));th.dataset.sort=asc?'asc':'desc';
+}
+msgsEl.addEventListener('click',e=>{
+  const b=e.target.closest('[data-ta]');
+  if(b){const t=b.closest('.tblw')?.querySelector('table');if(!t)return;const rows=[...t.rows].map(r=>[...r.cells].map(c=>c.textContent.trim().replace(/\s+/g,' ')));
+    if(b.dataset.ta==='csv')dl_('table.csv','\ufeff'+rows.map(r=>r.map(csvCell).join(',')).join('\n'));
+    else{navigator.clipboard.writeText(rows.map(r=>r.join('\t')).join('\n'));b.textContent='Copied';setTimeout(()=>b.textContent='Copy table',1200)}
+    return}
+  const th=e.target.closest('.body th');if(th&&!th.closest('.msg.streaming'))sortTable(th);
+});
+const MARKRE=/\[(\d{1,2}(?:\s*,\s*\d{1,2})*)\]|==([^=\s](?:[^=\n]*?[^=\s])?)==/g;
+function inlineMarks(tpl,srcs){   // [1] -> source chips, ==text== -> highlight; both built before the diff so streaming never flickers
+  const w=document.createTreeWalker(tpl,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement.closest('pre,code,a,kbd,.math')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT}),nodes=[];
+  for(let n;n=w.nextNode();)nodes.push(n);
+  for(const n of nodes){
+    const s=n.data;MARKRE.lastIndex=0;if(!MARKRE.test(s))continue;MARKRE.lastIndex=0;
+    const f=document.createDocumentFragment();let last=0,m;
+    while(m=MARKRE.exec(s)){
+      if(m[1]!==undefined){
+        const nums=m[1].split(/\s*,\s*/).map(Number);
+        if(!srcs?.length||!nums.every(k=>k>=1&&k<=srcs.length&&okUrl(srcs[k-1].url)))continue;
+        f.append(s.slice(last,m.index));last=m.index+m[0].length;
+        nums.forEach(k=>{const r=srcs[k-1],a=document.createElement('a');a.className='cite';a.href=r.url;a.target='_blank';a.rel='noopener noreferrer';a.title=(r.title||'')+(r.domain?' — '+r.domain:'');a.textContent=k;f.append(a)});
+      }else{f.append(s.slice(last,m.index));last=m.index+m[0].length;const mk=document.createElement('mark');mk.textContent=m[2];f.append(mk)}
+    }
+    if(!last)continue;f.append(s.slice(last));n.replaceWith(f);
+  }
+}
+function mountMath(root){
+  const els=[...root.querySelectorAll('.math:not([data-r])')];if(!els.length)return;
+  if(!document.getElementById('katexcss')){const l=document.createElement('link');l.id='katexcss';l.rel='stylesheet';l.href='https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css';document.head.append(l)}
+  lib('katex').then(()=>els.forEach(el=>{if(el.dataset.r||!el.isConnected)return;
+    try{katex.render(el.dataset.tex,el,{displayMode:el.dataset.d==='1',throwOnError:false,strict:'ignore',trust:false});el.dataset.r='1'}catch{el.dataset.r='0'}})).catch(()=>{});
+}
+
+/* ---------- discoverability: commands, help, empty state ---------- */
+Object.assign(CMDS,{web:['d','Look this up on the web (SearXNG) and answer with sources'],search:['d','Same as /web']});
+SUGG.push(['Search the web','/web','Pull live results through your SearXNG']);
+HERO[HERO.indexOf('Edit a file')]='Search the web';
+HELP+='\n\n**Web search** — turn on **Web** next to the paperclip. Questions that need fresh info (news, prices, versions, "latest…") are searched through your SearXNG and answered from the sources, with clickable [1] [2] chips; paste a link and it is read. `/web your question` forces a search for one message. Search words leave your machine through your SearXNG; the model itself stays local. Set it up under *Settings → Web search*.\n\n**Text & style** — *Settings → Text & style* changes response style (balanced / rich / plain), font, size, line spacing, reading width and accent colour. Replies can use callouts (`> [!TIP]`), sortable tables with *Copy table* / *Download CSV*, task lists, `==highlight==`, LaTeX math (`$x^2$`, `$$...$$`) and a *Wrap* button on code blocks.';
 renderEmpty();hist_();setTitle();
 </script></body></html>

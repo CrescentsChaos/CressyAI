@@ -10,6 +10,8 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from starlette.concurrency import run_in_threadpool
 from llama_cpp import Llama
 
+import websearch
+
 try:
     import psutil
     PROC = psutil.Process()
@@ -46,6 +48,10 @@ ap.add_argument("--image-flash-attn", action="store_true", help="flash attention
 ap.add_argument("--image-low-vram", action="store_true", help="keep the text encoder and VAE on the CPU (slower, needs less VRAM)")
 ap.add_argument("--image-no-vae-tiling", action="store_true", help="decode the whole image at once (faster, needs more VRAM)")
 ap.add_argument("--no-image", action="store_true", help="disable image generation and editing")
+ap.add_argument("--searxng-url", default=os.environ.get("SEARXNG_URL", "http://127.0.0.1:8080"),
+                help="SearXNG address used by the Web button (default http://127.0.0.1:8080, or the SEARXNG_URL variable)")
+ap.add_argument("--no-web", action="store_true", help="turn off web search and the page reader")
+ap.add_argument("--web-allow-private", action="store_true", help="let the page reader open links on your own network (off by default)")
 ap.add_argument("--host", default="127.0.0.1")
 ap.add_argument("--port", type=int, default=8000)
 ap.add_argument("--root", default=".", help="folder the app may read (default: current folder)")
@@ -1082,6 +1088,7 @@ def caps():
             "image": image_ready()[0], "image_why": image_ready()[1],
             "image_model": os.path.basename(IMG["path"]) if IMG["path"] else "",
             "can_manage": CAN_EXEC,
+            "can_manage": CAN_EXEC, "web": WEB_ON, "web_url": SEARX if WEB_ON else "",
             "shell": os.environ.get("COMSPEC", "cmd") if os.name == "nt" else os.environ.get("SHELL", "/bin/sh")}
 
 
@@ -1089,6 +1096,79 @@ def need_ui(req):
     """State-changing endpoints require a custom header, which forces a CORS preflight for other sites."""
     if req.headers.get("x-cressy") != "1":
         raise HTTPException(403, "Missing X-Cressy header")
+
+
+# ---------------------------------------------------------------- web: SearXNG search + page reader
+WEB_ON = not args.no_web
+SEARX = websearch.norm_base(args.searxng_url)
+WEB_SLOTS = threading.BoundedSemaphore(4)     # at most a few web jobs at once
+WEB_PING = {"t": 0.0, "ok": False, "why": ""}
+
+
+def web_guard(req):
+    need_ui(req)
+    if not WEB_ON:
+        raise HTTPException(503, "Web search is turned off (--no-web).")
+
+
+def web_int(v, default, lo, hi):
+    try:
+        return max(lo, min(hi, int(v)))
+    except (TypeError, ValueError):
+        return default
+
+
+@app.get("/api/web/status")
+def web_status(force: int = 0):
+    """Is SearXNG reachable and answering JSON? Cached for a few seconds so opening Settings stays cheap."""
+    if not WEB_ON:
+        return {"enabled": False, "ok": False, "why": "Web search is turned off (--no-web).", "url": ""}
+    if force or time.time() - WEB_PING["t"] > 15:
+        ok, why = websearch.searx_ping(SEARX)
+        WEB_PING.update(t=time.time(), ok=ok, why=why)
+    return {"enabled": True, "ok": WEB_PING["ok"], "why": WEB_PING["why"], "url": SEARX}
+
+
+@app.post("/api/web/search")
+async def web_search(req: Request):
+    """Body: {query, n, read, time_range, categories}. Returns numbered results; the top `read` pages come with their text."""
+    web_guard(req)
+    b = await req.json()
+    q = str(b.get("query", "")).strip()[:300]
+    if not q:
+        raise HTTPException(400, "Nothing to search for.")
+    kw = dict(n=web_int(b.get("n"), 6, 1, 10), read=web_int(b.get("read"), 2, 0, 5), time_range=str(b.get("time_range") or ""),
+              categories=str(b.get("categories") or "general"), allow_private=args.web_allow_private)
+    if not WEB_SLOTS.acquire(timeout=20):
+        raise HTTPException(429, "Too many web requests at once. Try again in a moment.")
+    t0 = time.perf_counter()
+    try:
+        out = await run_in_threadpool(lambda: websearch.research(SEARX, q, **kw))
+    except websearch.WebError as e:
+        WEB_PING.update(t=time.time(), ok=False, why=str(e))
+        raise HTTPException(502, str(e))
+    finally:
+        WEB_SLOTS.release()
+    WEB_PING.update(t=time.time(), ok=True, why="")
+    out["seconds"] = round(time.perf_counter() - t0, 2)
+    return out
+
+
+@app.post("/api/web/read")
+async def web_read(req: Request):
+    """Body: {urls: [...]}. Opens links the user pasted and returns their text."""
+    web_guard(req)
+    b = await req.json()
+    urls = [u.strip() for u in (b.get("urls") or []) if isinstance(u, str) and u.strip()][:4]
+    if not urls:
+        raise HTTPException(400, "No links to read.")
+    if not WEB_SLOTS.acquire(timeout=20):
+        raise HTTPException(429, "Too many web requests at once. Try again in a moment.")
+    try:
+        pages = await run_in_threadpool(lambda: websearch.read_pages(urls, allow_private=args.web_allow_private))
+    finally:
+        WEB_SLOTS.release()
+    return {"pages": pages}
 
 
 # ---------------------------------------------------------------- models: manual load / unload / tweak, and the reasoning swap
@@ -1550,6 +1630,11 @@ if __name__ == "__main__":
     print(f"Terminal: {'on' if CAN_RUN else 'off'}   Write files: {'on' if CAN_WRITE else 'off'}"
           + ("   !! non-loopback host with --unsafe-remote-exec: anyone who can reach this port can run commands !!"
              if (not LOCAL and args.unsafe_remote_exec) else ""))
+    print(f"Terminal: {'on' if CAN_RUN else 'off'}   Write files: {'on' if CAN_WRITE else 'off'}"
+          + ("   !! non-loopback host with --unsafe-remote-exec: anyone who can reach this port can run commands !!"
+             if (not LOCAL and args.unsafe_remote_exec) else ""))
+    print(f"Web search: {'on, SearXNG at ' + SEARX if WEB_ON else 'off (--no-web)'}"
+          + ("   (pages on your own network can be read)" if WEB_ON and args.web_allow_private else ""))
     if args.open:
         threading.Timer(1.0, webbrowser.open, [f"http://{args.host}:{args.port}"]).start()
     uvicorn.run(app, host=args.host, port=args.port, log_level="warning")

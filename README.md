@@ -3,6 +3,7 @@
 **New UI:** three-pane layout (chats · conversation · Files/Model/Settings tabs), light/dark/auto theme, steady word-by-word streaming with a blinking cursor, a collapsible *Thinking* card for reasoning models, rotating loading texts (Cooking…, Brewing…, Simmering…), and a file browser with **Back / Forward / breadcrumbs** (Backspace or Alt+← goes back).
 
 A private chat UI for a local **GGUF** model. Nothing leaves your machine.
+A private chat UI for a local **GGUF** model. The model always runs on your machine; the optional **Web** button looks things up through your own SearXNG (see *Web search*).
 
 ## Run it
 ```bash
@@ -44,6 +45,9 @@ Then open http://127.0.0.1:8000 (`--open` does it for you).
 | `--image-no-vae-tiling` | off | decode the whole image at once (faster, needs more VRAM) |
 | `--image-threads` | auto | CPU threads for image generation |
 | `--no-image` | off | disable image generation and editing |
+| `--searxng-url` | `http://127.0.0.1:8080` | SearXNG address for the Web button (or set `SEARXNG_URL`) |
+| `--no-web` | off | turn off web search and the page reader |
+| `--web-allow-private` | off | let the page reader open links on your own network (blocked by default) |
 | `--unsafe-remote-exec` | off | allow terminal and file writes on a non-loopback `--host` (**dangerous**) |
 
 ## Reasoning model (think first, then code)
@@ -105,6 +109,31 @@ The model is taught (via a short system prompt, switch it off under *Settings �
 
 Charts, the zip download and diagrams load Chart.js, JSZip and Mermaid from cdnjs the first time they are used (like the existing markdown/highlight libraries), so that needs internet once.
 
+## Web search (SearXNG)
+Lets the model answer from live results. [SearXNG](https://github.com/searxng/searxng) is a self-hosted meta search engine; CressyAI asks it for results, opens the top pages, and hands the text to the model as numbered sources. The model itself never touches the network.
+
+**Set it up (once)**
+1. Install Docker, then in this folder run `docker compose up -d` (or `./searxng.sh` / `searxng.bat`). It listens on `127.0.0.1:8080` only. `searxng/settings.yml` already enables the JSON format and turns the limiter off; if you use your own SearXNG, add `json` under `search: formats:`.
+2. Start CressyAI as usual (use `--searxng-url http://host:port` if it is elsewhere). *Settings → Web search → Test connection* tells you what is wrong if it fails.
+
+**Use it**
+- Press **Web** next to the paperclip. In the default *When it needs it* mode, questions about news, prices, versions, "latest…", today, weather and similar are searched; the rest are answered normally. *Every message* searches always.
+- `/web your question` (or `/search`) forces a search for one message, even with Web off, and uses your words as the query.
+- Paste a link and it is read (up to 3 links) instead of searched.
+- A collapsible card above the reply lists the sources (marked *read* when the page text was used); `[1]` `[2]` in the answer become clickable chips. **Retry** repeats the lookup.
+- *Settings → Web search*: results (4-10), pages to read (0-4), text budget, freshness, category (web/news/IT/science). The budget is capped by the context window, so small `--n-ctx` values stay safe.
+- If search fails, the card shows why and the model is told it has no fresh data, so it should not pretend to have searched.
+
+**Privacy:** your search words go to SearXNG and on to the engines it queries; page text never leaves your machine except as the page request itself. The footer says so while Web is on. The page reader refuses private/local addresses and non-web links, re-checks every redirect, and skips PDFs and binaries.
+
+## Text & style
+*Settings → Text & style*: response style (**Balanced / Rich / Plain**, which tells the model how to format), font, size, line spacing, reading width, accent colour, and LaTeX on/off. Replies can show:
+- callouts: a quote starting `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]` (also `> **Warning:** …`)
+- tables with click-to-sort headers, zebra rows, *Copy table* (pastes into Sheets/Excel) and *Download CSV*
+- task lists, `==highlight==`, `<kbd>`, source chips
+- math: `$x^2$`, `$$\\int…$$`, `\\( \\)`, `\\[ \\]` (KaTeX loads from cdnjs on first use; currency like $5 or $10 is left alone)
+- a **Wrap** button on code blocks
+
 ## What you can do
 **Slash commands** – paste code after the command, attach a file, or run it bare to use the last code block in the chat.
 
@@ -132,6 +161,7 @@ Charts, the zip download and diagrams load Chart.js, JSZip and Mermaid from cdnj
 Enter send · Shift+Enter newline · Esc stop/close popup · ↑/↓ recall earlier messages · Tab accept suggestion ·
 Alt+N new chat · Alt+L focus input · Alt+R retry · Alt+C copy last reply · Alt+E export · Alt+S side panel · Alt+T terminal · Alt+/ help ·
 Alt+I image mode · Alt+G new seed for the last image · Alt+V edit the last image
+Alt+N new chat · Alt+L focus input · Alt+R retry · Alt+C copy last reply · Alt+E export · Alt+S side panel · Alt+T terminal · Alt+/ help
 
 ## Tips
 - Small models forget fast: use *Precise*, give one task per message, attach only the files that matter.
