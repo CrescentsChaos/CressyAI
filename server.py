@@ -16,6 +16,7 @@ from llama_cpp import Llama
 import modelmgr
 import rag
 import websearch
+import wikipedia
 
 try:
     import psutil
@@ -57,6 +58,7 @@ ap.add_argument("--no-image", action="store_true", help="disable image generatio
 ap.add_argument("--searxng-url", default=os.environ.get("SEARXNG_URL", "http://127.0.0.1:8080"),
                 help="SearXNG address used by the Web button (default http://127.0.0.1:8080, or the SEARXNG_URL variable)")
 ap.add_argument("--no-web", action="store_true", help="turn off web search and the page reader")
+ap.add_argument("--no-wiki", action="store_true", help="turn off the Wikipedia lookup (it is also off with --no-web)")
 ap.add_argument("--web-allow-private", action="store_true", help="let the page reader open links on your own network (off by default)")
 ap.add_argument("--no-autoswitch", action="store_true",
                 help="never switch the coder model automatically based on what you ask")
@@ -506,6 +508,17 @@ def fit(messages, max_new, model=None):
 @app.get("/")
 def index():
     return FileResponse(HERE / "index.html")
+
+
+@app.get("/js/{name}")
+def js_file(name: str):
+    # front-end scripts live in ./js/ (loaded in order by index.html); only plain *.js names are served
+    if not re.fullmatch(r"[\w.-]+\.js", name) or ".." in name:
+        raise HTTPException(404)
+    p = HERE / "js" / name
+    if not p.is_file():
+        raise HTTPException(404)
+    return FileResponse(p, media_type="text/javascript")
 
 
 @app.get("/api/info")
@@ -1396,6 +1409,51 @@ async def web_read(req: Request):
     finally:
         WEB_SLOTS.release()
     return {"pages": pages}
+
+
+# ---------------------------------------------------------------- Wikipedia (MediaWiki API): encyclopedic facts, no SearXNG needed
+WIKI_ON = WEB_ON and not args.no_wiki
+WIKI_PING = {"t": 0.0, "ok": False, "why": "", "lang": ""}
+
+
+def wiki_guard(req):
+    need_ui(req)
+    if not WIKI_ON:
+        raise HTTPException(503, "Wikipedia lookup is turned off (--no-wiki or --no-web).")
+
+
+@app.get("/api/wiki/status")
+def wiki_status(lang: str = "en", force: int = 0):
+    """Can this machine reach Wikipedia? Cached for a few seconds, like the web status."""
+    if not WIKI_ON:
+        return {"enabled": False, "ok": False, "why": "Wikipedia lookup is turned off (--no-wiki or --no-web)."}
+    lang = wikipedia.lang_ok(lang)
+    if force or lang != WIKI_PING["lang"] or time.time() - WIKI_PING["t"] > 15:
+        ok, why = wikipedia.ping(lang)
+        WIKI_PING.update(t=time.time(), ok=ok, why=why, lang=lang)
+    return {"enabled": True, "ok": WIKI_PING["ok"], "why": WIKI_PING["why"], "lang": lang}
+
+
+@app.post("/api/wiki/search")
+async def wiki_search(req: Request):
+    """Body: {query, n, read, lang}. Returns the best matching articles; the top `read` come with their text."""
+    wiki_guard(req)
+    b = await req.json()
+    q = str(b.get("query", "")).strip()[:300]
+    if not q:
+        raise HTTPException(400, "Nothing to look up.")
+    kw = dict(n=web_int(b.get("n"), 3, 1, 6), read=web_int(b.get("read"), 1, 0, 3), lang=wikipedia.lang_ok(str(b.get("lang") or "en")))
+    if not WEB_SLOTS.acquire(timeout=20):
+        raise HTTPException(429, "Too many web requests at once. Try again in a moment.")
+    t0 = time.perf_counter()
+    try:
+        out = await run_in_threadpool(lambda: wikipedia.lookup(q, **kw))
+    except websearch.WebError as e:
+        raise HTTPException(502, str(e))
+    finally:
+        WEB_SLOTS.release()
+    out["seconds"] = round(time.perf_counter() - t0, 2)
+    return out
 
 
 # ---------------------------------------------------------------- knowledge base: upload .txt / .md / .pdf, retrieve passages (RAG)
@@ -2334,6 +2392,7 @@ if __name__ == "__main__":
     print(f"Terminal: {'on' if CAN_RUN else 'off'}   Write files: {'on' if CAN_WRITE else 'off'}"
           + ("   !! non-loopback host with --unsafe-remote-exec: anyone who can reach this port can run commands !!"
              if (not LOCAL and args.unsafe_remote_exec) else ""))
+    print(f"Wikipedia: {'on' if WIKI_ON else 'off (--no-wiki or --no-web)'}")
     print(f"Web search: {'on, SearXNG at ' + SEARX if WEB_ON else 'off (--no-web)'}"
           + ("   (pages on your own network can be read)" if WEB_ON and args.web_allow_private else ""))
     if args.open:

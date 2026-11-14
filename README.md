@@ -47,7 +47,8 @@ Then open http://127.0.0.1:8000 (`--open` does it for you).
 | `--image-threads` | auto | CPU threads for image generation |
 | `--no-image` | off | disable image generation and editing |
 | `--searxng-url` | `http://127.0.0.1:8080` | SearXNG address for the Web button (or set `SEARXNG_URL`) |
-| `--no-web` | off | turn off web search and the page reader |
+| `--no-web` | off | turn off web search, the page reader and Wikipedia |
+| `--no-wiki` | off | turn off only the Wikipedia lookup |
 | `--autoswitch` | off | opt in to switching coder models automatically based on message intent |
 | `--no-autoswitch` | off | force automatic model switching off |
 | `--bench-dir PATH` | `./benchmarks` | folder with extra benchmark datasets (`.jsonl`) |
@@ -163,6 +164,15 @@ Add `.txt`, `.md` and `.pdf` files in the **Knowledge** tab (drop them on the bo
 - Markdown headings and PDF page numbers are kept, so sources read like `manual.pdf, p. 12` or `handbook.md - Leave policy`.
 - PDFs need the `pypdf` package: with the app stopped run `.venv\Scripts\pip install pypdf` (Windows) or `.venv/bin/pip install pypdf` (macOS/Linux), then start it again. Scanned PDFs have no text to read and are rejected with a message; run OCR on them first. Password-protected PDFs are rejected too.
 - Documents are stored as plain JSON in the `knowledge` folder next to `server.py`. Delete that folder to wipe everything.
+
+## Wikipedia
+Gives the model encyclopedic knowledge beyond its training. CressyAI asks Wikipedia's public MediaWiki API for the best matching articles, reads the top one (or more) and hands the text to the model as numbered sources, shown as clickable [1] [2] chips like web results. **No SearXNG, Docker or API key needed**; it only needs an internet connection.
+
+- **When it runs:** in the default *When a question asks for facts* mode, questions like "who was…", "what is…", "when did…", "history of…", "tell me about…" are looked up. Code, attached files, `/commands`, small talk and questions about you or the chat are skipped. *Every message* looks up everything that is not local work. `/wiki your question` forces a lookup for one message.
+- **With Web on:** Wikipedia articles and SearXNG results are merged into one numbered list (Wikipedia first, duplicates removed). Without Web it works on its own.
+- *Settings → Wikipedia*: mode, language (English, Bengali, Hindi, Arabic, Spanish, French, German and more), articles to find (2-6), articles to read in full (0-3), and a *Test connection* button.
+- Article text is trimmed to save context: *References*, *External links*, *See also* and similar tail sections are dropped, disambiguation pages are skipped, and repeated lookups are cached for 10 minutes.
+- **Privacy:** your search words go to `<lang>.wikipedia.org`; the footer says so. Only that host can be reached by this feature. Start with `--no-wiki` (or `--no-web`) to switch it off.
 
 ## Web search (SearXNG)
 Lets the model answer from live results. [SearXNG](https://github.com/searxng/searxng) is a self-hosted meta search engine; CressyAI asks it for results, opens the top pages, and hands the text to the model as numbered sources. The model itself never touches the network.
