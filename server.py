@@ -13,6 +13,8 @@ from pypdf.errors import PdfReadError
 from starlette.concurrency import run_in_threadpool
 from llama_cpp import Llama
 
+import modelmgr
+import rag
 import websearch
 
 try:
@@ -56,6 +58,22 @@ ap.add_argument("--searxng-url", default=os.environ.get("SEARXNG_URL", "http://1
                 help="SearXNG address used by the Web button (default http://127.0.0.1:8080, or the SEARXNG_URL variable)")
 ap.add_argument("--no-web", action="store_true", help="turn off web search and the page reader")
 ap.add_argument("--web-allow-private", action="store_true", help="let the page reader open links on your own network (off by default)")
+ap.add_argument("--no-autoswitch", action="store_true",
+                help="never switch the coder model automatically based on what you ask")
+ap.add_argument("--autoswitch", action="store_true",
+                help="opt in to switching coder models automatically based on message intent")
+
+ap.add_argument("--bench-dir", default=None,
+                help="folder with extra benchmark datasets (.jsonl); default ./benchmarks next to server.py")
+
+ap.add_argument("--kb-dir", default=None,
+                help="where the knowledge base (uploaded .txt / .md / .pdf documents) is stored (default: ./knowledge next to server.py)")
+
+ap.add_argument("--kb-max-mb", type=int, default=30,
+                help="largest single file the knowledge base accepts, in MB (default 30)")
+
+ap.add_argument("--no-kb", action="store_true",
+                help="turn off the knowledge base")
 ap.add_argument("--host", default="127.0.0.1")
 ap.add_argument("--port", type=int, default=8000)
 ap.add_argument("--root", default=".", help="folder the app may read (default: current folder)")
@@ -240,6 +258,16 @@ CFG = {
 }
 CFG["vision"]["chat_format"] = ""
 LOADED_CFG = {}           # the settings each slot was actually loaded with (to show "reload to apply")
+
+
+def model_cfg_key(path):
+    return os.path.normcase(os.path.abspath(path))
+
+
+MODEL_CFG = {
+    (slot, model_cfg_key(c["path"])): dict(c)
+    for slot, c in CFG.items() if c["path"]
+}
 
 
 def llama_kw(slot):
@@ -630,7 +658,7 @@ def read_folder(path: str = ""):
     return {"files": files, "skipped": skipped}
 
 
-def walk_files(include_pdf=False):
+def walk_files():
     out = []
     for dp, dns, fns in os.walk(ROOT):
         dns[:] = sorted(d for d in dns if d not in SKIP)
@@ -1151,9 +1179,10 @@ def caps():
             "vision": VL_OK, "vision_why": VL_WHY, "reasoner": bool(CFG["reasoner"]["path"]), "reasoner_why": R_WHY,
             "image": image_ready()[0], "image_why": image_ready()[1],
             "image_model": os.path.basename(IMG["path"]) if IMG["path"] else "",
-            "can_manage": CAN_EXEC,
-            "can_manage": CAN_EXEC, "web": WEB_ON, "web_url": SEARX if WEB_ON else "",
-            "shell": os.environ.get("COMSPEC", "cmd") if os.name == "nt" else os.environ.get("SHELL", "/bin/sh")}
+"can_manage": CAN_EXEC,
+"kb": KB_ON,
+"web": WEB_ON,
+"web_url": SEARX if WEB_ON else "",            "shell": os.environ.get("COMSPEC", "cmd") if os.name == "nt" else os.environ.get("SHELL", "/bin/sh")}
 
 
 def need_ui(req):
@@ -1369,6 +1398,105 @@ async def web_read(req: Request):
     return {"pages": pages}
 
 
+# ---------------------------------------------------------------- knowledge base: upload .txt / .md / .pdf, retrieve passages (RAG)
+KB_ON = not args.no_kb
+KB_MAX = max(1, args.kb_max_mb) * 1024 * 1024
+KB = None
+if KB_ON:
+    try:
+        KB = rag.KB(Path(args.kb_dir).expanduser() if args.kb_dir else HERE / "knowledge", max_bytes=KB_MAX)
+        print(f"Knowledge base: {len(KB.docs)} document(s) in {KB.dir}" + ("" if rag.pdf_ready() else "  (PDF reading needs: pip install pypdf)"))
+        for w in KB.skipped:
+            print("  skipped unreadable knowledge file:", w)
+    except OSError as e:
+        KB_ON = False
+        print("Knowledge base turned off:", e)
+KB_SLOTS = threading.BoundedSemaphore(3)     # parsing a big PDF is CPU work; keep a few at once at most
+
+
+def kb_guard(req):
+    need_ui(req)
+    if not KB_ON:
+        raise HTTPException(503, "The knowledge base is turned off (--no-kb).")
+
+
+@app.get("/api/kb")
+def kb_status():
+    if not KB_ON:
+        return {"enabled": False, "docs": [], "chunks": 0, "chars": 0, "pdf": False, "max_mb": 0}
+    return {"enabled": True, **KB.status()}
+
+
+@app.post("/api/kb/upload")
+async def kb_upload(req: Request):
+    """Raw file body; the file name travels percent-encoded in the X-Filename header. One file per request."""
+    kb_guard(req)
+    from urllib.parse import unquote
+    name = unquote(req.headers.get("x-filename", "")).strip()
+    if not name:
+        raise HTTPException(400, "Missing file name.")
+    try:
+        if int(req.headers.get("content-length") or 0) > KB_MAX + 4096:
+            raise HTTPException(413, f"That file is larger than {KB_MAX // (1024 * 1024)} MB.")
+    except ValueError:
+        pass
+    data = await req.body()
+    if not KB_SLOTS.acquire(timeout=30):
+        raise HTTPException(429, "Busy indexing other files. Try again in a moment.")
+    t0 = time.perf_counter()
+    try:
+        meta = await run_in_threadpool(lambda: KB.add(name, data))
+    except rag.KBError as e:
+        raise HTTPException(400, str(e))
+    finally:
+        KB_SLOTS.release()
+    meta["seconds"] = round(time.perf_counter() - t0, 2)
+    return meta
+
+
+@app.post("/api/kb/doc")
+async def kb_doc(req: Request):
+    """Body: {id, enabled}. Switch a document in or out of the search without deleting it."""
+    kb_guard(req)
+    b = await req.json()
+    try:
+        return KB.set_enabled(b.get("id"), bool(b.get("enabled")))
+    except rag.KBError as e:
+        raise HTTPException(404, str(e))
+
+
+@app.post("/api/kb/delete")
+async def kb_delete(req: Request):
+    kb_guard(req)
+    b = await req.json()
+    try:
+        KB.remove(b.get("id"))
+    except rag.KBError as e:
+        raise HTTPException(404, str(e))
+    return {"ok": True}
+
+
+@app.post("/api/kb/clear")
+async def kb_clear(req: Request):
+    kb_guard(req)
+    KB.clear()
+    return {"ok": True}
+
+
+@app.post("/api/kb/query")
+async def kb_query(req: Request):
+    """Body: {query, k}. Returns the best-matching passages from the enabled documents."""
+    kb_guard(req)
+    b = await req.json()
+    q = str(b.get("query", "")).strip()[:500]
+    if not q:
+        raise HTTPException(400, "Nothing to look up.")
+    t0 = time.perf_counter()
+    out = await run_in_threadpool(lambda: KB.query(q, web_int(b.get("k"), 5, 1, 12)))
+    out["seconds"] = round(time.perf_counter() - t0, 3)
+    return out
+
+
 # ---------------------------------------------------------------- models: manual load / unload / tweak, and the reasoning swap
 BUSY_MSG = "A model is busy (generating, reading an image or swapping). Press Stop or wait, then try again."
 CFG_FIELDS = ("n_ctx", "n_gpu_layers", "n_threads", "n_batch", "flash_attn", "chat_format")
@@ -1417,10 +1545,22 @@ def slot_status(slot):
 def status():
     ms = scan_models()
     names = {m["name"].lower() for m in ms}
+    avail = [m for m in ms if not m["mmproj"] and not m["image"]]
     return {"state": STATE["model"], "busy": LOCK.locked(),
             "slots": {k: slot_status(k) for k in ("coder", "reasoner", "vision", "image")},
-            "available": [m for m in ms if not m["mmproj"] and not m["image"]],
-            "image_models": [m for m in ms if m["image"] and not m["mmproj"]],
+"available": [
+    modelmgr.annotate(m)
+    for m in avail
+    if not m.get("mmproj") and not m.get("image")
+],
+"families": modelmgr.group_models(avail),
+"ram": {
+    "free": ram_free(),
+    "total": psutil.virtual_memory().total if psutil else 0
+},
+"routing": route_state(),
+"quantize": qjob_public(),
+"quant_targets": modelmgr.QUANTIZE_TARGETS,            "image_models": [m for m in ms if m["image"] and not m["mmproj"]],
             "preferred": [n for n in REASONER_PREFERRED if n.lower() in names],
             "wanted": REASONER_PREFERRED, "dirs": [str(d) for d in model_dirs()]}
 
@@ -1451,27 +1591,53 @@ def num(v, lo, hi, label):
     return n
 
 
+def remember_model_cfg(slot):
+    c = CFG[slot]
+    if c["path"]:
+        MODEL_CFG[(slot, model_cfg_key(c["path"]))] = dict(c)
+
+
+def cfg_for_model(slot, path):
+    saved = MODEL_CFG.get((slot, model_cfg_key(path)))
+    if saved:
+        return {**saved, "path": path}
+    default_ctx = args.n_ctx if slot == "coder" else args.reasoner_n_ctx
+    return base_cfg(path, min(int(default_ctx), 8192))
+
+
 def do_load(slot, path, force):
     if not LOCK.acquire(blocking=False):
         raise HTTPException(409, BUSY_MSG)
+    previous = dict(CFG[slot])
+    was_loaded = slot_loaded(slot)
     try:
         if path:
             new = allowed_model(path)
-            cur = CFG[slot]["path"]
-            if slot_loaded(slot) and (not cur or Path(cur) != Path(new)):
+            changed = not previous["path"] or model_cfg_key(previous["path"]) != model_cfg_key(new)
+            if changed:
+                remember_model_cfg(slot)
+                CFG[slot] = cfg_for_model(slot, new)
+            if was_loaded and changed:
                 with SWAP:
                     SLOT_UNLOAD[slot]()
-            CFG[slot] = {**CFG[slot], "path": new}
         elif not CFG[slot]["path"]:
             raise HTTPException(400, "Choose a model file first")
-        if force and slot_loaded(slot):
+        if force and slot_loaded(slot) and not (path and changed):
             with SWAP:
                 SLOT_UNLOAD[slot]()
         with SWAP:
             SLOT_LOAD[slot]()
+        remember_model_cfg(slot)
     except HTTPException:
         raise
     except Exception as e:
+        CFG[slot] = previous
+        if was_loaded and not slot_loaded(slot):
+            try:
+                with SWAP:
+                    SLOT_LOAD[slot]()
+            except Exception as restore_error:
+                raise HTTPException(500, f"Could not load the {slot} model: {e}. The previous model also failed to reload: {restore_error}") from e
         raise HTTPException(500, f"Could not load the {slot} model: {e}")
     finally:
         LOCK.release()
@@ -1493,15 +1659,25 @@ def do_unload(which):
 def do_config(slot, new, reload):
     if not LOCK.acquire(blocking=False):
         raise HTTPException(409, BUSY_MSG)
+    previous = dict(CFG[slot])
+    was_loaded = slot_loaded(slot)
     try:
         CFG[slot] = new
-        if reload and slot in SLOT_LOAD and slot_loaded(slot):
+        if reload and slot in SLOT_LOAD and was_loaded:
             try:
                 with SWAP:
                     SLOT_UNLOAD[slot]()
                     SLOT_LOAD[slot]()
             except Exception as e:
+                CFG[slot] = previous
+                if not slot_loaded(slot):
+                    try:
+                        with SWAP:
+                            SLOT_LOAD[slot]()
+                    except Exception as restore_error:
+                        raise HTTPException(500, f"Could not reload the {slot} model with those settings: {e}. The previous settings also failed to reload: {restore_error}") from e
                 raise HTTPException(500, f"Could not reload the {slot} model with those settings: {e}")
+        remember_model_cfg(slot)
     finally:
         LOCK.release()
     return status()
@@ -1557,6 +1733,332 @@ async def model_config(req: Request):
             raise HTTPException(400, "Chat format looks wrong (letters, digits, - _ . only)")
         c["chat_format"] = cf
     return await run_in_threadpool(do_config, slot, c, bool(b.get("reload")))
+
+
+# ---------------------------------------------------------------- persistent state (routes, benchmark history)
+STATE_FILE = HERE / "cressy-state.json"
+STATE_IO = threading.Lock()
+BENCH_DIR = Path(args.bench_dir).expanduser() if args.bench_dir else HERE / "benchmarks"
+
+
+def load_state():
+    try:
+        d = json.loads(STATE_FILE.read_text("utf-8"))
+        return d if isinstance(d, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+PERSIST = load_state()
+
+
+def save_state():
+    with STATE_IO:
+        try:
+            tmp = STATE_FILE.with_suffix(".tmp")
+            tmp.write_text(json.dumps(PERSIST, indent=1), "utf-8")
+            os.replace(tmp, STATE_FILE)
+        except OSError:
+            pass     # history is a convenience; never break a request over it
+
+
+def ram_free():
+    try:
+        return psutil.virtual_memory().available if psutil else 0
+    except Exception:
+        return 0
+
+
+# ---------------------------------------------------------------- auto-switch: pick the coder model from what the user is asking
+_saved = PERSIST.get("routes") if isinstance(PERSIST.get("routes"), dict) else {}
+ROUTE = {"enabled": bool(args.autoswitch or (_saved.get("enabled") if _saved.get("explicit") else False)) and not args.no_autoswitch,
+         "map": {k: str((_saved.get("map") or {}).get(k) or "") for k in ("code", "chat")}, "last": None}
+
+
+def route_state():
+    return {"enabled": ROUTE["enabled"], "map": dict(ROUTE["map"]), "last": ROUTE["last"]}
+
+
+def do_route(text, prev, dry):
+    """Classify the message and, unless dry, load the model best suited to it (the coder slot changes file).
+    A 'reason' intent is not a swap here: the browser then runs the existing reasoning step."""
+    cls = modelmgr.classify(text, prev)
+    intent = cls["intent"]
+    cur = CFG["coder"]["path"]
+    name = lambda p: os.path.basename(p) if p else ""
+    out = {"intent": intent, "why": cls["why"], "enabled": ROUTE["enabled"], "switched": False, "reason": False,
+           "model": name(cur), "from": name(cur), "target": ""}
+    if not ROUTE["enabled"] and not dry:
+        return out
+    if intent == "reason" and CFG["reasoner"]["path"] and (cls["scores"]["reason"] >= 2 or cls["why"].startswith("/")):
+        out["reason"] = True
+        out["target"] = name(CFG["reasoner"]["path"])
+        ROUTE["last"] = {k: out[k] for k in ("intent", "why", "model", "target", "switched")} if not dry else ROUTE["last"]
+        return out
+    models = [m for m in scan_models() if not m["mmproj"] and not m["image"]]
+    target = modelmgr.pick_for_intent(intent, models, cur, ROUTE["map"].get(intent, ""), modelmgr.quant_of(name(cur))[0], ram_free())
+    out["target"] = name(target)
+    if dry or not target:
+        if not dry:
+            ROUTE["last"] = {k: out[k] for k in ("intent", "why", "model", "target", "switched")}
+        return out
+    if not LOCK.acquire(blocking=False):
+        out["note"] = "Models are busy, so it did not switch."
+        return out
+    try:
+        old = dict(CFG["coder"])
+        remember_model_cfg("coder")
+        with SWAP:
+            was_loaded = llm is not None
+            if was_loaded:
+                unload_coder()
+            CFG["coder"] = cfg_for_model("coder", target)
+            if was_loaded:
+                try:
+                    load_coder()
+                except Exception as e:
+                    CFG["coder"] = old
+                    out["error"] = f"Could not load {name(target)}: {e}"
+                    try:
+                        load_coder()
+                    except Exception:
+                        pass
+        if not out.get("error"):
+            remember_model_cfg("coder")
+            out.update(switched=True, model=name(target))
+    finally:
+        LOCK.release()
+    ROUTE["last"] = {k: out[k] for k in ("intent", "why", "model", "target", "switched")}
+    return out
+
+
+@app.post("/api/route")
+async def route(req: Request):
+    need_ui(req)
+    b = await req.json()
+    text = str(b.get("text") or "")[:4000]
+    dry = bool(b.get("dry")) or not CAN_EXEC
+    return await run_in_threadpool(do_route, text, str(b.get("prev") or ""), dry)
+
+
+@app.post("/api/route/config")
+async def route_config(req: Request):
+    b = await model_body(req)
+    if "enabled" in b:
+        ROUTE["enabled"] = bool(b["enabled"]) and not args.no_autoswitch
+    if isinstance(b.get("map"), dict):
+        for k in ("code", "chat"):
+            if k in b["map"]:
+                v = str(b["map"][k] or "")
+                ROUTE["map"][k] = allowed_model(v) if v else ""
+    PERSIST["routes"] = {"enabled": ROUTE["enabled"], "map": ROUTE["map"], "explicit": True}
+    save_state()
+    return status()
+
+
+# ---------------------------------------------------------------- benchmarks on the loaded model
+BENCH_FIELDS = ("id", "ts", "slot", "model", "quant", "size", "n_ctx", "gpu_layers", "load_seconds", "speed", "suites", "overall", "seconds")
+
+
+def bench_suites():
+    custom, errs = modelmgr.load_custom(BENCH_DIR)
+    pool = {**modelmgr.SUITES, **custom}
+    return pool, [{"name": k, "title": v["title"], "n": len(v["items"]), "custom": bool(v.get("custom"))} for k, v in pool.items()], errs
+
+
+@app.get("/api/bench/suites")
+def bench_list():
+    _, lst, errs = bench_suites()
+    return {"suites": lst, "dir": str(BENCH_DIR), "errors": errs}
+
+
+@app.get("/api/bench/history")
+def bench_history():
+    return {"runs": PERSIST.get("bench", []), "running": LOCK.locked()}
+
+
+@app.post("/api/bench/delete")
+async def bench_delete(req: Request):
+    need_ui(req)
+    b = await req.json()
+    runs = PERSIST.get("bench", [])
+    PERSIST["bench"] = [] if b.get("all") else [r for r in runs if r.get("id") != b.get("id")]
+    save_state()
+    return {"runs": PERSIST["bench"]}
+
+
+def bench_speed(m):
+    """Prompt-processing speed (tokens/s over a fresh ~512-token prompt) and generation speed (tokens/s over ~96 tokens)."""
+    n_ctx = int(m.n_ctx())
+    target = max(64, min(512, n_ctx // 2 - 64))
+    filler = "The quick brown fox jumps over the lazy dog while rain falls on quiet streets. " * 120
+    ids = m.tokenize((uuid.uuid4().hex + " " + filler).encode("utf-8"), add_bos=True)[:target]
+    m.reset()
+    t0 = time.perf_counter()
+    for _ in m.create_completion(prompt=ids, max_tokens=1, temperature=0.0, stream=True):
+        pass
+    pp = max(1e-6, time.perf_counter() - t0)
+    m.reset()
+    t0 = time.perf_counter()
+    first, n = None, 0
+    for _ in m.create_completion(prompt="Write a long story about a lighthouse keeper.\n\n", max_tokens=96, temperature=0.8, top_k=40, stream=True):
+        first = first or time.perf_counter()
+        n += 1
+    end = time.perf_counter()
+    tg = (n - 1) / (end - first) if first and n > 1 and end > first else 0.0
+    return {"pp_tokens": len(ids), "pp_tps": round(len(ids) / pp, 1), "tg_tps": round(tg, 1), "tg_tokens": n,
+            "ttft": round((first - t0) if first else 0.0, 2), "rss": PROC.memory_info().rss if PROC else 0}
+
+
+def bench_events(slot, suite_names, speed):
+    if slot not in ("coder", "reasoner"):
+        yield sse({"type": "error", "message": "Pick the coder or the reasoner to benchmark."})
+        return
+    pool, _, _ = bench_suites()
+    chosen = [s for s in suite_names if s in pool]
+    if not chosen and not speed:
+        yield sse({"type": "error", "message": "Tick at least one test."})
+        return
+    if not CFG[slot]["path"]:
+        yield sse({"type": "error", "message": f"No {slot} model is chosen. Pick one in the list above and load it first."})
+        return
+    if not LOCK.acquire(blocking=False):
+        yield sse({"type": "error", "message": BUSY_MSG})
+        return
+    try:
+        if not slot_loaded(slot):
+            yield sse({"type": "status", "message": f"Loading {os.path.basename(CFG[slot]['path'])}…"})
+            with SWAP:
+                SLOT_LOAD[slot]()
+        m = llm if slot == "coder" else rllm
+        name = os.path.basename(CFG[slot]["path"])
+        try:
+            size = os.path.getsize(CFG[slot]["path"])
+        except OSError:
+            size = 0
+        total = sum(len(pool[s]["items"]) for s in chosen)
+        rec = {"id": uuid.uuid4().hex[:8], "ts": int(time.time()), "slot": slot, "model": name, "quant": modelmgr.quant_of(name)[0],
+               "size": size, "n_ctx": int(m.n_ctx()), "gpu_layers": CFG[slot]["n_gpu_layers"],
+               "load_seconds": round(LOAD_S.get(slot, 0.0), 1), "speed": None, "suites": {}, "overall": None}
+        yield sse({"type": "start", "total": total, "speed": bool(speed), "model": name, "quant": rec["quant"]})
+        t_all = time.perf_counter()
+        if speed:
+            yield sse({"type": "status", "message": "Measuring speed…"})
+            rec["speed"] = bench_speed(m)
+            yield sse({"type": "speed", **rec["speed"]})
+        thinking = slot == "reasoner"
+        done = 0
+        for sname in chosen:
+            s = pool[sname]
+            res = {"correct": 0, "total": 0, "cut": 0, "seconds": 0.0, "tokens": 0}
+            t_s = time.perf_counter()
+            for item in s["items"]:
+                msgs = modelmgr.build_messages(s["kind"], item)
+                for attempt in (0, 1):
+                    r = m.create_chat_completion(messages=msgs, temperature=0.0, max_tokens=modelmgr.max_tokens_for(s["kind"], thinking))
+                    ch = r["choices"][0]
+                    out = (ch.get("message") or {}).get("content") or ""
+                    if attempt == 0 and not thinking and "<think>" in out.lower() and "</think>" not in out.lower():
+                        thinking = True      # a reasoning model answering in the coder slot: give it room to think
+                        continue
+                    break
+                ok = modelmgr.score_item(s["kind"], item, out)
+                res["total"] += 1
+                res["correct"] += 1 if ok else 0
+                res["cut"] += 1 if (not ok and ch.get("finish_reason") == "length") else 0
+                res["tokens"] += int((r.get("usage") or {}).get("completion_tokens") or 0)
+                done += 1
+                yield sse({"type": "item", "suite": sname, "ok": ok, "done": done, "total": total})
+            res["seconds"] = round(time.perf_counter() - t_s, 1)
+            rec["suites"][sname] = res
+            yield sse({"type": "suite", "suite": sname, "title": s["title"], **res})
+        rec["overall"] = modelmgr.overall(rec["suites"])
+        rec["seconds"] = round(time.perf_counter() - t_all, 1)
+        runs = PERSIST.setdefault("bench", [])
+        runs.insert(0, {k: rec.get(k) for k in BENCH_FIELDS})
+        del runs[40:]
+        save_state()
+        yield sse({"type": "done", "record": rec})
+    except Exception as e:
+        yield sse({"type": "error", "message": f"Benchmark stopped: {e}"})
+    finally:
+        LOCK.release()
+
+
+@app.post("/api/bench")
+async def bench(req: Request):
+    """Body: {slot: coder|reasoner, suites: [...], speed: bool}. Streams progress; closing the connection stops it."""
+    b = await model_body(req)
+    names = [str(s) for s in (b.get("suites") or []) if isinstance(s, str)][:30]
+    return StreamingResponse(bench_events(b.get("slot", "coder"), names, bool(b.get("speed", True))), media_type="text/event-stream")
+
+
+# ---------------------------------------------------------------- make another quantization of a file you already have
+QJOB = {"state": "idle", "src": "", "dst": "", "target": "", "error": "", "started": 0.0, "proc": None}
+
+
+def qjob_public():
+    return {k: QJOB[k] for k in ("state", "src", "dst", "target", "error", "started")}
+
+
+def run_quantize(src, part, dst, target, requant):
+    err = ""
+    try:
+        proc = subprocess.Popen([sys.executable, "-c", modelmgr.QUANTIZE_SCRIPT, src, str(part), target, "1" if requant else "0"],
+                                stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+        QJOB["proc"] = proc
+        _, tail = proc.communicate()
+        if QJOB["state"] == "cancelled":
+            err = "cancelled"
+        elif proc.returncode != 0:
+            err = (tail or "").strip().splitlines()[-1][:300] if (tail or "").strip() else f"the quantizer exited with code {proc.returncode}"
+        else:
+            os.replace(part, dst)
+    except Exception as e:
+        err = str(e)
+    if err:
+        try:
+            Path(part).unlink(missing_ok=True)
+        except OSError:
+            pass
+    QJOB.update(state="cancelled" if err == "cancelled" else "error" if err else "done", error="" if err == "cancelled" else err, proc=None)
+
+
+@app.post("/api/model/quantize")
+async def model_quantize(req: Request):
+    """Body: {path, target, allow_requantize}. Runs llama.cpp's quantizer in its own process and writes a new .gguf next to the source."""
+    b = await model_body(req)
+    src = allowed_model(b.get("path"))
+    ok, why, outname, requant = modelmgr.quantize_plan(Path(src).name, b.get("target", ""))
+    if not ok:
+        raise HTTPException(400, why)
+    if requant and not b.get("allow_requantize"):
+        raise HTTPException(400, "This file is already quantized, so a smaller one made from it loses extra quality. Tick the box to allow it, or start from an F16 / BF16 file.")
+    if QJOB["state"] == "running":
+        raise HTTPException(409, "A quantization is already running.")
+    dst = Path(src).with_name(outname)
+    if dst.exists():
+        raise HTTPException(400, f"{outname} already exists.")
+    try:
+        free = shutil.disk_usage(dst.parent).free
+    except OSError:
+        free = 0
+    if free and free < os.path.getsize(src):
+        raise HTTPException(400, f"Not enough free disk space next to the source ({free // 2**30} GB free, about {os.path.getsize(src) // 2**30} GB may be needed).")
+    target = str(b["target"]).upper()
+    QJOB.update(state="running", src=Path(src).name, dst=outname, target=target, error="", started=time.time())
+    threading.Thread(target=run_quantize, args=(src, str(dst) + ".part", str(dst), target, requant), daemon=True).start()
+    return status()
+
+
+@app.post("/api/model/quantize/cancel")
+async def quantize_cancel(req: Request):
+    await model_body(req)
+    p = QJOB.get("proc")
+    if QJOB["state"] == "running" and p is not None:
+        QJOB["state"] = "cancelled"
+        kill_tree(p)
+    return status()
 
 
 REASON_SYS = (

@@ -48,7 +48,13 @@ Then open http://127.0.0.1:8000 (`--open` does it for you).
 | `--no-image` | off | disable image generation and editing |
 | `--searxng-url` | `http://127.0.0.1:8080` | SearXNG address for the Web button (or set `SEARXNG_URL`) |
 | `--no-web` | off | turn off web search and the page reader |
+| `--autoswitch` | off | opt in to switching coder models automatically based on message intent |
+| `--no-autoswitch` | off | force automatic model switching off |
+| `--bench-dir PATH` | `./benchmarks` | folder with extra benchmark datasets (`.jsonl`) |
 | `--web-allow-private` | off | let the page reader open links on your own network (blocked by default) |
+| `--no-kb` | off | turn off the knowledge base |
+| `--kb-dir PATH` | `./knowledge` | where uploaded documents are stored |
+| `--kb-max-mb N` | 30 | largest single file the knowledge base accepts |
 | `--unsafe-remote-exec` | off | allow terminal and file writes on a non-loopback `--host` (**dangerous**) |
 
 ## Conversation history (stored on the server)
@@ -73,10 +79,23 @@ If the message has an image, the order is vision → reasoner → coder, and the
 
 ## Manual model control (Model tab → Models)
 Each of **Coder**, **Reasoner** and **Vision** has a card:
-- **Load / Switch** (pick any `.gguf` from the scanned folders, only files from those folders are accepted), **Unload**, **Reload**. Loading one unloads whatever else is in memory.
-- **Tweak settings**: context size, GPU layers, CPU threads, batch size, flash attention, chat format. *Save* stores them for the next load; *Save & reload* applies them now. A card warns when the loaded model is running older settings.
+- **Load / Switch** (pick any `.gguf` from the scanned folders, only files from those folders are accepted), **Unload**, **Reload**. Loading one unloads whatever else is in memory. A new model starts with its own settings and a context of at most 8192 tokens instead of inheriting the previous model's context; the previous model is restored if the new one cannot load.
+- **Tweak settings**: context size, GPU layers, CPU threads, batch size, flash attention, chat format. Settings are kept separately for each model in its Coder or Reasoner slot. *Save* stores them for the next load; *Save & reload* applies them to that same model. A card warns when the loaded model is running older settings.
 - Buttons refuse politely while a reply is generating. Chatting with the coder unloaded loads it automatically.
 - Starting the server with no `--model` is fine: nothing is loaded until you press **Load**.
+
+## Model management (Model tab)
+
+**Quantization levels.** Files that differ only by quantization (`…-Q4_K_M.gguf`, `…-Q8_0.gguf`, `…-F16.gguf`) are grouped. Each Coder / Reasoner card has a *model* picker and a *quantization* picker showing file size, approximate bits per weight, a one-line quality note and a warning when the file may not fit in free RAM. Pick one and press **Load**. The *Quantization* card can also create a new size from a file you already have (it runs llama.cpp's own quantizer in a separate process and writes the new `.gguf` next to the source): from F16 / BF16 / F32 directly, or from an already-quantized file if you tick the box (that loses a little extra quality). The quantize step needs a `llama-cpp-python` build that exposes `llama_model_quantize`; recent builds do.
+
+**Auto-switch.** Off by default: CressyAI keeps the selected coder model for every message. You can explicitly turn it on in the Model tab or start the server with `--autoswitch`. When enabled, it guesses intent and may switch coder models; each model keeps its own settings. You can pin files to *Code* or *Everything else*, test a sentence without switching, or force switching off with `--no-autoswitch`. The settings are saved in `cressy-state.json`.
+
+**Benchmarks.** *Model tab → Benchmark* runs on the Coder or Reasoner (it loads it first if needed):
+- **Speed**: prompt-processing and generation tokens per second, time to first token, memory.
+- **Quality**: built-in mini sets in the style of MMLU (knowledge), ARC / logic (reasoning), GSM8K (maths), IFEval (instruction following) and code reading, 39 questions in total, scored automatically at temperature 0.
+- **Your own sets**: drop `.jsonl` files into `benchmarks/` (or `--bench-dir`). One JSON object per line: `{"question": "...", "choices": ["a","b","c","d"], "answer": "B"}` for multiple choice, `{"question": "...", "answer": 42}` for a number, or `{"question": "...", "answer": "Paris"}` for a short text answer. This is how you run real MMLU / ARC / GSM8K subsets. Each file is capped at 50 questions to keep a run short.
+
+Runs are saved (newest 40) and grouped by model so you can compare quantizations side by side: score against write speed. The built-in sets are small samples, so use them to compare your own files with each other, not with published leaderboards. Press **Stop** to cancel; the model is released again.
 
 ## Images (Qwen2.5-VL, loaded only when needed)
 Attach, drop or paste a PNG / JPG / WebP / GIF (up to 4 per message). Only one model is in memory at a time:
@@ -136,7 +155,14 @@ Order ..> : include Payment
 Admin --> ManageCatalog
 ```
 
-Charts, the zip download and diagrams load Chart.js, JSZip and Mermaid from cdnjs the first time they are used (like the existing markdown/highlight libraries), so that needs internet once. Mermaid diagrams need Mermaid 12.0 or newer; use-case diagrams are currently a Mermaid beta feature.
+## Knowledge base (chat with your documents)
+Add `.txt`, `.md` and `.pdf` files in the **Knowledge** tab (drop them on the box or click it to browse). Turn on **Knowledge** next to the paperclip and every question is matched against your documents: the best passages are found, shown in a card above the answer, and handed to the model, which cites them as clickable **[K1] [K2]** chips. Click a chip to jump to its source passage.
+- `/kb your question` forces a lookup for one message, even with Knowledge off. Retry repeats the lookup.
+- Untick a document to keep it stored but out of the answers; the bin removes it. In *Retrieval* you choose how many passages to fetch and how much text to send.
+- Searching is plain keyword ranking (BM25) done in Python on your machine. It loads no model, so it never makes the chat model swap out, and nothing is sent anywhere. The trade-off: it matches words, not meaning, so ask using the document's own terms ("annual leave", not "time off") for the best results.
+- Markdown headings and PDF page numbers are kept, so sources read like `manual.pdf, p. 12` or `handbook.md - Leave policy`.
+- PDFs need the `pypdf` package: with the app stopped run `.venv\Scripts\pip install pypdf` (Windows) or `.venv/bin/pip install pypdf` (macOS/Linux), then start it again. Scanned PDFs have no text to read and are rejected with a message; run OCR on them first. Password-protected PDFs are rejected too.
+- Documents are stored as plain JSON in the `knowledge` folder next to `server.py`. Delete that folder to wipe everything.
 
 ## Web search (SearXNG)
 Lets the model answer from live results. [SearXNG](https://github.com/searxng/searxng) is a self-hosted meta search engine; CressyAI asks it for results, opens the top pages, and hands the text to the model as numbered sources. The model itself never touches the network.
@@ -146,7 +172,7 @@ Lets the model answer from live results. [SearXNG](https://github.com/searxng/se
 2. Start CressyAI as usual (use `--searxng-url http://host:port` if it is elsewhere). *Settings → Web search → Test connection* tells you what is wrong if it fails.
 
 **Use it**
-- Press **Web** next to the paperclip. In the default *When it needs it* mode, questions about news, prices, versions, "latest…", today, weather and similar are searched; the rest are answered normally. *Every message* searches always.
+- **Web is on by default** once SearXNG answers (it switches itself on when SearXNG starts; press **Web** to turn it off for good). In the default *By default* mode every question is searched live unless it is clearly local work: a `/command`, attached files or `@file`, code, small talk ("thanks"), or a request about the chat itself ("shorten that"). *Only fresh-info questions* keeps the older keyword rule (news, prices, versions, "latest…", weather); *Every message* always searches. If the model still answers with "as of my knowledge cutoff…" or "I can't browse", the app searches and answers again automatically (once). `/web …` forces a search.
 - `/web your question` (or `/search`) forces a search for one message, even with Web off, and uses your words as the query.
 - Paste a link and it is read (up to 3 links) instead of searched.
 - A collapsible card above the reply lists the sources (marked *read* when the page text was used); `[1]` `[2]` in the answer become clickable chips. **Retry** repeats the lookup.

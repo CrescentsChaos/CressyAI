@@ -1,0 +1,11 @@
+{
+ "routes": {
+  "enabled": false,
+  "map": {
+   "code": "E:\\AI\\Models\\qwen2.5-coder-7b-instruct-q5_k_m.gguf",
+   "chat": "E:\\AI\\Models\\gemma-4-12b-it-Q4_K_M.gguf"
+  },
+  "explicit": true
+ },
+ "bench": []
+}
