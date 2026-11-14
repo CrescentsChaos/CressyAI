@@ -49,6 +49,9 @@ Then open http://127.0.0.1:8000 (`--open` does it for you).
 | `--searxng-url` | `http://127.0.0.1:8080` | SearXNG address for the Web button (or set `SEARXNG_URL`) |
 | `--no-web` | off | turn off web search, the page reader and Wikipedia |
 | `--no-wiki` | off | turn off only the Wikipedia lookup |
+| `--no-inat` | off | turn off the iNaturalist nature lookup (also off with `--no-web`) |
+| `--inat-token` | `$INAT_TOKEN` | iNaturalist API token (JWT) that unlocks photo identification |
+| `--inat-locale` | `en` | language for common names (`en`, `bn`, `es`, …) |
 | `--autoswitch` | off | opt in to switching coder models automatically based on message intent |
 | `--no-autoswitch` | off | force automatic model switching off |
 | `--bench-dir PATH` | `./benchmarks` | folder with extra benchmark datasets (`.jsonl`) |
@@ -258,3 +261,15 @@ Alt+N new chat · Alt+L focus input · Alt+R retry · Alt+C copy last reply · A
 - **13 new task commands**: `/summarize` `/tldr` `/rewrite` `/proofread` `/translate` `/email` `/outline` `/plan` `/brainstorm` `/proscons` `/table` `/quiz` `/steps`, and new modes: Writer, Analyst, Study buddy, Brainstorm, Translator.
 - **Chats**: search (titles and message text), pin to top, back up / restore all chats as JSON.
 - **Speed flags**: `--n-batch 512` and `--flash-attn` for faster prompt processing.
+
+
+## Nature lookup (iNaturalist)
+A **🌿 Nature** button (bottom-left) opens the iNaturalist explorer in a new tab. It uses the public iNaturalist API v1; no account or key is needed except for photo identification. Only `api.inaturalist.org` is contacted, results are cached for 10 minutes and requests are spaced out to respect their rate limit.
+
+- **Species**: search by common or scientific name. Each page has a summary, classification breadcrumbs (click to climb the tree), conservation status, photos, a month-by-month *when is it seen* chart, look-alike species and child taxa.
+- **Nearby**: what lives around you or inside a named place, filtered by group (birds, plants, insects…), recency, threatened-only and native-only.
+- **Sightings**: recent research-grade observations with photos for the chosen place.
+- **Identify**: drop a photo for computer-vision suggestions. Needs a token: log in at inaturalist.org, open `https://www.inaturalist.org/users/api_token`, and start the server with `--inat-token <jwt>` (or `INAT_TOKEN`). Tokens last 24 hours.
+- **Add to chat** returns to the chat page with a compact data block in the composer so the model answers from real records. Shortcut: type `/inat red fox` and press Enter.
+
+Set the location once (search a place, or *Use my location*) and Nearby, Sightings and the seasonality chart all use it. API: `GET /api/inat/status`, `POST /api/inat/{search,taxon,places,nearby,observations,observation,season,observers,identify}`.

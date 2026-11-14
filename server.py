@@ -17,6 +17,7 @@ import modelmgr
 import rag
 import websearch
 import wikipedia
+import inaturalist
 
 try:
     import psutil
@@ -58,6 +59,9 @@ ap.add_argument("--no-image", action="store_true", help="disable image generatio
 ap.add_argument("--searxng-url", default=os.environ.get("SEARXNG_URL", "http://127.0.0.1:8080"),
                 help="SearXNG address used by the Web button (default http://127.0.0.1:8080, or the SEARXNG_URL variable)")
 ap.add_argument("--no-web", action="store_true", help="turn off web search and the page reader")
+ap.add_argument("--no-inat", action="store_true", help="turn off the iNaturalist nature lookup (it is also off with --no-web)")
+ap.add_argument("--inat-token", default=os.environ.get("INAT_TOKEN", ""), help="iNaturalist API token (JWT) for photo identification; or set INAT_TOKEN")
+ap.add_argument("--inat-locale", default="en", help="language for iNaturalist common names, e.g. en, bn, es")
 ap.add_argument("--no-wiki", action="store_true", help="turn off the Wikipedia lookup (it is also off with --no-web)")
 ap.add_argument("--web-allow-private", action="store_true", help="let the page reader open links on your own network (off by default)")
 ap.add_argument("--no-autoswitch", action="store_true",
@@ -508,6 +512,11 @@ def fit(messages, max_new, model=None):
 @app.get("/")
 def index():
     return FileResponse(HERE / "index.html")
+
+
+@app.get("/nature")
+def nature():
+    return FileResponse(HERE / "nature.html")
 
 
 @app.get("/js/{name}")
@@ -1195,6 +1204,7 @@ def caps():
 "can_manage": CAN_EXEC,
 "kb": KB_ON,
 "web": WEB_ON,
+"inat": INAT_ON,
 "web_url": SEARX if WEB_ON else "",            "shell": os.environ.get("COMSPEC", "cmd") if os.name == "nt" else os.environ.get("SHELL", "/bin/sh")}
 
 
@@ -1454,6 +1464,129 @@ async def wiki_search(req: Request):
         WEB_SLOTS.release()
     out["seconds"] = round(time.perf_counter() - t0, 2)
     return out
+
+
+# ---------------------------------------------------------------- iNaturalist (API v1): species, places, nearby wildlife, seasonality, photo ID
+INAT_ON = WEB_ON and not args.no_inat
+INAT_LOC = inaturalist.locale_ok(args.inat_locale)
+INAT_PING = {"t": 0.0, "ok": False, "why": ""}
+
+
+def inat_guard(req):
+    need_ui(req)
+    if not INAT_ON:
+        raise HTTPException(503, "iNaturalist lookup is turned off (--no-inat or --no-web).")
+
+
+def _f(v):
+    try:
+        return None if v in (None, "") else float(v)
+    except (TypeError, ValueError):
+        raise HTTPException(400, "Latitude, longitude and radius must be numbers.")
+
+
+def _geo(b):
+    lat, lng = _f(b.get("lat")), _f(b.get("lng"))
+    if lat is not None and not -90 <= lat <= 90 or lng is not None and not -180 <= lng <= 180:
+        raise HTTPException(400, "That location is outside the map.")
+    pid = web_int(b.get("place_id"), 0, 0, 10**9) or None
+    return dict(lat=lat, lng=lng, radius=_f(b.get("radius")) or 10, place_id=pid)
+
+
+def _flt(b):
+    ic = b.get("iconic") or []
+    ic = [ic] if isinstance(ic, str) else ic
+    out = {"iconic": [str(x) for x in ic][:6], "quality": str(b.get("quality") or ""), "locale": INAT_LOC}
+    for k in ("days", "month", "taxon_id", "user"):
+        if b.get(k) not in (None, ""):
+            out[k] = b[k]
+    for k in ("threatened", "introduced", "native", "endemic", "photos"):
+        out[k] = bool(b.get(k))
+    return out
+
+
+async def inat_call(req, fn):
+    """Shared plumbing: guard, parse JSON body, limit parallel jobs, map errors."""
+    inat_guard(req)
+    try:
+        b = await req.json()
+    except Exception:
+        raise HTTPException(400, "Bad request body.")
+    if not isinstance(b, dict):
+        raise HTTPException(400, "Bad request body.")
+    if not WEB_SLOTS.acquire(timeout=20):
+        raise HTTPException(429, "Too many web requests at once. Try again in a moment.")
+    t0 = time.perf_counter()
+    try:
+        out = await run_in_threadpool(lambda: fn(b))
+    except websearch.WebError as e:
+        raise HTTPException(502, str(e))
+    except (ValueError, TypeError) as e:
+        raise HTTPException(400, "Bad input: " + str(e)[:100])
+    finally:
+        WEB_SLOTS.release()
+    out["seconds"] = round(time.perf_counter() - t0, 2)
+    return out
+
+
+@app.get("/api/inat/status")
+def inat_status(force: int = 0):
+    if not INAT_ON:
+        return {"enabled": False, "ok": False, "why": "iNaturalist lookup is turned off (--no-inat or --no-web).", "identify": False}
+    if force or time.time() - INAT_PING["t"] > 15:
+        ok, why = inaturalist.ping()
+        INAT_PING.update(t=time.time(), ok=ok, why=why)
+    return {"enabled": True, "ok": INAT_PING["ok"], "why": INAT_PING["why"], "identify": bool(args.inat_token), "locale": INAT_LOC,
+            "iconic": inaturalist.ICONIC}
+
+
+@app.post("/api/inat/search")
+async def inat_search(req: Request):
+    """Body: {query, rank, limit}. Species / taxa by common or scientific name."""
+    return await inat_call(req, lambda b: inaturalist.search(str(b.get("query", "")), str(b.get("rank") or ""), web_int(b.get("limit"), 8, 1, 20), INAT_LOC))
+
+
+@app.post("/api/inat/taxon")
+async def inat_taxon(req: Request):
+    """Body: {id}. Summary, classification, children, status, photos, look-alikes."""
+    return await inat_call(req, lambda b: inaturalist.taxon(web_int(b.get("id"), 0, 1, 10**9), INAT_LOC))
+
+
+@app.post("/api/inat/places")
+async def inat_places(req: Request):
+    return await inat_call(req, lambda b: inaturalist.places(str(b.get("query", "")), web_int(b.get("limit"), 6, 1, 15)))
+
+
+@app.post("/api/inat/nearby")
+async def inat_nearby(req: Request):
+    """Body: {lat, lng, radius | place_id, limit, iconic[], days, threatened, native, introduced, ...}. What lives here?"""
+    return await inat_call(req, lambda b: inaturalist.nearby(limit=web_int(b.get("limit"), 20, 1, 50), **_geo(b), **_flt(b)))
+
+
+@app.post("/api/inat/observations")
+async def inat_observations(req: Request):
+    return await inat_call(req, lambda b: inaturalist.observations(limit=web_int(b.get("limit"), 12, 1, 30), order=str(b.get("order") or ""), **_geo(b), **_flt(b)))
+
+
+@app.post("/api/inat/observation")
+async def inat_observation(req: Request):
+    return await inat_call(req, lambda b: inaturalist.observation(web_int(b.get("id"), 0, 1, 10**10)))
+
+
+@app.post("/api/inat/season")
+async def inat_season(req: Request):
+    return await inat_call(req, lambda b: inaturalist.season(web_int(b.get("taxon_id"), 0, 1, 10**9), **_geo(b)))
+
+
+@app.post("/api/inat/observers")
+async def inat_observers(req: Request):
+    return await inat_call(req, lambda b: inaturalist.observers(limit=web_int(b.get("limit"), 8, 1, 20), **_geo(b), **_flt(b)))
+
+
+@app.post("/api/inat/identify")
+async def inat_identify(req: Request):
+    """Body: {image: 'data:image/jpeg;base64,...', lat, lng}. Needs --inat-token."""
+    return await inat_call(req, lambda b: inaturalist.identify(str(b.get("image") or ""), args.inat_token, _f(b.get("lat")), _f(b.get("lng")), INAT_LOC))
 
 
 # ---------------------------------------------------------------- knowledge base: upload .txt / .md / .pdf, retrieve passages (RAG)
@@ -2393,6 +2526,7 @@ if __name__ == "__main__":
           + ("   !! non-loopback host with --unsafe-remote-exec: anyone who can reach this port can run commands !!"
              if (not LOCAL and args.unsafe_remote_exec) else ""))
     print(f"Wikipedia: {'on' if WIKI_ON else 'off (--no-wiki or --no-web)'}")
+    print(f"iNaturalist: {('on' + (', photo ID ready' if args.inat_token else ', photo ID off (no --inat-token)')) if INAT_ON else 'off (--no-inat or --no-web)'}")
     print(f"Web search: {'on, SearXNG at ' + SEARX if WEB_ON else 'off (--no-web)'}"
           + ("   (pages on your own network can be read)" if WEB_ON and args.web_allow_private else ""))
     if args.open:

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>iNaturalist — CressyAI</title>
+<link rel="icon" type="image/png" href="/assets/logo-mark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#090b10;--panel:#0e1117;--card:#141822;--card2:#1a2030;--line:#252b3b;--ink:#e9ecf5;--mut:#8d95aa;--acc:#8b7cff;--acc2:#2dd4bf;--danger:#ff6b6b;--shadow:0 14px 40px -14px #000c;color-scheme:dark}
+@media(prefers-color-scheme:light){:root:not([data-theme=dark]){--bg:#f4f5fb;--panel:#fbfbfe;--card:#fff;--card2:#eef0f8;--line:#e2e5f0;--ink:#151826;--mut:#626a80;--acc:#5b4bf0;--acc2:#0d9488;--danger:#dc2626;--shadow:0 14px 40px -16px #2a2f5a40;color-scheme:light}}
+:root[data-theme=light]{--bg:#f4f5fb;--panel:#fbfbfe;--card:#fff;--card2:#eef0f8;--line:#e2e5f0;--ink:#151826;--mut:#626a80;--acc:#5b4bf0;--acc2:#0d9488;--danger:#dc2626;--shadow:0 14px 40px -16px #2a2f5a40;color-scheme:light}
+*{box-sizing:border-box}
+html,body{min-height:100%;margin:0}
+body{background:radial-gradient(55% 45% at 72% -8%,#7c6cff30,transparent 70%),radial-gradient(45% 40% at -4% 104%,#2dd4bf1c,transparent 70%),var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+</style>
+<script>try{const theme=localStorage.getItem('gc.theme');if(['auto','light','dark'].includes(theme))document.documentElement.dataset.theme=theme}catch{}</script>
+</head>
+<body data-page="nature">
+<script src="/js/18-inaturalist.js"></script>
+</body>
+</html>
