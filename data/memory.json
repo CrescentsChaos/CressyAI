@@ -1,0 +1,188 @@
+{
+ "version": 2,
+ "facts": [
+  {
+   "id": "1995fa564a14",
+   "text": "The project uses FastAPI as the backend framework.",
+   "scope": "project",
+   "pin": false,
+   "source": "chat",
+   "project": "E:\\AI\\CressyAI",
+   "created": 1794750512623,
+   "updated": 1794750512623,
+   "hits": 0
+  },
+  {
+   "id": "35ba6f347750",
+   "text": "The project uses the CressyAI stack.",
+   "scope": "project",
+   "pin": false,
+   "source": "chat",
+   "project": "E:\\AI\\CressyAI",
+   "created": 1794750569129,
+   "updated": 1794750569129,
+   "hits": 2,
+   "used": 1794750760288
+  },
+  {
+   "id": "839372f0f2ee",
+   "text": "The project is named CressyAI.",
+   "scope": "project",
+   "pin": false,
+   "source": "chat",
+   "project": "E:\\AI\\CressyAI",
+   "created": 1794750841282,
+   "updated": 1794750841282,
+   "hits": 0
+  },
+  {
+   "id": "d31b456e599b",
+   "text": "The project is a calculator built with HTML, CSS, and JS.",
+   "scope": "project",
+   "pin": false,
+   "source": "chat",
+   "project": "E:\\AI\\test",
+   "created": 1794797871895,
+   "updated": 1794797871895,
+   "hits": 1,
+   "used": 1794807144824
+  },
+  {
+   "id": "d1c0050451d1",
+   "text": "The project includes a word counter script in Python.",
+   "scope": "project",
+   "pin": false,
+   "source": "chat",
+   "project": "E:\\AI\\test",
+   "created": 1794802480411,
+   "updated": 1794802480411,
+   "hits": 8,
+   "used": 1794807144824
+  },
+  {
+   "id": "3ca8fc4e9974",
+   "text": "The project is an AI-powered personal assistant for Windows users.",
+   "scope": "project",
+   "pin": false,
+   "source": "chat",
+   "project": "E:\\AI\\test",
+   "created": 1794804913893,
+   "updated": 1794804913893,
+   "hits": 1,
+   "used": 1794807144824
+  },
+  {
+   "id": "f869eaff3f5b",
+   "text": "The architecture includes LLM inference, agent orchestration, tool execution, memory (long/short), RAG, web research, and planning modules.",
+   "scope": "project",
+   "pin": false,
+   "source": "chat",
+   "project": "E:\\AI\\test",
+   "created": 1794804914053,
+   "updated": 1794804914053,
+   "hits": 0
+  },
+  {
+   "id": "f1384bd8c525",
+   "text": "The project includes a calculator with logic in calculator.js and styling in calculator.css.",
+   "scope": "project",
+   "pin": false,
+   "source": "chat",
+   "project": "E:\\AI\\test",
+   "created": 1794805107449,
+   "updated": 1794805107449,
+   "hits": 1,
+   "used": 1794807144824
+  }
+ ],
+ "tasks": [
+  {
+   "id": "97d579ae9191",
+   "text": "Implement theme switching (Light, Dark, Auto) across the three-pane layout.",
+   "status": "open",
+   "source": "chat",
+   "chat": "",
+   "chats": [],
+   "project": "E:\\AI\\CressyAI",
+   "created": 1794749783738,
+   "updated": 1794749783738
+  },
+  {
+   "id": "26d3e19e478d",
+   "text": "Handle state management for synchronizing the 'active conversation' between the list pane and the chat pane.",
+   "status": "open",
+   "source": "chat",
+   "chat": "",
+   "chats": [],
+   "project": "E:\\AI\\CressyAI",
+   "created": 1794749783952,
+   "updated": 1794749783952
+  },
+  {
+   "id": "e2d02e4b7cee",
+   "text": "Refine the frontend logic to display tokens as they arrive from `llama.cpp` using word-by-word streaming.",
+   "status": "open",
+   "source": "chat",
+   "chat": "",
+   "chats": [],
+   "project": "E:\\AI\\CressyAI",
+   "created": 1794749784058,
+   "updated": 1794749784058
+  },
+  {
+   "id": "c1a794ac2188",
+   "text": "Create the CSS file for the calculator styling.",
+   "status": "done",
+   "source": "chat",
+   "chat": "mwish920",
+   "chats": [
+    "mwish920"
+   ],
+   "project": "E:\\AI\\test",
+   "created": 1794797871897,
+   "updated": 1794805107449
+  },
+  {
+   "id": "96e6223f9a03",
+   "text": "Create the JavaScript file for calculator logic.",
+   "status": "done",
+   "source": "chat",
+   "chat": "mwish920",
+   "chats": [
+    "mwish920"
+   ],
+   "project": "E:\\AI\\test",
+   "created": 1794797873212,
+   "updated": 1794805107449
+  }
+ ],
+ "sessions": [
+  {
+   "chat": "mwish920",
+   "project": "E:\\AI\\test",
+   "title": "I want you to complete a complex multi-stage task. Treat thi",
+   "summary": "",
+   "handoff": "The calculator logic and styling files have been created. The next step is to integrate them into the main HTML file.",
+   "next": [
+    "Link calculator.js and calculator.css in main.html",
+    "Test the calculator functionality"
+   ],
+   "created": 1794804895248,
+   "updated": 1794805107452,
+   "turns": 2,
+   "quality": "llm"
+  },
+  {
+   "chat": "mwittw1q",
+   "project": "E:\\AI\\test",
+   "title": "Create a mern project for a resturaunt.",
+   "summary": "",
+   "handoff": "Last request: improve it | Last reply: **Done.** Improved research_models.py and word_counter.py.",
+   "next": [],
+   "created": 1794807208787,
+   "updated": 1794807208787,
+   "turns": 2,
+   "quality": "auto"
+  }
+ ]
+}

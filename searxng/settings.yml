@@ -1,0 +1,19 @@
+# Minimal SearXNG settings for CressyAI (used by docker-compose.yml).
+# CressyAI needs the JSON output format; everything else keeps SearXNG's defaults.
+use_default_settings: true
+
+general:
+  instance_name: "Cressy search"
+
+server:
+  # Generated for you. Replace it with your own random string if you share this folder.
+  secret_key: "94fdaa909eaca48768aa76ef4361237bd40f015a85b819419493b37aa0b540e8"
+  # Only your own machine talks to it, so the bot limiter is not needed (and blocks API calls).
+  limiter: false
+  image_proxy: false
+
+search:
+  safe_search: 0
+  formats:
+    - html
+    - json
